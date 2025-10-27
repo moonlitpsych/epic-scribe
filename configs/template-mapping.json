@@ -1,0 +1,73 @@
+{
+  "HMHI Downtown RCC": {
+    "Intake": {
+      "templateId": "rcc_intake_v1",
+      "version": 1
+    },
+    "Transfer of Care": {
+      "templateId": "rcc_toc_v1",
+      "version": 1
+    },
+    "Follow-up": {
+      "templateId": "rcc_fu_v1",
+      "version": 1
+    }
+  },
+  "Redwood Clinic MHI": {
+    "Consultation Visit": {
+      "templateId": "redwood_consult_v1",
+      "version": 1,
+      "visitTypeAlias": "Intake"
+    },
+    "Transfer of Care": {
+      "templateId": "redwood_toc_v1",
+      "version": 1
+    },
+    "Follow-up": {
+      "templateId": "redwood_fu_v1",
+      "version": 1
+    }
+  },
+  "Davis Behavioral Health": {
+    "Intake": {
+      "templateId": "dbh_intake_v1",
+      "version": 1
+    },
+    "Transfer of Care": {
+      "templateId": "dbh_toc_v1",
+      "version": 1
+    },
+    "Follow-up": {
+      "templateId": "dbh_fu_v1",
+      "version": 1
+    }
+  },
+  "Moonlit Psychiatry": {
+    "Intake": {
+      "templateId": "moonlit_intake_v1",
+      "version": 1
+    },
+    "Transfer of Care": {
+      "templateId": "moonlit_toc_v1",
+      "version": 1
+    },
+    "Follow-up": {
+      "templateId": "moonlit_fu_v1",
+      "version": 1
+    }
+  },
+  "BHIDC therapy": {
+    "Intake": {
+      "templateId": "bhidc_therapy_intake_v1",
+      "version": 1
+    },
+    "Transfer of Care": {
+      "templateId": "bhidc_therapy_toc_v1",
+      "version": 1
+    },
+    "Follow-up": {
+      "templateId": "bhidc_therapy_fu_v1",
+      "version": 1
+    }
+  }
+}

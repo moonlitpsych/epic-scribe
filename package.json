@@ -1,0 +1,33 @@
+{
+  "name": "epic-scribe",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Epic-ready psychiatry note generator with SmartTools integration",
+  "author": "Dr. Rufus Sweeney",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter apps/web dev",
+    "build": "pnpm -r build",
+    "test": "jest --runInBand",
+    "lint": "eslint . && tsc -p tsconfig.json --noEmit",
+    "format": "prettier --write \"**/*.{js,ts,tsx,json,md}\"",
+    "golden:update": "node scripts/update-goldens.mjs",
+    "golden:check": "node scripts/check-goldens.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^14.1.0",
+    "eslint-config-prettier": "^9.1.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.2.4",
+    "typescript": "^5.3.3"
+  }
+}

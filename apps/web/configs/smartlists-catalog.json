@@ -1,0 +1,2159 @@
+{
+  "smartLists": {
+    "appearance": {
+      "identifier": "Appearance",
+      "epicId": "304120201",
+      "displayName": "Appearance",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Well-groomed, appropriate dress",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Disheveled",
+          "order": 2
+        },
+        {
+          "value": "Poor hygiene",
+          "order": 3
+        },
+        {
+          "value": "Bizarre dress",
+          "order": 4
+        },
+        {
+          "value": "Appears stated age",
+          "order": 5
+        },
+        {
+          "value": "Appears older than stated age",
+          "order": 6
+        },
+        {
+          "value": "Appears younger than stated age",
+          "order": 7
+        }
+      ]
+    },
+    "behavior": {
+      "identifier": "Behavior",
+      "epicId": "304120202",
+      "displayName": "Behavior",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Cooperative",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Guarded",
+          "order": 2
+        },
+        {
+          "value": "Hostile",
+          "order": 3
+        },
+        {
+          "value": "Agitated",
+          "order": 4
+        },
+        {
+          "value": "Psychomotor retardation",
+          "order": 5
+        },
+        {
+          "value": "Psychomotor agitation",
+          "order": 6
+        }
+      ]
+    },
+    "eyeContact": {
+      "identifier": "Eye Contact",
+      "epicId": "304120203",
+      "displayName": "Eye Contact",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Good",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Poor",
+          "order": 2
+        },
+        {
+          "value": "Avoidant",
+          "order": 3
+        },
+        {
+          "value": "Intense/staring",
+          "order": 4
+        }
+      ]
+    },
+    "speech": {
+      "identifier": "Speech",
+      "epicId": "304120204",
+      "displayName": "Speech",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Normal rate and tone",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Slow",
+          "order": 2
+        },
+        {
+          "value": "Rapid",
+          "order": 3
+        },
+        {
+          "value": "Pressured",
+          "order": 4
+        },
+        {
+          "value": "Soft",
+          "order": 5
+        },
+        {
+          "value": "Loud",
+          "order": 6
+        },
+        {
+          "value": "Monotone",
+          "order": 7
+        }
+      ]
+    },
+    "mood": {
+      "identifier": "Mood",
+      "epicId": "305000005",
+      "displayName": "Mood",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "Euthymic",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Depressed",
+          "order": 2
+        },
+        {
+          "value": "Anxious",
+          "order": 3
+        },
+        {
+          "value": "Irritable",
+          "order": 4
+        },
+        {
+          "value": "Elevated",
+          "order": 5
+        },
+        {
+          "value": "Mixed",
+          "order": 6
+        },
+        {
+          "value": "Labile",
+          "order": 7
+        },
+        {
+          "value": "Stable",
+          "order": 8
+        }
+      ]
+    },
+    "affect": {
+      "identifier": "Affect",
+      "epicId": "304120206",
+      "displayName": "Affect",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Congruent with mood",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Incongruent",
+          "order": 2
+        },
+        {
+          "value": "Flat",
+          "order": 3
+        },
+        {
+          "value": "Blunted",
+          "order": 4
+        },
+        {
+          "value": "Restricted",
+          "order": 5
+        },
+        {
+          "value": "Labile",
+          "order": 6
+        },
+        {
+          "value": "Full range",
+          "order": 7
+        }
+      ]
+    },
+    "thoughtProcess": {
+      "identifier": "Thought Process",
+      "epicId": "304120207",
+      "displayName": "Thought Process",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Linear and goal-directed",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Circumstantial",
+          "order": 2
+        },
+        {
+          "value": "Tangential",
+          "order": 3
+        },
+        {
+          "value": "Flight of ideas",
+          "order": 4
+        },
+        {
+          "value": "Loose associations",
+          "order": 5
+        },
+        {
+          "value": "Thought blocking",
+          "order": 6
+        },
+        {
+          "value": "Perseveration",
+          "order": 7
+        }
+      ]
+    },
+    "thoughtContent": {
+      "identifier": "Thought Content",
+      "epicId": "304120208",
+      "displayName": "Thought Content",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "No psychosis",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Delusions present",
+          "order": 2
+        },
+        {
+          "value": "Paranoid ideation",
+          "order": 3
+        },
+        {
+          "value": "Ideas of reference",
+          "order": 4
+        },
+        {
+          "value": "Obsessions",
+          "order": 5
+        },
+        {
+          "value": "Preoccupations",
+          "order": 6
+        }
+      ]
+    },
+    "perceptualDisturbances": {
+      "identifier": "Perceptual Disturbances",
+      "epicId": "304120209",
+      "displayName": "Perceptual Disturbances",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Auditory hallucinations",
+          "order": 2
+        },
+        {
+          "value": "Visual hallucinations",
+          "order": 3
+        },
+        {
+          "value": "Tactile hallucinations",
+          "order": 4
+        },
+        {
+          "value": "Illusions",
+          "order": 5
+        }
+      ]
+    },
+    "suicidalIdeation": {
+      "identifier": "Suicidal Ideation",
+      "epicId": "305000012",
+      "displayName": "Suicidal Ideation",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Passive ideation without plan",
+          "order": 2
+        },
+        {
+          "value": "Active ideation without plan",
+          "order": 3
+        },
+        {
+          "value": "Active ideation with plan",
+          "order": 4
+        },
+        {
+          "value": "Active ideation with intent",
+          "order": 5
+        },
+        {
+          "value": "Past ideation, currently denied",
+          "order": 6
+        },
+        {
+          "value": "Fleeting thoughts",
+          "order": 7
+        }
+      ]
+    },
+    "homicidalIdeation": {
+      "identifier": "Homicidal Ideation",
+      "epicId": "305000013",
+      "displayName": "Homicidal Ideation",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Passive thoughts",
+          "order": 2
+        },
+        {
+          "value": "Active ideation without plan",
+          "order": 3
+        },
+        {
+          "value": "Active ideation with plan",
+          "order": 4
+        },
+        {
+          "value": "Violent thoughts without intent",
+          "order": 5
+        }
+      ]
+    },
+    "insight": {
+      "identifier": "Insight",
+      "epicId": "304120212",
+      "displayName": "Insight",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Good",
+          "order": 1
+        },
+        {
+          "value": "Fair",
+          "order": 2,
+          "is_default": true
+        },
+        {
+          "value": "Poor",
+          "order": 3
+        },
+        {
+          "value": "None",
+          "order": 4
+        }
+      ]
+    },
+    "judgment": {
+      "identifier": "Judgment",
+      "epicId": "304120213",
+      "displayName": "Judgment",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Good",
+          "order": 1
+        },
+        {
+          "value": "Fair",
+          "order": 2,
+          "is_default": true
+        },
+        {
+          "value": "Poor",
+          "order": 3
+        },
+        {
+          "value": "Impaired",
+          "order": 4
+        }
+      ]
+    },
+    "sleepQuality": {
+      "identifier": "Sleep Quality",
+      "epicId": "305000002",
+      "displayName": "Sleep Quality",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "Good",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Fair",
+          "order": 2
+        },
+        {
+          "value": "Poor",
+          "order": 3
+        },
+        {
+          "value": "Very poor",
+          "order": 4
+        },
+        {
+          "value": "Variable",
+          "order": 5
+        },
+        {
+          "value": "Poor with frequent awakening",
+          "order": 6
+        },
+        {
+          "value": "Improved",
+          "order": 7
+        },
+        {
+          "value": "Worsened",
+          "order": 8
+        }
+      ]
+    },
+    "appetite": {
+      "identifier": "Appetite",
+      "epicId": "305000003",
+      "displayName": "Appetite",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "Normal",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Increased",
+          "order": 2
+        },
+        {
+          "value": "Decreased",
+          "order": 3
+        },
+        {
+          "value": "Variable",
+          "order": 4
+        },
+        {
+          "value": "Poor",
+          "order": 5
+        },
+        {
+          "value": "Binge eating",
+          "order": 6
+        },
+        {
+          "value": "No appetite",
+          "order": 7
+        }
+      ]
+    },
+    "energy": {
+      "identifier": "Energy Level",
+      "epicId": "304120301",
+      "displayName": "Energy Level",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "Normal",
+          "order": 1
+        },
+        {
+          "value": "Low",
+          "order": 2,
+          "is_default": true
+        },
+        {
+          "value": "High",
+          "order": 3
+        },
+        {
+          "value": "Variable",
+          "order": 4
+        }
+      ]
+    },
+    "concentration": {
+      "identifier": "Concentration",
+      "epicId": "305000008",
+      "displayName": "Concentration",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "Normal",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Mildly impaired",
+          "order": 2
+        },
+        {
+          "value": "Moderately impaired",
+          "order": 3
+        },
+        {
+          "value": "Significantly impaired",
+          "order": 4
+        },
+        {
+          "value": "Variable",
+          "order": 5
+        },
+        {
+          "value": "Improved",
+          "order": 6
+        },
+        {
+          "value": "Worsened",
+          "order": 7
+        }
+      ]
+    },
+    "anxietyLevel": {
+      "identifier": "Anxiety Level",
+      "epicId": "304120109",
+      "displayName": "Anxiety Level",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "None",
+          "order": 1
+        },
+        {
+          "value": "Mild",
+          "order": 2
+        },
+        {
+          "value": "Moderate",
+          "order": 3,
+          "is_default": true
+        },
+        {
+          "value": "Severe",
+          "order": 4
+        },
+        {
+          "value": "Panic attacks",
+          "order": 5
+        }
+      ]
+    },
+    "bhHospitalizations": {
+      "identifier": "BH Hospitalizations",
+      "epicId": "304120103",
+      "displayName": "BH Hospitalizations",
+      "group": "Past Psychiatric History",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "1 hospitalization",
+          "order": 2
+        },
+        {
+          "value": "2 hospitalizations",
+          "order": 3
+        },
+        {
+          "value": "3+ hospitalizations",
+          "order": 4
+        },
+        {
+          "value": "Details in note",
+          "order": 5
+        }
+      ]
+    },
+    "suicideHistory": {
+      "identifier": "Suicide History",
+      "epicId": "304120104",
+      "displayName": "Suicide History",
+      "group": "Past Psychiatric History",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "1 attempt",
+          "order": 2
+        },
+        {
+          "value": "Multiple attempts",
+          "order": 3
+        },
+        {
+          "value": "Details in note",
+          "order": 4
+        }
+      ]
+    },
+    "medicationCompliance": {
+      "identifier": "Medication Compliance",
+      "epicId": "304120105",
+      "displayName": "Medication Compliance",
+      "group": "Medications",
+      "options": [
+        {
+          "value": "Good",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Fair",
+          "order": 2
+        },
+        {
+          "value": "Poor",
+          "order": 3
+        },
+        {
+          "value": "Non-compliant",
+          "order": 4
+        },
+        {
+          "value": "Not applicable",
+          "order": 5
+        }
+      ]
+    },
+    "moodROS": {
+      "identifier": "Mood",
+      "epicId": "304120108",
+      "displayName": "Mood",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "Euthymic",
+          "order": 1
+        },
+        {
+          "value": "Depressed",
+          "order": 2,
+          "is_default": true
+        },
+        {
+          "value": "Anxious",
+          "order": 3
+        },
+        {
+          "value": "Irritable",
+          "order": 4
+        },
+        {
+          "value": "Elevated",
+          "order": 5
+        },
+        {
+          "value": "Angry",
+          "order": 6
+        }
+      ]
+    },
+    "riskLevel": {
+      "identifier": "Risk Level",
+      "epicId": "304120111",
+      "displayName": "Risk Level",
+      "group": "Assessment",
+      "options": [
+        {
+          "value": "Low",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Moderate",
+          "order": 2
+        },
+        {
+          "value": "High",
+          "order": 3
+        }
+      ]
+    },
+    "prognosis": {
+      "identifier": "Prognosis",
+      "epicId": "304120112",
+      "displayName": "Prognosis",
+      "group": "Assessment",
+      "options": [
+        {
+          "value": "Good",
+          "order": 1
+        },
+        {
+          "value": "Good with treatment",
+          "order": 2,
+          "is_default": true
+        },
+        {
+          "value": "Fair",
+          "order": 3
+        },
+        {
+          "value": "Guarded",
+          "order": 4
+        },
+        {
+          "value": "Poor",
+          "order": 5
+        }
+      ]
+    },
+    "therapyReferral": {
+      "identifier": "Therapy Referral",
+      "epicId": "304120113",
+      "displayName": "Therapy Referral",
+      "group": "Plan",
+      "options": [
+        {
+          "value": "CBT referral placed",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "DBT referral placed",
+          "order": 2
+        },
+        {
+          "value": "Psychodynamic therapy referral placed",
+          "order": 3
+        },
+        {
+          "value": "Family therapy referral placed",
+          "order": 4
+        },
+        {
+          "value": "Already in therapy",
+          "order": 5
+        },
+        {
+          "value": "Declined therapy",
+          "order": 6
+        },
+        {
+          "value": "Not indicated",
+          "order": 7
+        }
+      ]
+    },
+    "followupTimeframe": {
+      "identifier": "Follow-up Timeframe",
+      "epicId": "304120114",
+      "displayName": "Follow-up Timeframe",
+      "group": "Plan",
+      "options": [
+        {
+          "value": "1 week",
+          "order": 1
+        },
+        {
+          "value": "2 weeks",
+          "order": 2
+        },
+        {
+          "value": "2-3 weeks",
+          "order": 3,
+          "is_default": true
+        },
+        {
+          "value": "4 weeks",
+          "order": 4
+        },
+        {
+          "value": "6 weeks",
+          "order": 5
+        },
+        {
+          "value": "8 weeks",
+          "order": 6
+        },
+        {
+          "value": "12 weeks",
+          "order": 7
+        },
+        {
+          "value": "PRN",
+          "order": 8
+        }
+      ]
+    },
+    "sleepPattern": {
+      "identifier": "Sleep Pattern",
+      "epicId": "305000001",
+      "displayName": "Sleep Pattern",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "Normal sleep",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Initial insomnia",
+          "order": 2
+        },
+        {
+          "value": "Middle insomnia",
+          "order": 3
+        },
+        {
+          "value": "Terminal insomnia",
+          "order": 4
+        },
+        {
+          "value": "Hypersomnia",
+          "order": 5
+        },
+        {
+          "value": "Fragmented sleep",
+          "order": 6
+        },
+        {
+          "value": "Non-restorative sleep",
+          "order": 7
+        }
+      ]
+    },
+    "energyLevel": {
+      "identifier": "Energy Level",
+      "epicId": "305000004",
+      "displayName": "Energy Level",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "Normal",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Mildly decreased",
+          "order": 2
+        },
+        {
+          "value": "Moderately decreased",
+          "order": 3
+        },
+        {
+          "value": "Markedly decreased",
+          "order": 4
+        },
+        {
+          "value": "Increased",
+          "order": 5
+        },
+        {
+          "value": "Variable",
+          "order": 6
+        },
+        {
+          "value": "Fatigue",
+          "order": 7
+        }
+      ]
+    },
+    "anxietySymptoms": {
+      "identifier": "Anxiety Symptoms",
+      "epicId": "305000006",
+      "displayName": "Anxiety Symptoms",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Mild anxiety",
+          "order": 2
+        },
+        {
+          "value": "Moderate anxiety",
+          "order": 3
+        },
+        {
+          "value": "Severe anxiety",
+          "order": 4
+        },
+        {
+          "value": "Generalized anxiety",
+          "order": 5
+        },
+        {
+          "value": "Social anxiety",
+          "order": 6
+        },
+        {
+          "value": "Panic symptoms",
+          "order": 7
+        },
+        {
+          "value": "Improved",
+          "order": 8
+        }
+      ]
+    },
+    "panicAttacks": {
+      "identifier": "Panic Attacks",
+      "epicId": "305000007",
+      "displayName": "Panic Attacks",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Rare",
+          "order": 2
+        },
+        {
+          "value": "Occasional",
+          "order": 3
+        },
+        {
+          "value": "Frequent",
+          "order": 4
+        },
+        {
+          "value": "Daily",
+          "order": 5
+        },
+        {
+          "value": "Situational",
+          "order": 6
+        },
+        {
+          "value": "Nocturnal",
+          "order": 7
+        }
+      ]
+    },
+    "anhedonia": {
+      "identifier": "Anhedonia",
+      "epicId": "305000009",
+      "displayName": "Anhedonia",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Mild",
+          "order": 2
+        },
+        {
+          "value": "Moderate",
+          "order": 3
+        },
+        {
+          "value": "Severe",
+          "order": 4
+        },
+        {
+          "value": "Present",
+          "order": 5
+        },
+        {
+          "value": "Improving",
+          "order": 6
+        },
+        {
+          "value": "Worsening",
+          "order": 7
+        }
+      ]
+    },
+    "guilt": {
+      "identifier": "Guilt/Worthlessness",
+      "epicId": "305000010",
+      "displayName": "Guilt/Worthlessness",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Mild guilt",
+          "order": 2
+        },
+        {
+          "value": "Moderate guilt",
+          "order": 3
+        },
+        {
+          "value": "Excessive guilt",
+          "order": 4
+        },
+        {
+          "value": "Worthlessness",
+          "order": 5
+        },
+        {
+          "value": "Self-blame",
+          "order": 6
+        },
+        {
+          "value": "Delusional guilt",
+          "order": 7
+        }
+      ]
+    },
+    "hopelessness": {
+      "identifier": "Hopelessness",
+      "epicId": "305000011",
+      "displayName": "Hopelessness",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Mild",
+          "order": 2
+        },
+        {
+          "value": "Moderate",
+          "order": 3
+        },
+        {
+          "value": "Severe",
+          "order": 4
+        },
+        {
+          "value": "Present",
+          "order": 5
+        },
+        {
+          "value": "Improving",
+          "order": 6
+        },
+        {
+          "value": "Worsening",
+          "order": 7
+        }
+      ]
+    },
+    "hallucinations": {
+      "identifier": "Hallucinations",
+      "epicId": "305000014",
+      "displayName": "Hallucinations",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Auditory",
+          "order": 2
+        },
+        {
+          "value": "Visual",
+          "order": 3
+        },
+        {
+          "value": "Tactile",
+          "order": 4
+        },
+        {
+          "value": "Olfactory",
+          "order": 5
+        },
+        {
+          "value": "Command auditory",
+          "order": 6
+        },
+        {
+          "value": "Hypnagogic/hypnopompic",
+          "order": 7
+        }
+      ]
+    },
+    "paranoia": {
+      "identifier": "Paranoia",
+      "epicId": "305000015",
+      "displayName": "Paranoia",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Mild suspiciousness",
+          "order": 2
+        },
+        {
+          "value": "Moderate paranoia",
+          "order": 3
+        },
+        {
+          "value": "Severe paranoia",
+          "order": 4
+        },
+        {
+          "value": "Paranoid ideation",
+          "order": 5
+        },
+        {
+          "value": "Paranoid delusions",
+          "order": 6
+        }
+      ]
+    },
+    "obsessions": {
+      "identifier": "Obsessions",
+      "epicId": "305000016",
+      "displayName": "Obsessions",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Mild",
+          "order": 2
+        },
+        {
+          "value": "Moderate",
+          "order": 3
+        },
+        {
+          "value": "Severe",
+          "order": 4
+        },
+        {
+          "value": "Contamination",
+          "order": 5
+        },
+        {
+          "value": "Harm",
+          "order": 6
+        },
+        {
+          "value": "Symmetry",
+          "order": 7
+        },
+        {
+          "value": "Religious",
+          "order": 8
+        }
+      ]
+    },
+    "compulsions": {
+      "identifier": "Compulsions",
+      "epicId": "305000017",
+      "displayName": "Compulsions",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Mild",
+          "order": 2
+        },
+        {
+          "value": "Moderate",
+          "order": 3
+        },
+        {
+          "value": "Severe",
+          "order": 4
+        },
+        {
+          "value": "Checking",
+          "order": 5
+        },
+        {
+          "value": "Washing",
+          "order": 6
+        },
+        {
+          "value": "Counting",
+          "order": 7
+        },
+        {
+          "value": "Organizing",
+          "order": 8
+        }
+      ]
+    },
+    "flashbacks": {
+      "identifier": "Flashbacks",
+      "epicId": "305000018",
+      "displayName": "Flashbacks",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Rare",
+          "order": 2
+        },
+        {
+          "value": "Occasional",
+          "order": 3
+        },
+        {
+          "value": "Frequent",
+          "order": 4
+        },
+        {
+          "value": "Daily",
+          "order": 5
+        },
+        {
+          "value": "Triggered",
+          "order": 6
+        }
+      ]
+    },
+    "nightmares": {
+      "identifier": "Nightmares",
+      "epicId": "305000019",
+      "displayName": "Nightmares",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Rare",
+          "order": 2
+        },
+        {
+          "value": "Occasional",
+          "order": 3
+        },
+        {
+          "value": "Frequent",
+          "order": 4
+        },
+        {
+          "value": "Nightly",
+          "order": 5
+        },
+        {
+          "value": "Trauma-related",
+          "order": 6
+        }
+      ]
+    },
+    "alcoholUse": {
+      "identifier": "Alcohol Use",
+      "epicId": "305000020",
+      "displayName": "Alcohol Use",
+      "group": "Substance Use",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Social use",
+          "order": 2
+        },
+        {
+          "value": "Daily use",
+          "order": 3
+        },
+        {
+          "value": "Heavy use",
+          "order": 4
+        },
+        {
+          "value": "Binge drinking",
+          "order": 5
+        },
+        {
+          "value": "In recovery",
+          "order": 6
+        },
+        {
+          "value": "Past use, now abstinent",
+          "order": 7
+        }
+      ]
+    },
+    "cannabisUse": {
+      "identifier": "Cannabis Use",
+      "epicId": "305000021",
+      "displayName": "Cannabis Use",
+      "group": "Substance Use",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Occasional use",
+          "order": 2
+        },
+        {
+          "value": "Regular use",
+          "order": 3
+        },
+        {
+          "value": "Daily use",
+          "order": 4
+        },
+        {
+          "value": "Medical use",
+          "order": 5
+        },
+        {
+          "value": "Past use, now abstinent",
+          "order": 6
+        }
+      ]
+    },
+    "stimulantUse": {
+      "identifier": "Stimulant Use",
+      "epicId": "305000022",
+      "displayName": "Stimulant Use",
+      "group": "Substance Use",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Prescribed use only",
+          "order": 2
+        },
+        {
+          "value": "Occasional use",
+          "order": 3
+        },
+        {
+          "value": "Regular use",
+          "order": 4
+        },
+        {
+          "value": "Past use, now abstinent",
+          "order": 5
+        },
+        {
+          "value": "In recovery",
+          "order": 6
+        }
+      ]
+    },
+    "opioidUse": {
+      "identifier": "Opioid Use",
+      "epicId": "305000023",
+      "displayName": "Opioid Use",
+      "group": "Substance Use",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Prescribed use only",
+          "order": 2
+        },
+        {
+          "value": "Occasional use",
+          "order": 3
+        },
+        {
+          "value": "Regular use",
+          "order": 4
+        },
+        {
+          "value": "Past use, now abstinent",
+          "order": 5
+        },
+        {
+          "value": "On MAT",
+          "order": 6
+        }
+      ]
+    },
+    "benzodiazepineUse": {
+      "identifier": "Benzodiazepine Use",
+      "epicId": "305000024",
+      "displayName": "Benzodiazepine Use",
+      "group": "Substance Use",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Prescribed use only",
+          "order": 2
+        },
+        {
+          "value": "Occasional use",
+          "order": 3
+        },
+        {
+          "value": "Regular use",
+          "order": 4
+        },
+        {
+          "value": "Past use, now abstinent",
+          "order": 5
+        }
+      ]
+    },
+    "tobaccoUse": {
+      "identifier": "Tobacco Use",
+      "epicId": "305000025",
+      "displayName": "Tobacco Use",
+      "group": "Substance Use",
+      "options": [
+        {
+          "value": "Never smoker",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Current smoker",
+          "order": 2
+        },
+        {
+          "value": "Former smoker",
+          "order": 3
+        },
+        {
+          "value": "Vaping/e-cigarettes",
+          "order": 4
+        },
+        {
+          "value": "Smokeless tobacco",
+          "order": 5
+        },
+        {
+          "value": "Trying to quit",
+          "order": 6
+        }
+      ]
+    },
+    "livingSituation": {
+      "identifier": "Living Situation",
+      "epicId": "305000030",
+      "displayName": "Living Situation",
+      "group": "Social History",
+      "options": [
+        {
+          "value": "Stable housing",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Lives alone",
+          "order": 2
+        },
+        {
+          "value": "Lives with family",
+          "order": 3
+        },
+        {
+          "value": "Lives with roommates",
+          "order": 4
+        },
+        {
+          "value": "Unstable housing",
+          "order": 5
+        },
+        {
+          "value": "Homeless",
+          "order": 6
+        },
+        {
+          "value": "Shelter",
+          "order": 7
+        },
+        {
+          "value": "Group home",
+          "order": 8
+        }
+      ]
+    },
+    "employmentStatus": {
+      "identifier": "Employment Status",
+      "epicId": "305000031",
+      "displayName": "Employment Status",
+      "group": "Social History",
+      "options": [
+        {
+          "value": "Employed full-time",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Employed part-time",
+          "order": 2
+        },
+        {
+          "value": "Unemployed",
+          "order": 3
+        },
+        {
+          "value": "Recently unemployed",
+          "order": 4
+        },
+        {
+          "value": "Disabled",
+          "order": 5
+        },
+        {
+          "value": "Retired",
+          "order": 6
+        },
+        {
+          "value": "Student",
+          "order": 7
+        },
+        {
+          "value": "Homemaker",
+          "order": 8
+        }
+      ]
+    },
+    "educationLevel": {
+      "identifier": "Education Level",
+      "epicId": "305000032",
+      "displayName": "Education Level",
+      "group": "Social History",
+      "options": [
+        {
+          "value": "High school graduate",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Some high school",
+          "order": 2
+        },
+        {
+          "value": "GED",
+          "order": 3
+        },
+        {
+          "value": "Some college",
+          "order": 4
+        },
+        {
+          "value": "College graduate",
+          "order": 5
+        },
+        {
+          "value": "Graduate degree",
+          "order": 6
+        },
+        {
+          "value": "Trade school",
+          "order": 7
+        }
+      ]
+    },
+    "relationshipStatus": {
+      "identifier": "Relationship Status",
+      "epicId": "305000033",
+      "displayName": "Relationship Status",
+      "group": "Social History",
+      "options": [
+        {
+          "value": "Single",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Married",
+          "order": 2
+        },
+        {
+          "value": "Partnered",
+          "order": 3
+        },
+        {
+          "value": "Divorced",
+          "order": 4
+        },
+        {
+          "value": "Separated",
+          "order": 5
+        },
+        {
+          "value": "Widowed",
+          "order": 6
+        },
+        {
+          "value": "In a relationship",
+          "order": 7
+        }
+      ]
+    },
+    "supportSystem": {
+      "identifier": "Support System",
+      "epicId": "305000034",
+      "displayName": "Support System",
+      "group": "Social History",
+      "options": [
+        {
+          "value": "Good",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Fair",
+          "order": 2
+        },
+        {
+          "value": "Poor",
+          "order": 3
+        },
+        {
+          "value": "Limited",
+          "order": 4
+        },
+        {
+          "value": "Strong family support",
+          "order": 5
+        },
+        {
+          "value": "Friends only",
+          "order": 6
+        },
+        {
+          "value": "Isolated",
+          "order": 7
+        }
+      ]
+    },
+    "mseAppearance": {
+      "identifier": "MSE Appearance",
+      "epicId": "305000040",
+      "displayName": "MSE Appearance",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Well-groomed",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Disheveled",
+          "order": 2
+        },
+        {
+          "value": "Appropriate dress",
+          "order": 3
+        },
+        {
+          "value": "Poor hygiene",
+          "order": 4
+        },
+        {
+          "value": "Bizarre dress",
+          "order": 5
+        },
+        {
+          "value": "Appears stated age",
+          "order": 6
+        },
+        {
+          "value": "Appears older than stated age",
+          "order": 7
+        },
+        {
+          "value": "Appears younger than stated age",
+          "order": 8
+        }
+      ]
+    },
+    "mseBehavior": {
+      "identifier": "MSE Behavior",
+      "epicId": "305000041",
+      "displayName": "MSE Behavior",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Cooperative",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Guarded",
+          "order": 2
+        },
+        {
+          "value": "Hostile",
+          "order": 3
+        },
+        {
+          "value": "Agitated",
+          "order": 4
+        },
+        {
+          "value": "Psychomotor retardation",
+          "order": 5
+        },
+        {
+          "value": "Psychomotor agitation",
+          "order": 6
+        },
+        {
+          "value": "Restless",
+          "order": 7
+        }
+      ]
+    },
+    "mseEyeContact": {
+      "identifier": "MSE Eye Contact",
+      "epicId": "305000042",
+      "displayName": "MSE Eye Contact",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Good",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Poor",
+          "order": 2
+        },
+        {
+          "value": "Avoidant",
+          "order": 3
+        },
+        {
+          "value": "Intense",
+          "order": 4
+        },
+        {
+          "value": "Variable",
+          "order": 5
+        }
+      ]
+    },
+    "mseSpeechRate": {
+      "identifier": "MSE Speech Rate",
+      "epicId": "305000043",
+      "displayName": "MSE Speech Rate",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Normal rate",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Slow",
+          "order": 2
+        },
+        {
+          "value": "Rapid",
+          "order": 3
+        },
+        {
+          "value": "Pressured",
+          "order": 4
+        },
+        {
+          "value": "Hesitant",
+          "order": 5
+        }
+      ]
+    },
+    "mseSpeechVolume": {
+      "identifier": "MSE Speech Volume",
+      "epicId": "305000044",
+      "displayName": "MSE Speech Volume",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Normal volume",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Soft",
+          "order": 2
+        },
+        {
+          "value": "Loud",
+          "order": 3
+        },
+        {
+          "value": "Whispered",
+          "order": 4
+        },
+        {
+          "value": "Variable",
+          "order": 5
+        }
+      ]
+    },
+    "mseMood": {
+      "identifier": "MSE Mood",
+      "epicId": "305000045",
+      "displayName": "MSE Mood",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Euthymic",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Depressed",
+          "order": 2
+        },
+        {
+          "value": "Anxious",
+          "order": 3
+        },
+        {
+          "value": "Irritable",
+          "order": 4
+        },
+        {
+          "value": "Elevated",
+          "order": 5
+        },
+        {
+          "value": "\"Good\"",
+          "order": 6
+        },
+        {
+          "value": "\"Okay\"",
+          "order": 7
+        },
+        {
+          "value": "\"Fine\"",
+          "order": 8
+        }
+      ]
+    },
+    "mseAffect": {
+      "identifier": "MSE Affect",
+      "epicId": "305000046",
+      "displayName": "MSE Affect",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Appropriate and mood-congruent",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Constricted and mood-congruent",
+          "order": 2
+        },
+        {
+          "value": "Flat",
+          "order": 3
+        },
+        {
+          "value": "Blunted",
+          "order": 4
+        },
+        {
+          "value": "Labile",
+          "order": 5
+        },
+        {
+          "value": "Incongruent",
+          "order": 6
+        },
+        {
+          "value": "Bright",
+          "order": 7
+        },
+        {
+          "value": "Full range",
+          "order": 8
+        }
+      ]
+    },
+    "mseThoughtProcess": {
+      "identifier": "MSE Thought Process",
+      "epicId": "305000047",
+      "displayName": "MSE Thought Process",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Linear and goal-directed",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Circumstantial",
+          "order": 2
+        },
+        {
+          "value": "Tangential",
+          "order": 3
+        },
+        {
+          "value": "Disorganized",
+          "order": 4
+        },
+        {
+          "value": "Flight of ideas",
+          "order": 5
+        },
+        {
+          "value": "Thought blocking",
+          "order": 6
+        },
+        {
+          "value": "Perseverative",
+          "order": 7
+        }
+      ]
+    },
+    "mseThoughtContent": {
+      "identifier": "MSE Thought Content",
+      "epicId": "305000048",
+      "displayName": "MSE Thought Content",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "No delusions or paranoia",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Paranoid ideation",
+          "order": 2
+        },
+        {
+          "value": "Delusions present",
+          "order": 3
+        },
+        {
+          "value": "Grandiose delusions",
+          "order": 4
+        },
+        {
+          "value": "Persecutory delusions",
+          "order": 5
+        },
+        {
+          "value": "Ideas of reference",
+          "order": 6
+        },
+        {
+          "value": "Obsessive thoughts",
+          "order": 7
+        }
+      ]
+    },
+    "msePerceptual": {
+      "identifier": "MSE Perceptual",
+      "epicId": "305000049",
+      "displayName": "MSE Perceptual",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Auditory hallucinations",
+          "order": 2
+        },
+        {
+          "value": "Visual hallucinations",
+          "order": 3
+        },
+        {
+          "value": "Tactile hallucinations",
+          "order": 4
+        },
+        {
+          "value": "Illusions",
+          "order": 5
+        }
+      ]
+    },
+    "mseCognition": {
+      "identifier": "MSE Cognition",
+      "epicId": "305000050",
+      "displayName": "MSE Cognition",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Grossly intact",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Alert and oriented x3",
+          "order": 2
+        },
+        {
+          "value": "Alert and oriented x4",
+          "order": 3
+        },
+        {
+          "value": "Mild impairment",
+          "order": 4
+        },
+        {
+          "value": "Moderate impairment",
+          "order": 5
+        },
+        {
+          "value": "Severe impairment",
+          "order": 6
+        },
+        {
+          "value": "Memory deficits noted",
+          "order": 7
+        }
+      ]
+    },
+    "mseInsight": {
+      "identifier": "MSE Insight",
+      "epicId": "305000051",
+      "displayName": "MSE Insight",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Good",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Fair",
+          "order": 2
+        },
+        {
+          "value": "Poor",
+          "order": 3
+        },
+        {
+          "value": "Limited",
+          "order": 4
+        },
+        {
+          "value": "Absent",
+          "order": 5
+        }
+      ]
+    },
+    "mseJudgment": {
+      "identifier": "MSE Judgment",
+      "epicId": "305000052",
+      "displayName": "MSE Judgment",
+      "group": "Mental Status Exam",
+      "options": [
+        {
+          "value": "Good",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Fair",
+          "order": 2
+        },
+        {
+          "value": "Poor",
+          "order": 3
+        },
+        {
+          "value": "Impaired",
+          "order": 4
+        },
+        {
+          "value": "Intact",
+          "order": 5
+        }
+      ]
+    }
+  }
+}

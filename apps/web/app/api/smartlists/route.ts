@@ -1,0 +1,114 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getSmartListService } from '@epic-scribe/note-service/src/smartlists/smartlist-service';
+
+export async function GET(request: NextRequest) {
+  try {
+    const service = await getSmartListService();
+    const searchParams = request.nextUrl.searchParams;
+    const group = searchParams.get('group');
+    const id = searchParams.get('id');
+    const epicId = searchParams.get('epicId');
+
+    if (id) {
+      const smartList = service.getSmartList(id);
+      if (!smartList) {
+        return NextResponse.json({ error: 'SmartList not found' }, { status: 404 });
+      }
+      return NextResponse.json(smartList);
+    }
+
+    if (epicId) {
+      const smartList = service.getSmartListByEpicId(epicId);
+      if (!smartList) {
+        return NextResponse.json({ error: 'SmartList not found' }, { status: 404 });
+      }
+      return NextResponse.json(smartList);
+    }
+
+    if (group) {
+      const smartLists = service.getSmartListsByGroup(group);
+      return NextResponse.json(smartLists);
+    }
+
+    const allSmartLists = service.getAllSmartLists();
+    return NextResponse.json(allSmartLists);
+  } catch (error) {
+    console.error('Error fetching SmartLists:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch SmartLists' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const service = await getSmartListService();
+    const smartLists = await request.json();
+
+    await service.saveConfig(smartLists);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error updating SmartLists:', error);
+    return NextResponse.json(
+      { error: 'Failed to update SmartLists' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const service = await getSmartListService();
+    const { action, ...data } = await request.json();
+
+    switch (action) {
+      case 'recordValue': {
+        const { smartListId, selectedValue, context } = data;
+        const value = await service.recordValue(smartListId, selectedValue, context);
+        return NextResponse.json(value);
+      }
+
+      case 'exportForPrompt': {
+        const { smartListIds } = data;
+        const prompt = service.exportAllForPrompt(smartListIds);
+        return NextResponse.json({ prompt });
+      }
+
+      case 'validateSelections': {
+        const { noteContent } = data;
+        const result = service.validateSelections(noteContent);
+        return NextResponse.json(result);
+      }
+
+      case 'exportCSV': {
+        const csv = await service.exportToCSV();
+        return new NextResponse(csv, {
+          headers: {
+            'Content-Type': 'text/csv',
+            'Content-Disposition': 'attachment; filename="smartlists.csv"',
+          },
+        });
+      }
+
+      case 'importCSV': {
+        const { csvContent } = data;
+        await service.importFromCSV(csvContent);
+        return NextResponse.json({ success: true });
+      }
+
+      default:
+        return NextResponse.json(
+          { error: 'Invalid action' },
+          { status: 400 }
+        );
+    }
+  } catch (error) {
+    console.error('Error processing SmartList action:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Operation failed' },
+      { status: 500 }
+    );
+  }
+}
