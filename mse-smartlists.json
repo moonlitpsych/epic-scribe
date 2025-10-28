@@ -1,0 +1,615 @@
+[
+    {
+        "identifier": "General Appearance",
+        "epicId": "9231",
+        "displayName": "General Appearance",
+        "group": "Mental Status Examination",
+        "options": [
+            {
+                "value": "appropriately dressed with good hygiene",
+                "order": 1,
+                "is_default": false
+            },
+            {
+                "value": "normal dress",
+                "order": 2,
+                "is_default": false
+            },
+            {
+                "value": "appropriate dress",
+                "order": 3,
+                "is_default": false
+            },
+            {
+                "value": "inappropriate dress",
+                "order": 4,
+                "is_default": false
+            },
+            {
+                "value": "good hygiene",
+                "order": 5,
+                "is_default": false
+            },
+            {
+                "value": "poor hygiene",
+                "order": 6,
+                "is_default": false
+            },
+            {
+                "value": "adequate hygiene",
+                "order": 7,
+                "is_default": false
+            },
+            {
+                "value": "disheveled appearance",
+                "order": 8,
+                "is_default": false
+            },
+            {
+                "value": "tearful",
+                "order": 9,
+                "is_default": false
+            },
+            {
+                "value": "in scrubs",
+                "order": 10,
+                "is_default": false
+            },
+            {
+                "value": "***",
+                "order": 11,
+                "is_default": false
+            }
+        ]
+    },
+    {
+        "identifier": "Behavior",
+        "epicId": "9234",
+        "displayName": "Behavior",
+        "group": "Mental Status Examination",
+        "options": [
+            {
+                "value": "interactive",
+                "order": 1,
+                "is_default": true
+            },
+            {
+                "value": "non responsive",
+                "order": 2,
+                "is_default": false
+            },
+            {
+                "value": "uncooperative",
+                "order": 3,
+                "is_default": false
+            },
+            {
+                "value": "guarded",
+                "order": 4,
+                "is_default": false
+            },
+            {
+                "value": "restless",
+                "order": 5,
+                "is_default": false
+            },
+            {
+                "value": "anxious",
+                "order": 6,
+                "is_default": false
+            },
+            {
+                "value": "hyperactive",
+                "order": 7,
+                "is_default": false
+            },
+            {
+                "value": "hypoactive",
+                "order": 8,
+                "is_default": false
+            },
+            {
+                "value": "agitated",
+                "order": 9,
+                "is_default": false
+            },
+            {
+                "value": "threatening",
+                "order": 10,
+                "is_default": false
+            },
+            {
+                "value": "calm",
+                "order": 11,
+                "is_default": false
+            },
+            {
+                "value": "friendly",
+                "order": 12,
+                "is_default": false
+            },
+            {
+                "value": "aloof",
+                "order": 13,
+                "is_default": false
+            },
+            {
+                "value": "***",
+                "order": 14,
+                "is_default": false
+            }
+        ]
+    },
+    {
+        "identifier": "Eye Contact",
+        "epicId": "9232",
+        "displayName": "Eye Contact",
+        "group": "Mental Status Examination",
+        "options": [
+            {
+                "value": "good",
+                "order": 1,
+                "is_default": true
+            },
+            {
+                "value": "fair",
+                "order": 2,
+                "is_default": false
+            },
+            {
+                "value": "poor",
+                "order": 3,
+                "is_default": false
+            },
+            {
+                "value": "improving",
+                "order": 4,
+                "is_default": false
+            },
+            {
+                "value": "decreased",
+                "order": 5,
+                "is_default": false
+            },
+            {
+                "value": "decreased but improving",
+                "order": 6,
+                "is_default": false
+            },
+            {
+                "value": "intense",
+                "order": 7,
+                "is_default": false
+            },
+            {
+                "value": "***",
+                "order": 8,
+                "is_default": false
+            }
+        ]
+    },
+    {
+        "identifier": "Affect",
+        "epicId": "9225",
+        "displayName": "Affect",
+        "group": "Mental Status Examination",
+        "options": [
+            {
+                "value": "appropriate with content",
+                "order": 1,
+                "is_default": true
+            },
+            {
+                "value": "constricted",
+                "order": 2,
+                "is_default": false
+            },
+            {
+                "value": "blunted",
+                "order": 3,
+                "is_default": false
+            },
+            {
+                "value": "flat",
+                "order": 4,
+                "is_default": false
+            },
+            {
+                "value": "inappropriate",
+                "order": 5,
+                "is_default": false
+            },
+            {
+                "value": "labile",
+                "order": 6,
+                "is_default": false
+            },
+            {
+                "value": "congruent with mood",
+                "order": 7,
+                "is_default": false
+            },
+            {
+                "value": "incongruent with mood",
+                "order": 8,
+                "is_default": false
+            },
+            {
+                "value": "***",
+                "order": 9,
+                "is_default": false
+            }
+        ]
+    },
+    {
+        "identifier": "Mood",
+        "epicId": "304260510",
+        "displayName": "Mood",
+        "group": "Mental Status Examination",
+        "options": [
+            {
+                "value": "euthymic",
+                "order": 1,
+                "is_default": true
+            },
+            {
+                "value": "depressed",
+                "order": 2,
+                "is_default": false
+            },
+            {
+                "value": "dysphoric",
+                "order": 3,
+                "is_default": false
+            },
+            {
+                "value": "anxious",
+                "order": 4,
+                "is_default": false
+            },
+            {
+                "value": "irritable",
+                "order": 5,
+                "is_default": false
+            },
+            {
+                "value": "angry",
+                "order": 6,
+                "is_default": false
+            },
+            {
+                "value": "elevated",
+                "order": 7,
+                "is_default": false
+            },
+            {
+                "value": "euphoric",
+                "order": 8,
+                "is_default": false
+            },
+            {
+                "value": "volatile",
+                "order": 9,
+                "is_default": false
+            },
+            {
+                "value": "reactive",
+                "order": 10,
+                "is_default": false
+            },
+            {
+                "value": "improving",
+                "order": 11,
+                "is_default": false
+            },
+            {
+                "value": "slowly improving",
+                "order": 12,
+                "is_default": false
+            },
+            {
+                "value": "***",
+                "order": 13,
+                "is_default": false
+            }
+        ]
+    },
+    {
+        "identifier": "Speech",
+        "epicId": "9228",
+        "displayName": "Speech",
+        "group": "Mental Status Examination",
+        "options": [
+            {
+                "value": "normal rate, rhythm, volume, and prosody",
+                "order": 1,
+                "is_default": true
+            },
+            {
+                "value": "loud",
+                "order": 2,
+                "is_default": false
+            },
+            {
+                "value": "soft",
+                "order": 3,
+                "is_default": false
+            },
+            {
+                "value": "pressured",
+                "order": 4,
+                "is_default": false
+            },
+            {
+                "value": "slow",
+                "order": 5,
+                "is_default": false
+            },
+            {
+                "value": "monotone",
+                "order": 6,
+                "is_default": false
+            },
+            {
+                "value": "brief",
+                "order": 7,
+                "is_default": false
+            },
+            {
+                "value": "paucity of speech",
+                "order": 8,
+                "is_default": false
+            },
+            {
+                "value": "***",
+                "order": 9,
+                "is_default": false
+            }
+        ]
+    },
+    {
+        "identifier": "Thought Processes",
+        "epicId": "9233",
+        "displayName": "Thought Processes",
+        "group": "Mental Status Examination",
+        "options": [
+            {
+                "value": "normal",
+                "order": 1,
+                "is_default": true
+            },
+            {
+                "value": "linear",
+                "order": 2,
+                "is_default": false
+            },
+            {
+                "value": "logical",
+                "order": 3,
+                "is_default": false
+            },
+            {
+                "value": "goal directed",
+                "order": 4,
+                "is_default": false
+            },
+            {
+                "value": "disorganized",
+                "order": 5,
+                "is_default": false
+            },
+            {
+                "value": "tangential",
+                "order": 6,
+                "is_default": false
+            },
+            {
+                "value": "circumstantial",
+                "order": 7,
+                "is_default": false
+            },
+            {
+                "value": "flight of ideas",
+                "order": 8,
+                "is_default": false
+            },
+            {
+                "value": "looseness of association",
+                "order": 9,
+                "is_default": false
+            },
+            {
+                "value": "***",
+                "order": 10,
+                "is_default": false
+            }
+        ]
+    },
+    {
+        "identifier": "Ideations",
+        "epicId": "9229",
+        "displayName": "Ideations",
+        "group": "Mental Status Examination",
+        "options": [
+            {
+                "value": "no suicidal, homicidal, self harm or aggressive ideations",
+                "order": 1,
+                "is_default": true
+            },
+            {
+                "value": "suicidal ideations",
+                "order": 2,
+                "is_default": false
+            },
+            {
+                "value": "homicidal ideations",
+                "order": 3,
+                "is_default": false
+            },
+            {
+                "value": "self-harm ideations",
+                "order": 4,
+                "is_default": false
+            },
+            {
+                "value": "aggressive ideations",
+                "order": 5,
+                "is_default": false
+            },
+            {
+                "value": "***",
+                "order": 6,
+                "is_default": false
+            }
+        ]
+    },
+    {
+        "identifier": "Hallucinations",
+        "epicId": "304260520",
+        "displayName": "Hallucinations/Delusions",
+        "group": "Mental Status Examination",
+        "options": [
+            {
+                "value": "none",
+                "order": 1,
+                "is_default": true
+            },
+            {
+                "value": "auditory hallucinations",
+                "order": 2,
+                "is_default": false
+            },
+            {
+                "value": "visual hallucinations",
+                "order": 3,
+                "is_default": false
+            },
+            {
+                "value": "command hallucinations",
+                "order": 4,
+                "is_default": false
+            },
+            {
+                "value": "tactile hallucinations",
+                "order": 5,
+                "is_default": false
+            },
+            {
+                "value": "systemized delusions",
+                "order": 6,
+                "is_default": false
+            },
+            {
+                "value": "grandiose delusions",
+                "order": 7,
+                "is_default": false
+            },
+            {
+                "value": "somatic delusions",
+                "order": 8,
+                "is_default": false
+            },
+            {
+                "value": "***",
+                "order": 9,
+                "is_default": false
+            }
+        ]
+    },
+    {
+        "identifier": "Insight",
+        "epicId": "9337",
+        "displayName": "Insight",
+        "group": "Mental Status Examination",
+        "options": [
+            {
+                "value": "good",
+                "order": 1,
+                "is_default": true
+            },
+            {
+                "value": "fair",
+                "order": 2,
+                "is_default": false
+            },
+            {
+                "value": "poor",
+                "order": 3,
+                "is_default": false
+            },
+            {
+                "value": "rationalization",
+                "order": 4,
+                "is_default": false
+            },
+            {
+                "value": "minimization",
+                "order": 5,
+                "is_default": false
+            },
+            {
+                "value": "denial",
+                "order": 6,
+                "is_default": false
+            },
+            {
+                "value": "limited",
+                "order": 7,
+                "is_default": false
+            },
+            {
+                "value": "***",
+                "order": 8,
+                "is_default": false
+            }
+        ]
+    },
+    {
+        "identifier": "Judgement",
+        "epicId": "9340",
+        "displayName": "Judgement",
+        "group": "Mental Status Examination",
+        "options": [
+            {
+                "value": "good",
+                "order": 1,
+                "is_default": true
+            },
+            {
+                "value": "fair",
+                "order": 2,
+                "is_default": false
+            },
+            {
+                "value": "poor",
+                "order": 3,
+                "is_default": false
+            },
+            {
+                "value": "rationalization",
+                "order": 4,
+                "is_default": false
+            },
+            {
+                "value": "minimization",
+                "order": 5,
+                "is_default": false
+            },
+            {
+                "value": "denial",
+                "order": 6,
+                "is_default": false
+            },
+            {
+                "value": "impaired",
+                "order": 7,
+                "is_default": false
+            },
+            {
+                "value": "***",
+                "order": 8,
+                "is_default": false
+            }
+        ]
+    }
+]
