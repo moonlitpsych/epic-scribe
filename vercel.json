@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm build --filter=@epic-scribe/web",
+  "devCommand": "pnpm --filter=@epic-scribe/web dev",
+  "installCommand": "pnpm install",
+  "framework": null,
+  "outputDirectory": "apps/web/.next"
+}

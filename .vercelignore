@@ -1,0 +1,13 @@
+node_modules
+.next
+.env*.local
+*.log
+.DS_Store
+services
+docs
+tests
+supabase
+infra
+scripts
+.git
+.github
