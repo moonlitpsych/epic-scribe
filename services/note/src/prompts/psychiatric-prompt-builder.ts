@@ -148,11 +148,11 @@ export const SECTION_PROMPT_CONFIGS: Record<string, SectionPromptConfig> = {
     instructions: `Generate EXACTLY 4 paragraphs in this EXACT structure. DO NOT deviate from this format.
 
 PARAGRAPH 1 - Patient One-Liner (ONE SENTENCE ONLY):
-Format: "[First name] [Last name] is a [age] year old [sex/gender] with a history of [list psychiatric diagnoses] who presents for [type of visit and specific reason]."
+Format: "[patient name] is a [age] year old [sex/gender] with history of [psychiatric history] who presents for [reasons for presentation]."
 
-Example: "Jeremy Montoya is a 35 year old male with a history of Major Depressive Disorder and Generalized Anxiety Disorder who presents for psychiatric follow-up following recent medication adjustment."
+Example: "Jeremy Montoya is a 35 year old male with history of Major Depressive Disorder and Generalized Anxiety Disorder who presents for psychiatric follow-up following recent medication adjustment."
 
-CRITICAL: This must be ONE sentence only. Include all relevant psychiatric diagnoses.
+CRITICAL: This must be ONE sentence only. Include all relevant psychiatric diagnoses from the patient's history.
 
 PARAGRAPH 2 - Diagnosis with DSM Criteria and Biopsychosocial Formulation:
 Start with: "The patient's diagnosis is most consistent with [Primary Diagnosis, specify severity] ([ICD-10 code]) based on [list specific DSM-5-TR criteria met from the transcript]."
@@ -200,6 +200,8 @@ Medications:
 Format for EACH medication: "[Action] [medication name] [dose] [frequency] for [indication]"
 Valid Actions: Start, Continue, Increase, Decrease, Discontinue, Taper, Hold
 Examples:
+- "Start Wellbutrin XL 150 mg daily for depression"
+- "Increase Wellbutrin XL 150 mg to 300 mg daily - patient had incomplete remission of depressive symptoms with 150 mg daily"
 - "Start sertraline 50 mg daily for depression - patient agreeable to SSRI trial given previous partial response"
 - "Increase quetiapine from 50 mg to 100 mg qhs for mood stabilization - inadequate response at current dose"
 - "Continue lithium 900 mg daily - therapeutic level achieved"
