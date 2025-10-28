@@ -64,7 +64,8 @@ export async function PATCH(request: NextRequest) {
       const template = templates.find(t => t.template_id === templateId);
 
       if (!template) {
-        return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+        // Template not in database - throw to trigger fallback
+        throw new Error(`Template ${templateId} not found in database`);
       }
 
       const updatedTemplate = await updateTemplateSection(
@@ -76,7 +77,7 @@ export async function PATCH(request: NextRequest) {
 
       return NextResponse.json(updatedTemplate);
     } catch (dbError) {
-      console.log('Database not available, falling back to in-memory service:', dbError);
+      console.log('Database not available or template not in DB, falling back to in-memory service:', dbError);
 
       // Fallback to in-memory service
       const updated = templateService.updateSection(templateId, sectionName, content);

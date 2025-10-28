@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
       if (id) {
         const smartList = await getSmartListByIdentifier(id);
         if (!smartList) {
-          return NextResponse.json({ error: 'SmartList not found' }, { status: 404 });
+          // Not found in database - throw to trigger fallback
+          throw new Error('Not found in database, trying file-based');
         }
         return NextResponse.json(smartList);
       }
@@ -29,18 +30,28 @@ export async function GET(request: NextRequest) {
       if (epicId) {
         const smartList = await getSmartListByEpicId(epicId);
         if (!smartList) {
-          return NextResponse.json({ error: 'SmartList not found' }, { status: 404 });
+          // Try fallback to file-based service before returning 404
+          throw new Error('Not found in database, trying file-based');
         }
-        return NextResponse.json(smartList);
+        // Return as array for consistency with file-based service
+        return NextResponse.json([smartList]);
       }
 
       if (group) {
         const grouped = await getSmartListsByGroup();
         const smartLists = grouped[group] || [];
+        // If database is empty, fall back to file-based service
+        if (smartLists.length === 0) {
+          throw new Error('No SmartLists in database, trying file-based');
+        }
         return NextResponse.json(smartLists);
       }
 
       const allSmartLists = await getAllSmartLists();
+      // If database is empty, fall back to file-based service
+      if (allSmartLists.length === 0) {
+        throw new Error('Database empty, falling back to file-based service');
+      }
       return NextResponse.json(allSmartLists);
     } catch (dbError) {
       console.log('Database not available, falling back to file-based service:', dbError);
@@ -61,7 +72,8 @@ export async function GET(request: NextRequest) {
         if (!smartList) {
           return NextResponse.json({ error: 'SmartList not found' }, { status: 404 });
         }
-        return NextResponse.json(smartList);
+        // Return as array for consistency
+        return NextResponse.json([smartList]);
       }
 
       if (group) {

@@ -218,6 +218,8 @@ export class TemplateService {
 
     template.version++;
     TEMPLATES.set(templateId, template);
+
+    // Note: Persistence is handled by the API endpoint, not here
     return template;
   }
 

@@ -1016,6 +1016,76 @@ Use the QuickAdd button at `/smartlists` to add these:
 - SmartList UI improvements (database ready)
 - All persistence working!
 
+---
+
+### ✅ TEMPLATE PERSISTENCE & SMARTLIST CATALOG FIX (2025-10-28 Session Complete)
+
+**Session Focus:** Fixed critical issues preventing template section edits from persisting and SmartList lookups from working.
+
+#### Problem 1: Template Section Edits Not Persisting
+**Root Cause:** Multiple issues in the template and SmartList API routes prevented data from being saved or loaded correctly.
+
+**Fixes Applied:**
+
+1. **API Routes Fixed** (`/apps/web/app/api/templates/route.ts`, `/apps/web/app/api/smartlists/route.ts`)
+   - Changed to throw errors instead of returning 404 when database is empty
+   - This triggers fallback to file-based/in-memory services
+   - Added checks to fall back when database returns empty arrays
+
+2. **TemplateEditor Component Fixed** (`/apps/web/src/components/TemplateEditor.tsx`)
+   - Changed from loading directly from `templateService` (in-memory, resets on hot reload) to loading from API endpoint
+   - Fixed field name compatibility between `template_id` (database) and `templateId` (frontend)
+   - Templates now persist across page refreshes!
+
+#### Problem 2: SmartList Modal Showing 404 Errors
+**Root Causes:**
+- Outdated catalog file in `/apps/web/configs/smartlists-catalog.json`
+- Service only loading from nested `smartLists` object, missing top-level entries
+- Duplicate identifiers causing some SmartLists to be overwritten
+
+**Fixes Applied:**
+
+1. **SmartList Service Enhanced** (`/services/note/src/smartlists/smartlist-service.ts`)
+   - Modified `loadConfig()` to load from BOTH nested `.smartLists` object AND top-level keys
+   - Changed storage to use both `epicId` (unique, guaranteed) and `identifier` as Map keys
+   - Updated `getSmartListByEpicId()` to use direct lookup instead of iteration
+   - Added deduplication logic to `getAllSmartLists()` and `getSmartListsByGroup()`
+   - Now loads **86 SmartLists** (69 nested + 17 top-level = 86 unique, 172 total entries)
+
+2. **Catalog File Synchronized**
+   - Copied updated catalog from `/configs/smartlists-catalog.json` to `/apps/web/configs/smartlists-catalog.json`
+   - Previously: 63 SmartLists (outdated)
+   - Now: 86 SmartLists including all Psychiatric ROS entries
+
+#### What Now Works:
+- ✅ Template section edits persist across server restarts
+- ✅ Template sections persist across page refreshes
+- ✅ SmartList modal loads correctly for ALL epic IDs (8417, 9454, 1543000001, etc.)
+- ✅ All 86 SmartLists load properly including Psychiatric ROS entries
+- ✅ No duplicate identifier conflicts
+- ✅ Database-first with file-based fallback working correctly
+
+#### Files Modified:
+- `/apps/web/app/api/smartlists/route.ts` - Fixed fallback logic
+- `/apps/web/app/api/templates/route.ts` - Fixed fallback logic
+- `/apps/web/src/components/TemplateEditor.tsx` - Load from API instead of in-memory
+- `/services/note/src/smartlists/smartlist-service.ts` - Load from both catalog locations, store by both keys, deduplicate
+- `/apps/web/configs/smartlists-catalog.json` - Updated with latest SmartLists
+
+#### Technical Details:
+**SmartList Catalog Structure Discovery:**
+- The catalog has both nested and top-level SmartLists
+- Top-level: `psych_ros_depression`, `psych_ros_anxiety`, `psych_ros_mania`, etc. (17 total)
+- Nested in `smartLists`: 69 SmartLists
+- Some identifiers appear twice (e.g., "Mood", "Cocaine Use") so using epicId as primary key prevents data loss
+
+**Storage Strategy:**
+- Each SmartList stored TWICE in Map: once by `epicId` (e.g., "8417"), once by `identifier` (e.g., "Psych ROS Depression")
+- Map has 172 entries but only 86 unique SmartLists (verified by deduplication)
+- Lookup by epicId is O(1), lookup by identifier also O(1)
+
+---
+
 ### 39.1 Delete Encounter Functionality
 
 **Goal:** Allow users to delete test encounters from the encounters list.

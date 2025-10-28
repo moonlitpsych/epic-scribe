@@ -2353,5 +2353,750 @@
         }
       ]
     }
+  },
+  "psych_ros_depression": {
+    "identifier": "Psych ROS Depression",
+    "epicId": "8417",
+    "displayName": "Psych ROS Depression",
+    "group": "Psychiatric ROS",
+    "options": [
+      {
+        "value": "None",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Depressed mood",
+        "order": 2
+      },
+      {
+        "value": "Anhedonia",
+        "order": 3
+      },
+      {
+        "value": "Sleep disturbance",
+        "order": 4
+      },
+      {
+        "value": "Appetite changes",
+        "order": 5
+      },
+      {
+        "value": "Low energy/fatigue",
+        "order": 6
+      },
+      {
+        "value": "Psychomotor changes",
+        "order": 7
+      },
+      {
+        "value": "Concentration difficulties",
+        "order": 8
+      },
+      {
+        "value": "Guilt/worthlessness",
+        "order": 9
+      },
+      {
+        "value": "Suicidal ideation",
+        "order": 10
+      },
+      {
+        "value": "Hopelessness",
+        "order": 11
+      },
+      {
+        "value": "Irritability",
+        "order": 12
+      },
+      {
+        "value": "Social isolation",
+        "order": 13
+      }
+    ]
+  },
+  "psych_ros_anxiety": {
+    "identifier": "Psych ROS Anxiety",
+    "epicId": "8420",
+    "displayName": "Psych ROS Anxiety",
+    "group": "Psychiatric ROS",
+    "options": [
+      {
+        "value": "None",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Generalized anxiety",
+        "order": 2
+      },
+      {
+        "value": "Panic attacks",
+        "order": 3
+      },
+      {
+        "value": "Social anxiety",
+        "order": 4
+      },
+      {
+        "value": "Specific phobias",
+        "order": 5
+      },
+      {
+        "value": "Obsessive thoughts",
+        "order": 6
+      },
+      {
+        "value": "Compulsive behaviors",
+        "order": 7
+      },
+      {
+        "value": "Restlessness",
+        "order": 8
+      },
+      {
+        "value": "Muscle tension",
+        "order": 9
+      },
+      {
+        "value": "Difficulty concentrating",
+        "order": 10
+      },
+      {
+        "value": "Sleep difficulties",
+        "order": 11
+      },
+      {
+        "value": "Avoidance behaviors",
+        "order": 12
+      }
+    ]
+  },
+  "psych_ros_mania": {
+    "identifier": "Psych ROS Mania/Hypomania",
+    "epicId": "8418",
+    "displayName": "Psych ROS Mania/Hypomania",
+    "group": "Psychiatric ROS",
+    "options": [
+      {
+        "value": "None",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Elevated mood",
+        "order": 2
+      },
+      {
+        "value": "Decreased need for sleep",
+        "order": 3
+      },
+      {
+        "value": "Increased energy",
+        "order": 4
+      },
+      {
+        "value": "Racing thoughts",
+        "order": 5
+      },
+      {
+        "value": "Grandiosity",
+        "order": 6
+      },
+      {
+        "value": "Increased goal-directed activity",
+        "order": 7
+      },
+      {
+        "value": "Risky behavior",
+        "order": 8
+      },
+      {
+        "value": "Distractibility",
+        "order": 9
+      },
+      {
+        "value": "Pressured speech",
+        "order": 10
+      },
+      {
+        "value": "Flight of ideas",
+        "order": 11
+      }
+    ]
+  },
+  "psych_ros_psychosis": {
+    "identifier": "Psych ROS Psychosis",
+    "epicId": "8419",
+    "displayName": "Psych ROS Psychosis",
+    "group": "Psychiatric ROS",
+    "options": [
+      {
+        "value": "None",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Auditory hallucinations",
+        "order": 2
+      },
+      {
+        "value": "Visual hallucinations",
+        "order": 3
+      },
+      {
+        "value": "Paranoid ideation",
+        "order": 4
+      },
+      {
+        "value": "Delusions",
+        "order": 5
+      },
+      {
+        "value": "Disorganized thinking",
+        "order": 6
+      },
+      {
+        "value": "Ideas of reference",
+        "order": 7
+      },
+      {
+        "value": "Thought broadcasting",
+        "order": 8
+      },
+      {
+        "value": "Thought insertion",
+        "order": 9
+      },
+      {
+        "value": "Command hallucinations",
+        "order": 10
+      }
+    ]
+  },
+  "psych_ros_ocd": {
+    "identifier": "Psych ROS Obsessive/Compulsive",
+    "epicId": "9450",
+    "displayName": "Psych ROS Obsessive/Compulsive",
+    "group": "Psychiatric ROS",
+    "options": [
+      {
+        "value": "None",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Obsessive thoughts",
+        "order": 2
+      },
+      {
+        "value": "Compulsive behaviors",
+        "order": 3
+      },
+      {
+        "value": "Checking behaviors",
+        "order": 4
+      },
+      {
+        "value": "Contamination fears",
+        "order": 5
+      },
+      {
+        "value": "Counting rituals",
+        "order": 6
+      },
+      {
+        "value": "Ordering/arranging",
+        "order": 7
+      },
+      {
+        "value": "Hoarding",
+        "order": 8
+      },
+      {
+        "value": "Intrusive thoughts",
+        "order": 9
+      },
+      {
+        "value": "Washing/cleaning rituals",
+        "order": 10
+      }
+    ]
+  },
+  "psych_ros_trauma": {
+    "identifier": "Psych ROS Trauma and Stressor - Related",
+    "epicId": "9451",
+    "displayName": "Psych ROS Trauma and Stressor - Related",
+    "group": "Psychiatric ROS",
+    "options": [
+      {
+        "value": "None",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Flashbacks",
+        "order": 2
+      },
+      {
+        "value": "Nightmares",
+        "order": 3
+      },
+      {
+        "value": "Avoidance",
+        "order": 4
+      },
+      {
+        "value": "Hypervigilance",
+        "order": 5
+      },
+      {
+        "value": "Emotional numbing",
+        "order": 6
+      },
+      {
+        "value": "Dissociation",
+        "order": 7
+      },
+      {
+        "value": "Startle response",
+        "order": 8
+      },
+      {
+        "value": "Re-experiencing",
+        "order": 9
+      },
+      {
+        "value": "Negative cognitions",
+        "order": 10
+      }
+    ]
+  },
+  "psych_ros_eating": {
+    "identifier": "Psych ROS Eating Disorder",
+    "epicId": "8422",
+    "displayName": "Psych ROS Eating Disorder",
+    "group": "Psychiatric ROS",
+    "options": [
+      {
+        "value": "None",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Dietary restriction",
+        "order": 2
+      },
+      {
+        "value": "Binge eating",
+        "order": 3
+      },
+      {
+        "value": "Purging behaviors",
+        "order": 4
+      },
+      {
+        "value": "Body image disturbance",
+        "order": 5
+      },
+      {
+        "value": "Fear of weight gain",
+        "order": 6
+      },
+      {
+        "value": "Excessive exercise",
+        "order": 7
+      },
+      {
+        "value": "Laxative use",
+        "order": 8
+      },
+      {
+        "value": "Food preoccupation",
+        "order": 9
+      }
+    ]
+  },
+  "psych_ros_asd": {
+    "identifier": "Psych ROS ASD characteristics",
+    "epicId": "8425",
+    "displayName": "Psych ROS ASD characteristics",
+    "group": "Psychiatric ROS",
+    "options": [
+      {
+        "value": "None",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Social communication difficulties",
+        "order": 2
+      },
+      {
+        "value": "Restricted interests",
+        "order": 3
+      },
+      {
+        "value": "Repetitive behaviors",
+        "order": 4
+      },
+      {
+        "value": "Sensory sensitivities",
+        "order": 5
+      },
+      {
+        "value": "Difficulty with change",
+        "order": 6
+      },
+      {
+        "value": "Literal thinking",
+        "order": 7
+      },
+      {
+        "value": "Eye contact difficulties",
+        "order": 8
+      }
+    ]
+  },
+  "psych_ros_adhd": {
+    "identifier": "Psych ROS ADHD",
+    "epicId": "8423",
+    "displayName": "Psych ROS ADHD",
+    "group": "Psychiatric ROS",
+    "options": [
+      {
+        "value": "None",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Inattention",
+        "order": 2
+      },
+      {
+        "value": "Hyperactivity",
+        "order": 3
+      },
+      {
+        "value": "Impulsivity",
+        "order": 4
+      },
+      {
+        "value": "Difficulty organizing",
+        "order": 5
+      },
+      {
+        "value": "Easily distracted",
+        "order": 6
+      },
+      {
+        "value": "Forgetfulness",
+        "order": 7
+      },
+      {
+        "value": "Fidgeting",
+        "order": 8
+      },
+      {
+        "value": "Interrupting others",
+        "order": 9
+      },
+      {
+        "value": "Difficulty waiting turn",
+        "order": 10
+      }
+    ]
+  },
+  "psych_ros_disruptive": {
+    "identifier": "Psych ROS Disruptive behavior disorders",
+    "epicId": "1543000001",
+    "displayName": "Psych ROS Disruptive behavior disorders",
+    "group": "Psychiatric ROS",
+    "options": [
+      {
+        "value": "None",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Aggression",
+        "order": 2
+      },
+      {
+        "value": "Oppositional behavior",
+        "order": 3
+      },
+      {
+        "value": "Rule violations",
+        "order": 4
+      },
+      {
+        "value": "Property destruction",
+        "order": 5
+      },
+      {
+        "value": "Defiance",
+        "order": 6
+      },
+      {
+        "value": "Lying",
+        "order": 7
+      },
+      {
+        "value": "Stealing",
+        "order": 8
+      }
+    ]
+  },
+  "psych_ros_substance": {
+    "identifier": "Psych ROS Substance Abuse",
+    "epicId": "9454",
+    "displayName": "Psych ROS Substance Abuse",
+    "group": "Psychiatric ROS",
+    "options": [
+      {
+        "value": "None",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Alcohol use",
+        "order": 2
+      },
+      {
+        "value": "Cannabis use",
+        "order": 3
+      },
+      {
+        "value": "Stimulant use",
+        "order": 4
+      },
+      {
+        "value": "Opioid use",
+        "order": 5
+      },
+      {
+        "value": "Sedative use",
+        "order": 6
+      },
+      {
+        "value": "Hallucinogen use",
+        "order": 7
+      },
+      {
+        "value": "Tobacco use",
+        "order": 8
+      },
+      {
+        "value": "Polysubstance use",
+        "order": 9
+      }
+    ]
+  },
+  "cocaine_use": {
+    "identifier": "Cocaine Use",
+    "epicId": "304120501",
+    "displayName": "Cocaine Use",
+    "group": "Substance Use",
+    "options": [
+      {
+        "value": "Never",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Past use, not current",
+        "order": 2
+      },
+      {
+        "value": "Occasional use",
+        "order": 3
+      },
+      {
+        "value": "Weekly use",
+        "order": 4
+      },
+      {
+        "value": "Daily use",
+        "order": 5
+      },
+      {
+        "value": "Multiple times daily",
+        "order": 6
+      }
+    ]
+  },
+  "amphetamine_use": {
+    "identifier": "Amphetamine Use",
+    "epicId": "304120502",
+    "displayName": "Amphetamine Use",
+    "group": "Substance Use",
+    "options": [
+      {
+        "value": "Never",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Past use, not current",
+        "order": 2
+      },
+      {
+        "value": "Prescribed only",
+        "order": 3
+      },
+      {
+        "value": "Occasional non-prescribed",
+        "order": 4
+      },
+      {
+        "value": "Regular non-prescribed",
+        "order": 5
+      },
+      {
+        "value": "Daily use",
+        "order": 6
+      }
+    ]
+  },
+  "other_substances": {
+    "identifier": "Other Substances",
+    "epicId": "304120503",
+    "displayName": "Other Substances",
+    "group": "Substance Use",
+    "options": [
+      {
+        "value": "None",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Inhalants",
+        "order": 2
+      },
+      {
+        "value": "Synthetic cannabinoids",
+        "order": 3
+      },
+      {
+        "value": "Kratom",
+        "order": 4
+      },
+      {
+        "value": "Designer drugs",
+        "order": 5
+      },
+      {
+        "value": "Multiple other substances",
+        "order": 6
+      }
+    ]
+  },
+  "financial_status": {
+    "identifier": "Financial Status",
+    "epicId": "304120601",
+    "displayName": "Financial Status",
+    "group": "Social History",
+    "options": [
+      {
+        "value": "Stable",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Some financial stress",
+        "order": 2
+      },
+      {
+        "value": "Significant financial difficulties",
+        "order": 3
+      },
+      {
+        "value": "Homeless",
+        "order": 4
+      },
+      {
+        "value": "At risk of homelessness",
+        "order": 5
+      }
+    ]
+  },
+  "legal_issues": {
+    "identifier": "Legal Issues",
+    "epicId": "304120602",
+    "displayName": "Legal Issues",
+    "group": "Social History",
+    "options": [
+      {
+        "value": "None",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Past legal issues, resolved",
+        "order": 2
+      },
+      {
+        "value": "Current probation",
+        "order": 3
+      },
+      {
+        "value": "Pending charges",
+        "order": 4
+      },
+      {
+        "value": "Active legal proceedings",
+        "order": 5
+      }
+    ]
+  },
+  "psych_ros_adhd_alt": {
+    "identifier": "Psych ROS ADHD",
+    "epicId": "8424",
+    "displayName": "Psych ROS ADHD",
+    "group": "Psychiatric ROS",
+    "options": [
+      {
+        "value": "None",
+        "order": 1,
+        "is_default": true
+      },
+      {
+        "value": "Inattention",
+        "order": 2
+      },
+      {
+        "value": "Hyperactivity",
+        "order": 3
+      },
+      {
+        "value": "Impulsivity",
+        "order": 4
+      },
+      {
+        "value": "Difficulty organizing",
+        "order": 5
+      },
+      {
+        "value": "Easily distracted",
+        "order": 6
+      },
+      {
+        "value": "Forgetfulness",
+        "order": 7
+      },
+      {
+        "value": "Fidgeting",
+        "order": 8
+      },
+      {
+        "value": "Interrupting others",
+        "order": 9
+      },
+      {
+        "value": "Difficulty waiting turn",
+        "order": 10
+      }
+    ]
   }
 }

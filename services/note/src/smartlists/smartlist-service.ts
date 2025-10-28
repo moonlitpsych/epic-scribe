@@ -34,20 +34,48 @@ export class SmartListService {
       const data = await fs.readFile(this.configPath, 'utf-8');
       const catalog = JSON.parse(data);
 
-      // Load SmartLists - use identifier as Map key for lookups
-      Object.entries(catalog.smartLists).forEach(([key, list]: [string, any]) => {
-        const smartList = {
-          identifier: list.identifier || key,
-          epicId: list.epicId,
-          displayName: list.displayName,
-          group: list.group,
-          options: list.options,
-        };
-        // Use the identifier field as the key for lookups
-        this.smartLists.set(smartList.identifier, smartList);
-      });
+      // Helper function to add a SmartList
+      const addSmartList = (key: string, list: any) => {
+        if (list && list.epicId && list.options) {
+          const smartList = {
+            identifier: list.identifier || key,
+            epicId: list.epicId,
+            displayName: list.displayName || list.identifier || key,
+            group: list.group,
+            options: list.options,
+          };
+          // Use epicId as the key for lookups (it's guaranteed unique)
+          // Store by both epicId and identifier for backwards compatibility
+          this.smartLists.set(smartList.epicId, smartList);
+          if (smartList.identifier) {
+            this.smartLists.set(smartList.identifier, smartList);
+          }
+        }
+      };
 
-      console.log(`Loaded ${this.smartLists.size} SmartLists from config`);
+      // Load SmartLists from the nested .smartLists object
+      let nestedCount = 0;
+      if (catalog.smartLists) {
+        Object.entries(catalog.smartLists).forEach(([key, list]: [string, any]) => {
+          addSmartList(key, list);
+          nestedCount++;
+        });
+      }
+      console.log(`[SmartListService] Loaded ${nestedCount} SmartLists from catalog.smartLists`);
+
+      // Load SmartLists from top-level keys (backward compatibility)
+      let topLevelCount = 0;
+      const topLevelKeys: string[] = [];
+      Object.entries(catalog).forEach(([key, value]: [string, any]) => {
+        // Skip the 'smartLists' key itself and any non-SmartList entries
+        if (key !== 'smartLists' && key !== 'groups' && value && typeof value === 'object' && value.epicId && value.options) {
+          addSmartList(key, value);
+          topLevelCount++;
+          topLevelKeys.push(key);
+        }
+      });
+      console.log(`[SmartListService] Loaded ${topLevelCount} SmartLists from top-level:`, topLevelKeys.slice(0, 5));
+      console.log(`[SmartListService] Total loaded: ${this.smartLists.size} SmartLists`);
     } catch (error) {
       console.error('Error loading SmartList config:', error);
       throw error;
@@ -105,20 +133,43 @@ export class SmartListService {
   }
 
   getSmartListByEpicId(epicId: string): SmartList | undefined {
-    for (const list of this.smartLists.values()) {
-      if (list.epicId === epicId) {
-        return list;
-      }
+    // Now that we store by epicId as a key, we can do direct lookup
+    console.log(`[SmartListService] Looking up epicId: "${epicId}"`);
+    const result = this.smartLists.get(epicId);
+    if (!result) {
+      // Debug: show sample keys to understand format
+      const sampleKeys = Array.from(this.smartLists.keys()).slice(0, 10);
+      console.log(`[SmartListService] Not found. Sample keys:`, sampleKeys);
+    } else {
+      console.log(`[SmartListService] Found:`, result.displayName);
     }
-    return undefined;
+    return result;
   }
 
   getAllSmartLists(): SmartList[] {
-    return Array.from(this.smartLists.values());
+    // Deduplicate by epicId since we store each SmartList twice (by epicId and identifier)
+    const seen = new Set<string>();
+    const results: SmartList[] = [];
+    for (const list of this.smartLists.values()) {
+      if (!seen.has(list.epicId)) {
+        seen.add(list.epicId);
+        results.push(list);
+      }
+    }
+    return results;
   }
 
   getSmartListsByGroup(group: string): SmartList[] {
-    return Array.from(this.smartLists.values()).filter(list => list.group === group);
+    // Deduplicate by epicId since we store each SmartList twice
+    const seen = new Set<string>();
+    const results: SmartList[] = [];
+    for (const list of this.smartLists.values()) {
+      if (list.group === group && !seen.has(list.epicId)) {
+        seen.add(list.epicId);
+        results.push(list);
+      }
+    }
+    return results;
   }
 
   private async getGroups(): Promise<Record<string, any>> {
