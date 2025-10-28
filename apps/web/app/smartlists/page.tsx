@@ -96,12 +96,6 @@ export default function SmartListsPage() {
               Quick Add SmartList
             </button>
             <Link
-              href="/smartlists/demo"
-              className="px-4 py-2 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700"
-            >
-              Prompt Expansion Demo
-            </Link>
-            <Link
               href="/templates"
               className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
             >
