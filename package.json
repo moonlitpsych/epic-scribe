@@ -5,6 +5,7 @@
   "description": "Epic-ready psychiatry note generator with SmartTools integration",
   "author": "Dr. Rufus Sweeney",
   "license": "UNLICENSED",
+  "packageManager": "pnpm@10.13.1",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=8.0.0"
