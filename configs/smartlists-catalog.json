@@ -2807,47 +2807,6 @@
       }
     ]
   },
-  "psych_ros_disruptive": {
-    "identifier": "Psych ROS Disruptive behavior disorders",
-    "epicId": "1543000001",
-    "displayName": "Psych ROS Disruptive behavior disorders",
-    "group": "Psychiatric ROS",
-    "options": [
-      {
-        "value": "None",
-        "order": 1,
-        "is_default": true
-      },
-      {
-        "value": "Aggression",
-        "order": 2
-      },
-      {
-        "value": "Oppositional behavior",
-        "order": 3
-      },
-      {
-        "value": "Rule violations",
-        "order": 4
-      },
-      {
-        "value": "Property destruction",
-        "order": 5
-      },
-      {
-        "value": "Defiance",
-        "order": 6
-      },
-      {
-        "value": "Lying",
-        "order": 7
-      },
-      {
-        "value": "Stealing",
-        "order": 8
-      }
-    ]
-  },
   "psych_ros_substance": {
     "identifier": "Psych ROS Substance Abuse",
     "epicId": "9454",
@@ -3097,6 +3056,253 @@
         "value": "Difficulty waiting turn",
         "order": 10
       }
+    ]
+  },
+  "rcc_psych_ros_depression": {
+    "identifier": "Psych ROS Depression",
+    "epicId": "1543000001",
+    "displayName": "Psych ROS Depression",
+    "group": "Psychiatric ROS",
+    "options": [
+      { "value": "no symptoms", "order": 1, "is_default": true },
+      { "value": "depressed mood", "order": 2 },
+      { "value": "diminished interest", "order": 3 },
+      { "value": "weight change", "order": 4 },
+      { "value": "sleep disturbance", "order": 5 },
+      { "value": "psychomotor changes", "order": 6 },
+      { "value": "low energy", "order": 7 },
+      { "value": "guilt", "order": 8 },
+      { "value": "worthlessness", "order": 9 },
+      { "value": "poor concentration", "order": 10 },
+      { "value": "thoughts of death/suicide", "order": 11 },
+      { "value": "weight gain", "order": 12 },
+      { "value": "weight loss", "order": 13 },
+      { "value": "increased appetite", "order": 14 },
+      { "value": "decreased appetite", "order": 15 },
+      { "value": "increased sleep", "order": 16 },
+      { "value": "decreased sleep", "order": 17 },
+      { "value": "increased irritability", "order": 18 },
+      { "value": "no longer enjoying or seeking previously enjoyed activities", "order": 19 },
+      { "value": "increased isolation from baseline", "order": 20 },
+      { "value": "increased crying spells", "order": 21 },
+      { "value": "appears sad most of the time", "order": 22 },
+      { "value": "***", "order": 23 }
+    ]
+  },
+  "rcc_psych_ros_mania": {
+    "identifier": "Psych ROS Mania/Hypomania",
+    "epicId": "1543000002",
+    "displayName": "Psych ROS Mania/Hypomania",
+    "group": "Psychiatric ROS",
+    "options": [
+      { "value": "no symptoms", "order": 1, "is_default": true },
+      { "value": "elevated mood", "order": 2 },
+      { "value": "irritable mood", "order": 3 },
+      { "value": "inflated self esteem/grandiosity", "order": 4 },
+      { "value": "decreased need for sleep", "order": 5 },
+      { "value": "pressured speech", "order": 6 },
+      { "value": "flight of ideas/racing thoughts", "order": 7 },
+      { "value": "distractibility", "order": 8 },
+      { "value": "increased goal directed activity", "order": 9 },
+      { "value": "psychomotor agitation", "order": 10 },
+      { "value": "increased pleasurable activity", "order": 11 },
+      { "value": "increased vocalization", "order": 12 },
+      { "value": "laughing spells for no clear reason", "order": 13 },
+      { "value": "increased energy compared to baseline", "order": 14 },
+      { "value": "increased sexually acting out behavior compared to baseline", "order": 15 },
+      { "value": "more sociable than usual", "order": 16 },
+      { "value": "***", "order": 17 }
+    ]
+  },
+  "rcc_psych_ros_psychosis": {
+    "identifier": "Psych ROS Psychosis",
+    "epicId": "1543000003",
+    "displayName": "Psych ROS Psychosis",
+    "group": "Psychiatric ROS",
+    "options": [
+      { "value": "no symptoms", "order": 1, "is_default": true },
+      { "value": "auditory hallucinations", "order": 2 },
+      { "value": "visual hallucinations", "order": 3 },
+      { "value": "paranoia", "order": 4 },
+      { "value": "grandiose delusions", "order": 5 },
+      { "value": "somatic delusions", "order": 6 },
+      { "value": "ideas of reference", "order": 7 },
+      { "value": "ideas of influence", "order": 8 },
+      { "value": "thought broadcasting", "order": 9 },
+      { "value": "thought insertion", "order": 10 },
+      { "value": "appears to be responding to internal stimuli", "order": 11 },
+      { "value": "appearing to respond to internal stimuli in an agitated or scared manner", "order": 12 },
+      { "value": "***", "order": 13 }
+    ]
+  },
+  "rcc_psych_ros_anxiety": {
+    "identifier": "Psych ROS Anxiety",
+    "epicId": "1543000004",
+    "displayName": "Psych ROS Anxiety",
+    "group": "Psychiatric ROS",
+    "options": [
+      { "value": "no symptoms", "order": 1, "is_default": true },
+      { "value": "specific phobia", "order": 2 },
+      { "value": "panic attacks", "order": 3 },
+      { "value": "agoraphobia", "order": 4 },
+      { "value": "social anxiety", "order": 5 },
+      { "value": "excessive anxiety and worry", "order": 6 },
+      { "value": "difficult to control worry", "order": 7 },
+      { "value": "restlessness", "order": 8 },
+      { "value": "fatigability", "order": 9 },
+      { "value": "poor concentration", "order": 10 },
+      { "value": "irritability", "order": 11 },
+      { "value": "muscle tension", "order": 12 },
+      { "value": "sleep disturbance", "order": 13 },
+      { "value": "significant distress with minor changes in routine", "order": 14 },
+      { "value": "significant distress with everyday transitions in activity", "order": 15 },
+      { "value": "***", "order": 16 }
+    ]
+  },
+  "rcc_psych_ros_ocd": {
+    "identifier": "Psych ROS Obsessive/Compulsive",
+    "epicId": "1543000005",
+    "displayName": "Psych ROS Obsessive/Compulsive",
+    "group": "Psychiatric ROS",
+    "options": [
+      { "value": "no symptoms", "order": 1, "is_default": true },
+      { "value": "recurrent and persistent thoughts, urges, or images that are experiences as intrusive and unwanted", "order": 2 },
+      { "value": "efforts to ignore or suppress thoughts", "order": 3 },
+      { "value": "repetitive behaviors or mental acts in response to obsessions", "order": 4 },
+      { "value": "behaviors or mental acts are aimed at preventing or reducing anxiety or distress", "order": 5 },
+      { "value": "preoccupation with one or more perceived defects or flaws in appearance that are not notable to others", "order": 6 },
+      { "value": "persistent difficulty discarding or parting with possessions", "order": 7 },
+      { "value": "recurrent pulling out of one's hair with repeated attempts to stop", "order": 8 },
+      { "value": "recurrent skin picking with repeated attempts to stop", "order": 9 },
+      { "value": "***", "order": 10 }
+    ]
+  },
+  "rcc_psych_ros_trauma": {
+    "identifier": "Psych ROS Trauma and Stressor Related",
+    "epicId": "1543000006",
+    "displayName": "Psych ROS Trauma and Stressor Related",
+    "group": "Psychiatric ROS",
+    "options": [
+      { "value": "no symptoms", "order": 1, "is_default": true },
+      { "value": "no history of exposure to traumatic event", "order": 2 },
+      { "value": "exposure to traumatic event", "order": 3 },
+      { "value": "symptoms of intrusion associated with event, such as memories, dreams, or psychological or physiological distress", "order": 4 },
+      { "value": "avoidance of stimuli associated with the event", "order": 5 },
+      { "value": "negative alterations in cognition and mood", "order": 6 },
+      { "value": "marked alterations in arousal and reactivity associated with the event such as irritable or self destructive behavior, h", "order": 7 },
+      { "value": "***", "order": 8 }
+    ]
+  },
+  "rcc_psych_ros_eating": {
+    "identifier": "Psych ROS Eating Disorder",
+    "epicId": "1543000007",
+    "displayName": "Psych ROS Eating Disorder",
+    "group": "Psychiatric ROS",
+    "options": [
+      { "value": "none", "order": 1, "is_default": true },
+      { "value": "no s/s of eating disorder", "order": 2 },
+      { "value": "restricting", "order": 3 },
+      { "value": "purging", "order": 4 },
+      { "value": "binging", "order": 5 },
+      { "value": "increased exercise", "order": 6 },
+      { "value": "laxative use", "order": 7 },
+      { "value": "distorted body image", "order": 8 },
+      { "value": "***", "order": 9 }
+    ]
+  },
+  "rcc_psych_ros_asd": {
+    "identifier": "Psych ROS ASD",
+    "epicId": "1543000008",
+    "displayName": "Psych ROS ASD",
+    "group": "Psychiatric ROS",
+    "options": [
+      { "value": "none", "order": 1, "is_default": true },
+      { "value": "presentation consistent with former ASD diagnosis", "order": 2 },
+      { "value": "no s/s of ASD characteristics", "order": 3 },
+      { "value": "abnormal eye contact", "order": 4 },
+      { "value": "poor peer relationships", "order": 5 },
+      { "value": "difficulty sharing their interests with others", "order": 6 },
+      { "value": "impaired emotional/social reciprocity", "order": 7 },
+      { "value": "delayed language development", "order": 8 },
+      { "value": "marked impairment in initiating/sustaining conversation", "order": 9 },
+      { "value": "idiosyncratic language/speech", "order": 10 },
+      { "value": "lack of imaginary play", "order": 11 },
+      { "value": "preoccupation or narrow interests", "order": 12 },
+      { "value": "difficulty with change, insistence on non-functional routines", "order": 13 },
+      { "value": "repetitive body movements", "order": 14 },
+      { "value": "persistent preoccupation with parts of objects", "order": 15 },
+      { "value": "***", "order": 16 }
+    ]
+  },
+  "rcc_psych_ros_tics": {
+    "identifier": "Psych ROS Tics",
+    "epicId": "1543000009",
+    "displayName": "Psych ROS Tics",
+    "group": "Psychiatric ROS",
+    "options": [
+      { "value": "none", "order": 1, "is_default": true },
+      { "value": "presence of motor tics, less than 1 year's duration", "order": 2 },
+      { "value": "presence of motor tics, greater than 1 year's duration", "order": 3 },
+      { "value": "presence of vocal tics, less than 1 year's duration", "order": 4 },
+      { "value": "presence of vocal tics, greater than 1 year's duration", "order": 5 },
+      { "value": "***", "order": 6 }
+    ]
+  },
+  "rcc_psych_ros_adhd": {
+    "identifier": "Psych ROS ADHD",
+    "epicId": "1543000010",
+    "displayName": "Psych ROS ADHD",
+    "group": "Psychiatric ROS",
+    "options": [
+      { "value": "no symptoms", "order": 1, "is_default": true },
+      { "value": "fails to give close attention to detail", "order": 2 },
+      { "value": "easily distracted by extraneous stimuli", "order": 3 },
+      { "value": "does not follow through on instructions", "order": 4 },
+      { "value": "has difficulty organizing tasks and activities", "order": 5 },
+      { "value": "often loses things or is forgetful", "order": 6 },
+      { "value": "interrupts or has difficulty waiting turn", "order": 7 },
+      { "value": "fidgety or complains of feeling restless", "order": 8 },
+      { "value": "often talks excessively", "order": 9 },
+      { "value": "poor concentration", "order": 10 },
+      { "value": "***", "order": 11 }
+    ]
+  },
+  "rcc_psych_ros_disruptive": {
+    "identifier": "Psych ROS Disruptive Behavior Disorders",
+    "epicId": "1543000011",
+    "displayName": "Psych ROS Disruptive Behavior Disorders",
+    "group": "Psychiatric ROS",
+    "options": [
+      { "value": "no symptoms", "order": 1, "is_default": true },
+      { "value": "loses temper", "order": 2 },
+      { "value": "actively defies or refuses to comply with requests and/or rules", "order": 3 },
+      { "value": "blames others for his/her mistakes or misbehavior", "order": 4 },
+      { "value": "physical or verbal aggression", "order": 5 },
+      { "value": "serious violation of rules", "order": 6 },
+      { "value": "school truancy", "order": 7 },
+      { "value": "school suspensions", "order": 8 },
+      { "value": "legal charges or arrests", "order": 9 },
+      { "value": "***", "order": 10 }
+    ]
+  },
+  "rcc_psych_ros_substance": {
+    "identifier": "Psych ROS Substance Use",
+    "epicId": "1543000012",
+    "displayName": "Psych ROS Substance Use",
+    "group": "Psychiatric ROS",
+    "options": [
+      { "value": "no current substance use", "order": 1, "is_default": true },
+      { "value": "no history of substance use", "order": 2 },
+      { "value": "substance taken in larger amounts or over longer period than was intended", "order": 3 },
+      { "value": "persistent desire or efforts to cut down or control use", "order": 4 },
+      { "value": "great deal of time spent in activities necessary to obtain substance", "order": 5 },
+      { "value": "cravings", "order": 6 },
+      { "value": "recurrent use resulting in failure to fulfill major role obligations", "order": 7 },
+      { "value": "continued use despite having persistent or recurrent social or interpersonal problems", "order": 8 },
+      { "value": "recurrent use in situations in which it is hazardous", "order": 9 },
+      { "value": "tolerance", "order": 10 },
+      { "value": "withdrawal", "order": 11 },
+      { "value": "***", "order": 12 }
     ]
   }
 }

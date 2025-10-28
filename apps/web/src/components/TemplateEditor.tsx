@@ -183,6 +183,8 @@ export function TemplateEditor() {
           },
           body: JSON.stringify({
             templateId: templateId,
+            setting: selectedSetting,
+            visitType: selectedVisitType,
             sectionName: sectionName,
             content: sectionContent[sectionName],
             editReason: 'Manual edit from template editor'

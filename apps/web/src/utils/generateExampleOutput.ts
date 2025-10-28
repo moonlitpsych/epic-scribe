@@ -94,6 +94,24 @@ const EXAMPLE_SELECTIONS: { [key: string]: string[] } = {
     'Fair',
     'Impaired',
     'Poor'
+  ],
+  'disruptive': [
+    'No disruptive behaviors',
+    'Occasional temper outbursts',
+    'Defiant with parents',
+    'Aggressive behavior at school'
+  ],
+  'tics': [
+    'No tics observed',
+    'Motor tics present less than 1 year',
+    'Vocal tics intermittent',
+    'Both motor and vocal tics present'
+  ],
+  'asd': [
+    'No ASD characteristics',
+    'Mild social communication difficulties',
+    'Restricted interests and repetitive behaviors',
+    'Sensory sensitivities noted'
   ]
 };
 
@@ -119,6 +137,9 @@ function categorizeSmartList(displayName: string, identifier: string): string {
   if (lowerName.includes('thought') || lowerIdentifier.includes('thought')) return 'thought_process';
   if (lowerName.includes('insight') || lowerIdentifier.includes('insight')) return 'insight';
   if (lowerName.includes('judgment') || lowerIdentifier.includes('judgment')) return 'judgment';
+  if (lowerName.includes('disruptive') || lowerIdentifier.includes('disruptive')) return 'disruptive';
+  if (lowerName.includes('tic') || lowerIdentifier.includes('tic')) return 'tics';
+  if (lowerName.includes('asd') || lowerName.includes('autism') || lowerIdentifier.includes('asd')) return 'asd';
 
   return 'default';
 }

@@ -55,13 +55,22 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const { templateId, sectionName, content, editReason } = await request.json();
+    const { templateId, setting, visitType, sectionName, content, editReason } = await request.json();
 
     // Try database first
     try {
-      // Get template ID from database
-      const templates = await getAllTemplates();
-      const template = templates.find(t => t.template_id === templateId);
+      let template;
+
+      // Try to find by setting+visitType first (more reliable)
+      if (setting && visitType) {
+        template = await getTemplateBySettingAndVisitType(setting, visitType);
+      }
+
+      // Fallback to finding by templateId
+      if (!template) {
+        const templates = await getAllTemplates();
+        template = templates.find(t => t.template_id === templateId);
+      }
 
       if (!template) {
         // Template not in database - throw to trigger fallback
