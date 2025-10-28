@@ -105,9 +105,14 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Generate] Generated note in ${generationResult.latencyMs}ms using ${generationResult.modelUsed}`);
 
-    // Validate the generated note
-    const validationIssues = geminiClient.validateNote(generationResult.content);
+    // Use comprehensive validation from the NoteValidator (already done in Gemini client)
+    const comprehensiveValidation = generationResult.validationResult;
+
+    // Also do SmartTools-specific validation
     const smartListValidation = smartListService.validateSelections(generationResult.content);
+
+    // Combine validation issues for backward compatibility
+    const validationIssues = geminiClient.validateNote(generationResult.content);
 
     if (!smartListValidation.valid) {
       smartListValidation.errors.forEach(error => {
@@ -120,15 +125,16 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create receipt
-    const receipt: PromptReceipt = {
+    // Create receipt with comprehensive validation
+    const receipt: PromptReceipt & { validationResult?: any } = {
       id: crypto.randomBytes(16).toString('hex'),
       timestamp: new Date(),
       promptVersion: 1, // From manifest
       mappingVersion: 1, // From config
       templateId: template.templateId,
       permutationKey: `${setting}__${visitType}`,
-      promptHash: compiledPrompt.hash
+      promptHash: compiledPrompt.hash,
+      validationResult: comprehensiveValidation // Include comprehensive validation
     };
 
     const response: GenerateNoteResponse = {

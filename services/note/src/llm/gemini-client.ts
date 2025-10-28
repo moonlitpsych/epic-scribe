@@ -5,6 +5,7 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { GenerateNoteResponse, ValidationIssue, PromptReceipt } from '@epic-scribe/types';
+import { NoteValidator, ValidationResult } from '../validators/note-validator';
 
 export interface GeminiConfig {
   apiKey?: string;
@@ -27,6 +28,7 @@ export interface GenerationResult {
   modelUsed: string;
   latencyMs: number;
   cached?: boolean;
+  validationResult?: ValidationResult;
 }
 
 export class GeminiClient {
@@ -95,14 +97,30 @@ export class GeminiClient {
     try {
       const result = await this.generateWithRetry(prompt);
       const latencyMs = Date.now() - startTime;
+      const content = result.response.text();
+
+      // Perform comprehensive validation using NoteValidator
+      const validator = new NoteValidator();
+      const validationResult = validator.validateNote(content);
+
+      // Log validation results
+      if (!validationResult.valid) {
+        console.warn('Note validation failed:', validationResult.errors);
+        if (validationResult.warnings) {
+          console.warn('Note validation warnings:', validationResult.warnings);
+        }
+      } else if (validationResult.warnings && validationResult.warnings.length > 0) {
+        console.info('Note validation warnings:', validationResult.warnings);
+      }
 
       return {
-        content: result.response.text(),
+        content,
         modelUsed: this.config.model!,
         latencyMs,
         promptTokens: result.response.usageMetadata?.promptTokenCount,
         completionTokens: result.response.usageMetadata?.candidatesTokenCount,
-        totalTokens: result.response.usageMetadata?.totalTokenCount
+        totalTokens: result.response.usageMetadata?.totalTokenCount,
+        validationResult
       };
     } catch (error) {
       console.error('Gemini generation failed:', error);
@@ -187,51 +205,47 @@ export class GeminiClient {
     // Extract template structure from prompt
     const sections = this.extractSectionsFromPrompt(prompt);
 
-    // Generate mock content
-    const mockNote = `UNIVERSITY HEALTHCARE
-PSYCHIATRY CONSULTATION NOTE
+    // Generate mock content with v2 structure
+    const mockNote = `History of Present Illness
+The patient is a .age year old presenting for psychiatric evaluation. Based on the transcript provided, the patient reports experiencing moderate symptoms of depression and anxiety over the past several months. Sleep has been significantly disrupted with difficulty falling asleep and early morning awakening. The patient describes mood as "low" and reports decreased motivation for daily activities. Anxiety symptoms include persistent worry about work and family matters, with occasional panic symptoms including chest tightness and shortness of breath. These symptoms have progressively worsened and are now significantly impacting daily functioning and work performance. The patient states feeling overwhelmed by life circumstances and has noticed increased irritability affecting relationships with family members.
 
-Patient: .FNAME .LNAME
-MRN: .MRN
-Date of Service: .DATE
-Provider: .provider
+Psychiatric History
+Previous diagnoses: Major Depressive Disorder diagnosed 2019, Generalized Anxiety Disorder diagnosed 2020
+Previous medications: Sertraline 50mg (partial response, discontinued due to side effects)
+Hospitalizations: Denies any psychiatric hospitalizations
+Suicide attempts: Denies any previous suicide attempts
+Self-harm history (NSSIB): Denies self-harm behaviors
+Previous therapy: CBT for 6 months in 2020, found helpful
 
-Chief Complaint
-.RFV
+Formulation
+John Smith is a 45 year old male with a history of Major Depressive Disorder and Generalized Anxiety Disorder who presents for psychiatric evaluation following recent symptom exacerbation.
 
-History of Present Illness
-The patient is a .age year old presenting for psychiatric evaluation. Based on the transcript provided, the patient reports experiencing moderate symptoms of depression and anxiety over the past several months. Sleep has been significantly disrupted with difficulty falling asleep and early morning awakening. The patient describes mood as "low" and reports decreased motivation for daily activities. Anxiety symptoms include persistent worry about work and family matters, with occasional panic symptoms including chest tightness and shortness of breath. These symptoms have progressively worsened and are now significantly impacting daily functioning and work performance.
+The patient's diagnosis is most consistent with Major Depressive Disorder, recurrent, moderate severity (F33.1) based on depressed mood, anhedonia, sleep disturbance, fatigue, and impaired concentration meeting DSM-5-TR criteria for over 2 weeks. From a biological perspective, there is a family history of depression in mother suggesting genetic vulnerability, with possible serotonin dysregulation. Psychologically, the patient demonstrates negative cognitive patterns and catastrophic thinking following recent stressors, with maladaptive coping strategies. Socially, recent job changes have created role transition difficulties and financial stress, though protective factors include stable marriage and family support.
 
-Past Psychiatric History
-Previous hospitalizations: {BH Hospitalizations:304120103:: "None"}
-Previous suicide attempts: {Suicide History:304120104:: "None"}
-Previous treatments: The patient reports previous outpatient therapy approximately two years ago which was helpful but discontinued due to insurance changes. No previous psychiatric medication trials.
+Also considered in the differential diagnosis are Adjustment Disorder with mixed anxiety and depressed mood, and Persistent Depressive Disorder. Adjustment Disorder is less likely given the severity and number of symptoms exceeding expected response to stressor. Persistent Depressive Disorder was considered but the patient has distinct episodes with periods of remission between them.
 
-Current Medications
-.MEDS
-Medication compliance: {Medication Compliance:304120105:: "Not applicable"}
-
-Psychiatric Review of Systems
-Sleep: {Sleep Quality:304120106:: "Poor"}
-Appetite: {Appetite:304120107:: "Decreased"}
-Mood: {Mood:304120108:: "Depressed"}
-Anxiety: {Anxiety Level:304120109:: "Moderate"}
-Concentration: {Concentration:304120110:: "Impaired"}
-
-Mental Status Examination
-The patient appears their stated age and is appropriately dressed with good hygiene. They are cooperative throughout the interview and maintain appropriate eye contact. Speech is normal in rate and tone. Mood is reported as "depressed" and affect appears congruent and restricted. Thought process is linear and goal-directed without evidence of formal thought disorder. Thought content is negative for psychosis, with no hallucinations or delusions elicited. The patient denies current suicidal or homicidal ideation but endorses passive thoughts of "not wanting to be here" without plan or intent. Insight and judgment appear intact.
-
-Assessment
-.DIAGNOSIS
-Risk assessment: {Risk Level:304120111:: "Low"}
-Prognosis: {Prognosis:304120112:: "Good with treatment"}
+Plan is to initiate medication management combined with psychotherapy referral as follows:
 
 Plan
-1. Medications: Recommend initiating sertraline 50mg daily for depression and anxiety symptoms. Will monitor for response and side effects.
-2. Psychotherapy: {Therapy Referral:304120113:: "CBT referral placed"}
-3. Labs: .LABS
-4. Follow-up: {Follow-up Timeframe:304120114:: "2-3 weeks"}
-5. Safety planning: Safety plan reviewed with patient including identification of warning signs, coping strategies, and emergency contacts. Patient verbalizes understanding and agrees to plan.`;
+Medications:
+Start sertraline 50 mg daily for depression - previous partial response suggests higher dose may be effective
+Continue gabapentin 300 mg TID for anxiety - currently helping
+
+Referral to Psychotherapy:
+Refer to available CBT therapist for weekly sessions focusing on cognitive restructuring and behavioral activation
+Patient has verified insurance coverage for 20 sessions
+
+Therapy:
+Supportive psychotherapy provided today focusing on validation of current stressors, psychoeducation about depression as medical condition, and collaborative treatment planning. Discussed importance of medication adherence and therapy engagement. Patient receptive to recommendations. Session duration: 25 minutes.
+
+Follow-up:
+Return in 2 weeks for medication monitoring and supportive therapy, or sooner if needed
+
+Rufus Sweeney, MD`;
+
+    // Validate the mock note
+    const validator = new NoteValidator();
+    const validationResult = validator.validateNote(mockNote);
 
     return {
       content: mockNote,
@@ -240,7 +254,8 @@ Plan
       cached: true,
       promptTokens: Math.floor(prompt.length / 4),
       completionTokens: Math.floor(mockNote.length / 4),
-      totalTokens: Math.floor((prompt.length + mockNote.length) / 4)
+      totalTokens: Math.floor((prompt.length + mockNote.length) / 4),
+      validationResult
     };
   }
 

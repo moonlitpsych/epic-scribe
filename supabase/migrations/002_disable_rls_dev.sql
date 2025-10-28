@@ -1,0 +1,20 @@
+-- Temporary RLS bypass for development
+-- ⚠️ WARNING: Only use this in development! Re-enable RLS before production!
+
+-- Disable RLS on all tables for development
+ALTER TABLE patients DISABLE ROW LEVEL SECURITY;
+ALTER TABLE encounters DISABLE ROW LEVEL SECURITY;
+ALTER TABLE generated_notes DISABLE ROW LEVEL SECURITY;
+ALTER TABLE templates DISABLE ROW LEVEL SECURITY;
+ALTER TABLE smartlists DISABLE ROW LEVEL SECURITY;
+ALTER TABLE smartlist_values DISABLE ROW LEVEL SECURITY;
+ALTER TABLE template_edits DISABLE ROW LEVEL SECURITY;
+
+-- To re-enable RLS later, run:
+-- ALTER TABLE patients ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE encounters ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE generated_notes ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE templates ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE smartlists ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE smartlist_values ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE template_edits ENABLE ROW LEVEL SECURITY;

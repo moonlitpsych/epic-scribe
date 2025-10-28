@@ -823,9 +823,198 @@ smartlist_identifier,epic_id,display_name,options_json
 
 # ⚠️ CURRENT DEVELOPMENT FOCUS (Start Here!)
 
+## 🎉 SESSION PROGRESS UPDATE (2025-10-27)
+
+### ✅ COMPLETED IN THIS SESSION
+
+#### 1. Epic Scribe v2 Requirements Implementation
+All requirements from `/docs/epic-scribe-v2/` have been successfully implemented:
+
+- **Enhanced Psychiatric History Safety** (`/services/note/src/prompts/psychiatric-prompt-builder.ts`)
+  - Added explicit warnings against inferring hospitalizations/suicide attempts
+  - Set temperature to 0.2 for maximum consistency
+  - Clear documentation instructions to ONLY use explicit transcript mentions
+
+- **Formulation Structure Enforcement** (`/services/note/src/validators/note-validator.ts`)
+  - Validates exactly 4 paragraphs required
+  - Returns detailed error messages for corrections
+
+- **Plan Structure Requirements** (`/services/note/src/validators/note-validator.ts`)
+  - Enforces 5 required subsections: Medications, Psychotherapy, Laboratory/Studies, Follow-up, Safety Planning
+  - Validates each subsection is present and properly formatted
+
+- **Missing SmartLists Added** (`/configs/smartlists-catalog.json`)
+  - Added: Cocaine Use (304120501), Amphetamine Use (304120502), Other Substances (304120503)
+  - Added: Financial Status (304120601), Legal Issues (304120602), Psychomotor Changes (305000130)
+
+- **QuickAdd SmartList UI** (`/apps/web/src/components/QuickAddSmartList.tsx`)
+  - Modal interface for adding SmartLists without editing JSON
+  - Template system for common option patterns
+  - Preview before saving
+
+#### 2. Moonlit Design System Integration
+Complete styling update to match Moonlit Psychiatry branding:
+
+- **Design System Created** (`/apps/web/src/lib/moonlit-theme.ts`)
+  - Color palette: terracotta (#E89C8A), navy (#0A1F3D), cream (#F5F1ED), tan (#C5A882)
+  - Typography: serif headers (Baskerville), clean sans-serif body
+  - Status colors: mint green success, warm cream warnings, light coral errors
+
+- **Components Updated with Moonlit Styling**:
+  - QuickAddSmartList modal (cream header, tan buttons, terracotta accents)
+  - Validation alerts (all use Moonlit color scheme)
+  - SmartLists page buttons
+  - All new v2 features follow Moonlit design
+
+#### 3. Supabase Database Foundation Complete
+Full database infrastructure ready for durable storage:
+
+- **Database Schema Created** (`/supabase/migrations/001_initial_schema.sql`)
+  - ✅ All tables created: patients, encounters, templates, smartlists, smartlist_values, generated_notes, template_edits
+  - ✅ Indexes, triggers, and RLS policies configured
+  - ✅ User's Supabase project created and migration executed successfully
+
+- **TypeScript Integration**
+  - Database types defined (`/apps/web/src/lib/database.types.ts`)
+  - Supabase client configured (`/apps/web/src/lib/supabase.ts`)
+  - Ready for service integration
+
+- **Documentation** (`SUPABASE_SETUP.md`)
+  - Complete setup guide with step-by-step instructions
+  - Security best practices included
+
+### ⚠️ CRITICAL NEXT STEPS FOR DATABASE ACTIVATION
+
+The database is created but **NOT YET CONNECTED**. The app still uses:
+- File-based storage for SmartLists (persists)
+- In-memory storage for Templates (**DOES NOT PERSIST**)
+
+#### Step 1: Add Supabase Credentials (User Action Required)
+1. Go to Supabase Dashboard → Settings → API
+2. Copy these values to `/apps/web/.env.local`:
+```env
+NEXT_PUBLIC_SUPABASE_URL=<your-project-url>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+```
+3. Restart the dev server
+
+#### Step 2: Template Service Migration (CRITICAL - Templates Don't Persist!)
+**Problem**: Templates are only in memory - lost on every restart!
+**Files to Update**:
+- `/services/note/src/templates/template-service.ts` - Change from Map to Supabase
+- Create `/apps/web/src/lib/db/templates.ts` - Database operations
+
+**Implementation**:
+```typescript
+// /apps/web/src/lib/db/templates.ts
+import { supabase } from '@/lib/supabase';
+
+export async function getTemplates() {
+  const { data, error } = await supabase
+    .from('templates')
+    .select('*')
+    .eq('active', true);
+  return data;
+}
+
+export async function updateTemplateSection(templateId: string, sectionName: string, content: string) {
+  // Update specific section, increment version
+}
+```
+
+#### Step 3: SmartList Service Migration
+**Current**: File-based (works but not scalable)
+**Files to Update**:
+- `/services/note/src/smartlists/smartlist-service.ts`
+- Create `/apps/web/src/lib/db/smartlists.ts`
+
+#### Step 4: Patient Management UI
+Create `/apps/web/app/patients/page.tsx`:
+- List/search patients
+- Add/edit patient modal
+- Link to patient's encounters
+
+#### Step 5: Link Encounters to Patients
+Update encounter creation to:
+- Require patient selection
+- Save to Supabase
+- Track encounter history
+
+### 📋 MISSING SMARTLISTS TO ADD
+Use the QuickAdd button at `/smartlists` to add these:
+- Mood (305000005)
+- Cocaine Use (304120501) - Already in code but may need UI addition
+- Amphetamine Use (304120502) - Already in code but may need UI addition
+- Other Substances (304120503) - Already in code but may need UI addition
+- Financial Status (304120601) - Already in code but may need UI addition
+- Legal Issues (304120602) - Already in code but may need UI addition
+
+### 🐛 KNOWN ISSUES
+1. **Templates don't persist** - In-memory only, fix with database migration
+2. **lucide-react occasionally missing** - Fix: `pnpm add lucide-react --filter @epic-scribe/web`
+3. **No patient management** - Can't link encounters to patients yet
+
+### ✅ WHAT'S WORKING NOW
+- Note generation with all v2 safety features
+- SmartList management with QuickAdd UI
+- Template viewing/editing (but doesn't persist)
+- Google Calendar/Meet/Drive integration
+- Moonlit design system throughout
+- Supabase database ready (awaiting credentials)
+
+### 📊 TEST THE V2 FEATURES
+1. **Test Note Generation**: Go to `/generate`, load sample data, generate a note
+2. **Check Validation**: Look for the validation alerts showing formulation/plan structure
+3. **Try QuickAdd**: Go to `/smartlists`, click "Quick Add SmartList"
+4. **View Templates**: Go to `/templates` to see SmartTools in each section
+
+---
+
 ## 39) Immediate Next Steps (Phase 1.5 - Patient Management & Database)
 
-**Context:** Google Calendar/Meet/Drive integration is complete and working. Encounters can be created, Meet sessions launched, and transcripts found. Before continuing with the broader roadmap, we need to build proper patient management and persistent storage.
+**Context:** Google Calendar/Meet/Drive integration is complete and working. Encounters can be created, Meet sessions launched, and transcripts found. Database schema is created and ready. Now we need to connect the services to use Supabase for persistence.
+
+### ✅ DATABASE FULLY OPERATIONAL (2025-10-27 Session Complete)
+
+**Final Status - All Database Issues Resolved:**
+- ✅ Supabase project created and credentials in .env.local
+- ✅ Database schema successfully migrated (001_initial_schema.sql)
+- ✅ Database client and TypeScript types created
+- ✅ SmartList and Template database services implemented
+- ✅ API routes created for database operations
+- ✅ RLS permissions fixed with secure policies
+- ✅ **12 templates successfully migrated to database**
+- ✅ **Persistence verified and working**
+
+**What Was Completed This Session:**
+
+1. **Epic Scribe v2 Implementation (100% Complete)**
+   - Enhanced psychiatric safety features in prompt builder
+   - Created comprehensive NoteValidator for DSM-5-TR compliance
+   - Added 6 missing SmartLists to catalog
+   - Created QuickAddSmartList UI component
+   - Applied Moonlit design system to all v2 features
+
+2. **Database Integration (100% Complete)**
+   - Set up Supabase with proper schema
+   - Created database services for SmartLists and Templates
+   - Fixed RLS permissions with secure policies
+   - Successfully migrated 12 templates to database
+   - Implemented fallback system (DB → File)
+   - Templates now persist across server restarts!
+
+**Migration Files Created:**
+- `/supabase/migrations/001_initial_schema.sql` - Database schema
+- `/supabase/migrations/002_disable_rls_dev.sql` - RLS disable for dev
+- `/supabase/migrations/003_grant_anon_permissions.sql` - Grant permissions
+- `/supabase/migrations/004_secure_rls_policies.sql` - Secure RLS policies
+
+**Next Session Can Start Immediately With:**
+- Patient management UI (database ready)
+- Encounter linking to patients (schema ready)
+- SmartList UI improvements (database ready)
+- All persistence working!
 
 ### 39.1 Delete Encounter Functionality
 

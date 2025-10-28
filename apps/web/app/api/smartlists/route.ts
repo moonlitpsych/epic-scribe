@@ -1,37 +1,77 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  getAllSmartLists,
+  getSmartListByIdentifier,
+  getSmartListByEpicId,
+  getSmartListsByGroup
+} from '@/lib/db/smartlists';
+
+// Try to use database first, fallback to file-based service if needed
 import { getSmartListService } from '@epic-scribe/note-service/src/smartlists/smartlist-service';
 
 export async function GET(request: NextRequest) {
   try {
-    const service = await getSmartListService();
     const searchParams = request.nextUrl.searchParams;
     const group = searchParams.get('group');
     const id = searchParams.get('id');
     const epicId = searchParams.get('epicId');
 
-    if (id) {
-      const smartList = service.getSmartList(id);
-      if (!smartList) {
-        return NextResponse.json({ error: 'SmartList not found' }, { status: 404 });
+    // Try database first
+    try {
+      if (id) {
+        const smartList = await getSmartListByIdentifier(id);
+        if (!smartList) {
+          return NextResponse.json({ error: 'SmartList not found' }, { status: 404 });
+        }
+        return NextResponse.json(smartList);
       }
-      return NextResponse.json(smartList);
-    }
 
-    if (epicId) {
-      const smartList = service.getSmartListByEpicId(epicId);
-      if (!smartList) {
-        return NextResponse.json({ error: 'SmartList not found' }, { status: 404 });
+      if (epicId) {
+        const smartList = await getSmartListByEpicId(epicId);
+        if (!smartList) {
+          return NextResponse.json({ error: 'SmartList not found' }, { status: 404 });
+        }
+        return NextResponse.json(smartList);
       }
-      return NextResponse.json(smartList);
-    }
 
-    if (group) {
-      const smartLists = service.getSmartListsByGroup(group);
-      return NextResponse.json(smartLists);
-    }
+      if (group) {
+        const grouped = await getSmartListsByGroup();
+        const smartLists = grouped[group] || [];
+        return NextResponse.json(smartLists);
+      }
 
-    const allSmartLists = service.getAllSmartLists();
-    return NextResponse.json(allSmartLists);
+      const allSmartLists = await getAllSmartLists();
+      return NextResponse.json(allSmartLists);
+    } catch (dbError) {
+      console.log('Database not available, falling back to file-based service:', dbError);
+
+      // Fallback to file-based service
+      const service = await getSmartListService();
+
+      if (id) {
+        const smartList = service.getSmartList(id);
+        if (!smartList) {
+          return NextResponse.json({ error: 'SmartList not found' }, { status: 404 });
+        }
+        return NextResponse.json(smartList);
+      }
+
+      if (epicId) {
+        const smartList = service.getSmartListByEpicId(epicId);
+        if (!smartList) {
+          return NextResponse.json({ error: 'SmartList not found' }, { status: 404 });
+        }
+        return NextResponse.json(smartList);
+      }
+
+      if (group) {
+        const smartLists = service.getSmartListsByGroup(group);
+        return NextResponse.json(smartLists);
+      }
+
+      const allSmartLists = service.getAllSmartLists();
+      return NextResponse.json(allSmartLists);
+    }
   } catch (error) {
     console.error('Error fetching SmartLists:', error);
     return NextResponse.json(
@@ -43,12 +83,21 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const service = await getSmartListService();
     const smartLists = await request.json();
 
-    await service.saveConfig(smartLists);
+    // Save to database
+    try {
+      const { migrateSmartListsFromJSON } = await import('@/lib/db/smartlists');
+      await migrateSmartListsFromJSON(smartLists);
+      return NextResponse.json({ success: true, storage: 'database' });
+    } catch (dbError) {
+      console.log('Database save failed, falling back to file-based storage:', dbError);
 
-    return NextResponse.json({ success: true });
+      // Fallback to file-based service
+      const service = await getSmartListService();
+      await service.saveConfig(smartLists);
+      return NextResponse.json({ success: true, storage: 'file' });
+    }
   } catch (error) {
     console.error('Error updating SmartLists:', error);
     return NextResponse.json(

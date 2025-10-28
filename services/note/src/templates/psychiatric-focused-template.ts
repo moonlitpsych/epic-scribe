@@ -16,17 +16,19 @@ export const PSYCHIATRIC_FOCUSED_SECTIONS: TemplateSection[] = [
   {
     order: 2,
     name: 'Psychiatric History',
-    content: `Previous psychiatric hospitalizations: ***
-Previous suicide attempts: ***
-Previous self-harm behaviors: ***
-Previous psychiatric treatments: ***
-Previous psychiatric medications: ***`,
-    exemplar: `Previous psychiatric hospitalizations: Two psychiatric hospitalizations - first in 2018 at University Hospital for severe depression with suicidal ideation (5-day stay), second in 2020 at Valley Behavioral Health for mixed episode (3-day stay). Both resulted in medication adjustments and stabilization.
-Previous suicide attempts: One attempt in 2018 via overdose of acetaminophen, required medical hospitalization and subsequent psychiatric admission. No attempts since then.
-Previous self-harm behaviors: History of cutting behaviors in late teens and early twenties as a coping mechanism for emotional distress. Last episode was over 10 years ago. No current self-harm behaviors.
-Previous psychiatric treatments: Completed course of CBT in 2019 with good response. Participated in DBT group in 2020 focusing on distress tolerance skills. Currently not in therapy.
-Previous psychiatric medications: Previously tried sertraline (max dose 200mg) with partial response, switched to venlafaxine with better effect but discontinued due to side effects. Also tried quetiapine for sleep.`,
-    instructions: 'Extract specific details about psychiatric history from transcript. Be precise about dates, durations, and outcomes. Use "None reported" if explicitly stated, otherwise leave *** if not addressed.'
+    content: `Previous diagnoses: ***
+Previous medications: ***
+Hospitalizations: ***
+Suicide attempts: ***
+Self-harm history (NSSIB): ***
+Previous therapy: ***`,
+    exemplar: `Previous diagnoses: Major Depressive Disorder diagnosed 2018 by Dr. Smith at Valley Mental Health, Generalized Anxiety Disorder diagnosed 2019 by Dr. Johnson
+Previous medications: Sertraline 50-200mg daily (2018-2019, partial response with sexual side effects), Venlafaxine XR 150mg (2019-2020, good response but discontinued due to hypertension), Quetiapine 50mg qhs (2020-present for sleep)
+Hospitalizations: Two psychiatric hospitalizations - University Hospital 03/2018 for 5 days (severe depression with SI), Valley Behavioral Health 09/2020 for 3 days (mixed episode)
+Suicide attempts: One attempt 03/2018 via acetaminophen overdose, required medical hospitalization and psychiatric admission. No attempts since then.
+Self-harm history (NSSIB): Remote history of cutting on forearms ages 17-22 during periods of emotional distress. Last episode over 10 years ago. No current self-harm.
+Previous therapy: CBT with Dr. Johnson 2019-2020 (6 months, weekly, good response), DBT group at Valley 2020 (3 months, focused on distress tolerance)`,
+    instructions: 'SAFETY CRITICAL: Extract ONLY explicitly stated information. For hospitalizations, suicide attempts, and self-harm - NEVER infer or assume. Use "Denies" only if patient explicitly denies when asked. Otherwise leave *** blank. Include specific dates, durations, and details when provided.'
   },
   {
     order: 3,
@@ -68,21 +70,25 @@ Other psychiatric symptoms: Homicidal ideation none. No evidence of eating disor
     name: 'Substance Use History',
     content: `Alcohol: {Alcohol Use:305000020} ***
 Cannabis: {Cannabis Use:305000021} ***
+Tobacco/Nicotine: {Tobacco Use:305000025} ***
 Stimulants: {Stimulant Use:305000022} ***
+Cocaine: {Cocaine Use:304120501} ***
+Amphetamines: {Amphetamine Use:304120502} ***
 Opioids: {Opioid Use:305000023} ***
 Benzodiazepines: {Benzodiazepine Use:305000024} ***
-Tobacco/Nicotine: {Tobacco Use:305000025} ***
-Other substances: ***
+Other substances: {Other Substances:304120503} ***
 Treatment history: ***`,
-    exemplar: `Alcohol: Social use. Drinks 2-3 beers on weekends. No history of withdrawal or DUI. Denies drinking to intoxication.
+    exemplar: `Alcohol: Social use. Drinks 2-3 beers on weekends. No history of withdrawal, blackouts, or DUI. Denies drinking to intoxication.
 Cannabis: None
-Stimulants: None
-Opioids: None
-Benzodiazepines: None
 Tobacco/Nicotine: Former smoker. Quit 5 years ago after 10-year pack-per-day history. Currently uses nicotine gum occasionally.
-Other substances: None reported
-Treatment history: No formal substance use treatment. Quit smoking independently with nicotine replacement.`,
-    instructions: 'Use SmartLists for primary categorization, then add specific details in wildcard sections. Include patterns, amounts, consequences, and treatment history.'
+Stimulants: Prescribed ADHD medication only. Takes Adderall XR 20mg daily as prescribed for past 2 years.
+Cocaine: None
+Amphetamines: Prescribed ADHD medication only (see stimulants above)
+Opioids: None
+Benzodiazepines: None. Previously prescribed lorazepam prn but discontinued due to concerns about dependence.
+Other substances: None
+Treatment history: No formal substance use treatment. Quit smoking independently with nicotine replacement therapy.`,
+    instructions: 'Use SmartLists for primary categorization, then add specific details in wildcard sections. Include patterns, amounts, frequency, route of administration, consequences, and treatment history. Be specific about prescribed vs illicit use.'
   },
   {
     order: 5,
@@ -92,18 +98,20 @@ Employment: {Employment Status:305000031} ***
 Education: {Education Level:305000032} ***
 Relationships: {Relationship Status:305000033} ***
 Support system: {Support System:305000034} ***
-Legal history: ***
+Financial status: {Financial Status:304120601} ***
+Legal issues: {Legal Issues:304120602} ***
 Trauma history: ***
 Military history: ***`,
-    exemplar: `Living situation: Stable housing. Lives in apartment with spouse and two children ages 8 and 12.
+    exemplar: `Living situation: Stable housing. Lives in apartment with spouse and two children ages 8 and 12. Rent is current, no housing instability.
 Employment: Recently unemployed. Worked as software engineer for 8 years until termination 2 months ago due to performance issues related to depression.
-Education: College graduate. Bachelor's degree in Computer Science from University of Utah.
-Relationships: Married. Reports relationship strain due to current symptoms but spouse is supportive. Good relationships with children.
-Support system: Good. Has supportive spouse, close relationship with sister, and two close friends. Parents live locally and are involved.
-Legal history: No criminal history. No current legal issues.
-Trauma history: Witnessed domestic violence between parents during childhood. No physical or sexual abuse. Car accident 3 years ago with mild PTSD symptoms that resolved.
+Education: College graduate. Bachelor's degree in Computer Science from University of Utah, graduated 2010.
+Relationships: Married. Reports relationship strain due to current symptoms but spouse is supportive. Good relationships with children. Some isolation from friends recently.
+Support system: Good. Has supportive spouse, close relationship with sister who lives locally, and two close friends from college. Parents live nearby and are involved.
+Financial status: Financial stress. Lost primary income 2 months ago. Spouse works part-time. Using savings currently. Applied for unemployment benefits.
+Legal issues: No legal issues. No criminal history, no DUIs, no current legal proceedings.
+Trauma history: Witnessed domestic violence between parents during childhood. No physical or sexual abuse. Motor vehicle accident 3 years ago with mild PTSD symptoms that resolved without treatment.
 Military history: No military service.`,
-    instructions: 'Use SmartLists for categories, then expand with relevant details from transcript. Focus on factors relevant to psychiatric presentation.'
+    instructions: 'Use SmartLists for primary categories, then expand with relevant psychosocial details from transcript. Focus on factors that impact psychiatric presentation and treatment planning.'
   },
   {
     order: 6,
@@ -153,13 +161,10 @@ The treatment plan will focus on both medication optimization and psychotherapeu
     content: `Medications:
 ***
 
-Psychotherapy Referral:
+Referral to Psychotherapy:
 ***
 
-Therapy Conducted:
-***
-
-Laboratory/Studies:
+Therapy:
 ***
 
 Follow-up:
@@ -171,25 +176,18 @@ Start sertraline 50 mg daily for depression - patient had partial response previ
 Continue gabapentin 300 mg TID for anxiety - stable and effective
 Start trazodone 50 mg qhs prn for insomnia - patient requesting sleep aid, avoiding benzodiazepines given history
 
-Psychotherapy Referral:
-Refer to Dr. Smith for cognitive behavioral therapy focused on depression and return-to-work issues
-Patient agreeable to weekly sessions initially
+Referral to Psychotherapy:
+Refer to Dr. Sarah Smith for cognitive behavioral therapy weekly focusing on depression, negative thought patterns, and return-to-work anxiety
+Patient has verified insurance coverage for 20 sessions
 
-Therapy Conducted:
-Supportive psychotherapy provided today focusing on normalization of symptoms, validation of experience with job loss, and development of coping strategies. Discussed behavioral activation and scheduling pleasant activities. Total therapy time: 20 minutes.
-
-Laboratory/Studies:
-Order TSH, CBC, CMP to rule out medical causes of depression
-Vitamin D level given winter season
-PHQ-9 at next visit for monitoring
+Therapy:
+Supportive psychotherapy provided today focusing on validation of job loss experience, normalization of depressive symptoms in context of significant stressor, and collaborative problem-solving regarding financial concerns. Utilized cognitive restructuring to address catastrophic thinking about future employment. Patient engaged well and expressed feeling understood. Session duration: 30 minutes.
 
 Follow-up:
-Return in 2 weeks on [specific date] at [time] for medication monitoring and therapy
-Telehealth visit acceptable
-Or sooner if needed
+Return in 2 weeks for medication monitoring and supportive therapy, or sooner if needed
 
 Rufus Sweeney, MD`,
-    instructions: 'Format each section clearly. For medications include drug, dose, frequency and indication. Include therapy type and focus areas. Always end with signature and "or sooner if needed" for follow-up.'
+    instructions: 'REQUIRED: All 5 subsections must be present in this exact order: Medications, Referral to Psychotherapy, Therapy (conducted today), Follow-up, and Signature. Therapy section MUST include session duration. Follow-up MUST end with "or sooner if needed". End with "Rufus Sweeney, MD".'
   }
 ];
 

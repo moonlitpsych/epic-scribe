@@ -15,6 +15,10 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase environment variables:', {
+    url: supabaseUrl ? 'present' : 'missing',
+    anonKey: supabaseAnonKey ? 'present' : 'missing',
+  });
   throw new Error('Missing Supabase environment variables');
 }
 

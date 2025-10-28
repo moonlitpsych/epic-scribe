@@ -2154,6 +2154,204 @@
           "order": 5
         }
       ]
+    },
+    "cocaineUse": {
+      "identifier": "Cocaine Use",
+      "epicId": "304120501",
+      "displayName": "Cocaine Use",
+      "group": "Substance Use",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Experimental use only",
+          "order": 2
+        },
+        {
+          "value": "Occasional use",
+          "order": 3
+        },
+        {
+          "value": "Regular use",
+          "order": 4
+        },
+        {
+          "value": "Past use, now abstinent",
+          "order": 5
+        },
+        {
+          "value": "In recovery",
+          "order": 6
+        }
+      ]
+    },
+    "amphetamineUse": {
+      "identifier": "Amphetamine Use",
+      "epicId": "304120502",
+      "displayName": "Amphetamine Use",
+      "group": "Substance Use",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Prescribed ADHD medication only",
+          "order": 2
+        },
+        {
+          "value": "Occasional non-prescribed use",
+          "order": 3
+        },
+        {
+          "value": "Regular use",
+          "order": 4
+        },
+        {
+          "value": "Past use, now abstinent",
+          "order": 5
+        },
+        {
+          "value": "In recovery",
+          "order": 6
+        }
+      ]
+    },
+    "otherSubstances": {
+      "identifier": "Other Substances",
+      "epicId": "304120503",
+      "displayName": "Other Substances",
+      "group": "Substance Use",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Hallucinogens (specify in note)",
+          "order": 2
+        },
+        {
+          "value": "Inhalants (specify in note)",
+          "order": 3
+        },
+        {
+          "value": "Kratom",
+          "order": 4
+        },
+        {
+          "value": "Synthetic cannabinoids",
+          "order": 5
+        },
+        {
+          "value": "Other (specify in note)",
+          "order": 6
+        }
+      ]
+    },
+    "financialStatus": {
+      "identifier": "Financial Status",
+      "epicId": "304120601",
+      "displayName": "Financial Status",
+      "group": "Social History",
+      "options": [
+        {
+          "value": "Financially stable",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Financial stress",
+          "order": 2
+        },
+        {
+          "value": "Severe financial hardship",
+          "order": 3
+        },
+        {
+          "value": "Disability income",
+          "order": 4
+        },
+        {
+          "value": "Food/housing insecurity",
+          "order": 5
+        },
+        {
+          "value": "Not assessed",
+          "order": 6
+        }
+      ]
+    },
+    "legalIssues": {
+      "identifier": "Legal Issues",
+      "epicId": "304120602",
+      "displayName": "Legal Issues",
+      "group": "Social History",
+      "options": [
+        {
+          "value": "No legal issues",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Past criminal history, resolved",
+          "order": 2
+        },
+        {
+          "value": "Active probation/parole",
+          "order": 3
+        },
+        {
+          "value": "Pending charges",
+          "order": 4
+        },
+        {
+          "value": "DUI history",
+          "order": 5
+        },
+        {
+          "value": "Details in note",
+          "order": 6
+        }
+      ]
+    },
+    "psychomotorChanges": {
+      "identifier": "Psychomotor Changes",
+      "epicId": "304120118",
+      "displayName": "Psychomotor Changes",
+      "group": "Psychiatric ROS",
+      "options": [
+        {
+          "value": "None",
+          "order": 1,
+          "is_default": true
+        },
+        {
+          "value": "Psychomotor retardation",
+          "order": 2
+        },
+        {
+          "value": "Psychomotor agitation",
+          "order": 3
+        },
+        {
+          "value": "Restlessness",
+          "order": 4
+        },
+        {
+          "value": "Slowed movements",
+          "order": 5
+        },
+        {
+          "value": "Fidgeting",
+          "order": 6
+        }
+      ]
     }
   }
 }
