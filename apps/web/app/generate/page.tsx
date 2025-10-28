@@ -5,6 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import { SETTINGS, VISIT_TYPES, Setting, VisitType } from '@epic-scribe/types';
 import { moonlitTheme } from '@/lib/moonlit-theme';
 
+// Force dynamic rendering since we use useSearchParams
+export const dynamic = 'force-dynamic';
+
 export default function GeneratePage() {
   const searchParams = useSearchParams();
 
