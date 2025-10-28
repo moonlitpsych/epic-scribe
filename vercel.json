@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd apps/web && npx pnpm@10.13.1 build",
+  "buildCommand": "npx pnpm@10.13.1 --filter=@epic-scribe/web build",
   "devCommand": "pnpm --filter=@epic-scribe/web dev",
   "installCommand": "npx pnpm@10.13.1 install",
   "framework": null,
