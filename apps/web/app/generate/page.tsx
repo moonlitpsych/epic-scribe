@@ -7,8 +7,6 @@ import { moonlitTheme } from '@/lib/moonlit-theme';
 
 // Force dynamic rendering - no static generation
 export const dynamic = 'force-dynamic';
-export const dynamicParams = true;
-export const revalidate = 0;
 
 function GeneratePageContent() {
   const searchParams = useSearchParams();
