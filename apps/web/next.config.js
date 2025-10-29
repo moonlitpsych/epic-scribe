@@ -1,7 +1,13 @@
+const path = require('path')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@epic-scribe/types', '@epic-scribe/utils', '@epic-scribe/note-service'],
+  experimental: {
+    // Required for monorepo: Include workspace packages in deployment bundle
+    outputFileTracingRoot: path.join(__dirname, '../../'),
+  },
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
