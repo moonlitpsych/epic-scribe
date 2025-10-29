@@ -4,6 +4,5 @@
   "devCommand": "pnpm --filter=@epic-scribe/web dev",
   "installCommand": "npx pnpm@10.13.1 install",
   "framework": null,
-  "outputDirectory": ".next",
-  "rootDirectory": "apps/web"
+  "outputDirectory": ".next"
 }
