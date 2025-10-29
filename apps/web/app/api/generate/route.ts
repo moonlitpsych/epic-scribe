@@ -52,8 +52,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Validate setting and visit type
-    const template = templateService.getTemplate(setting as Setting, visitType as string);
+    // Load template from database (with fallback to in-memory)
+    let template;
+    try {
+      const { getTemplateBySettingAndVisitType } = await import('@/lib/db/templates');
+      template = await getTemplateBySettingAndVisitType(setting, visitType);
+      console.log(`[Generate] Loaded template from database for ${setting} - ${visitType}`);
+    } catch (dbError) {
+      console.log('[Generate] Database not available, using in-memory template:', dbError);
+      template = templateService.getTemplate(setting as Setting, visitType as string);
+    }
+
     if (!template) {
       return NextResponse.json(
         { error: `No template found for ${setting} - ${visitType}` },
