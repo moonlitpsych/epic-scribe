@@ -57,16 +57,12 @@
     }
   },
   "BHIDC therapy": {
-    "Intake": {
-      "templateId": "bhidc_therapy_intake_v1",
-      "version": 1
-    },
-    "Transfer of Care": {
-      "templateId": "bhidc_therapy_toc_v1",
+    "First Visit": {
+      "templateId": "bhidc_therapy_first_visit_v1",
       "version": 1
     },
     "Follow-up": {
-      "templateId": "bhidc_therapy_fu_v1",
+      "templateId": "bhidc_therapy_followup_v1",
       "version": 1
     }
   }

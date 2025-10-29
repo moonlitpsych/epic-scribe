@@ -285,8 +285,17 @@ export function buildSectionPrompt(section: TemplateSection): string {
 export function buildPsychiatricPrompt(
   template: Template,
   transcript: string,
-  smartListDefinitions: string
+  smartListDefinitions: string,
+  staffingTranscript?: string
 ): string {
+  // Check for staffing configuration
+  const staffingConfig = template.staffing_config;
+  const hasInlineStaffing = staffingConfig?.mode === 'inline' &&
+    staffingConfig.visitTypes.includes(template.visit_type);
+  const hasSeparateStaffing = staffingConfig?.mode === 'separate' &&
+    staffingConfig.visitTypes.includes(template.visit_type) &&
+    staffingTranscript;
+
   let prompt = `ROLE: You are a HIPAA-compliant psychiatric note generator for Dr. Rufus Sweeney. Generate focused, clinically accurate notes optimized for Epic EMR.
 
 TASK: Generate a psychiatric note using the provided template, following section-specific instructions precisely.
@@ -297,7 +306,82 @@ CRITICAL RULES:
 3. Wildcards: Replace *** with relevant transcript content, or leave *** if not discussed
 4. Format: Use paragraphs only - NO bullets, NO numbered lists except where specified in Plan
 5. Accuracy: Do not invent information not in the transcript
+`;
 
+  // Add inline staffing instructions if configured
+  if (hasInlineStaffing) {
+    const markers = staffingConfig.markers?.join('", "') || 'supervising doctor, staff this';
+    prompt += `
+⚠️ STAFFING CONVERSATION DETECTION (CRITICAL FOR THIS VISIT TYPE) ⚠️
+
+This is a residency training setting. The transcript likely contains TWO parts:
+1. PATIENT INTERVIEW: Conversation between Dr. Sweeney and the patient
+2. ATTENDING STAFFING: Conversation between Dr. Sweeney and the supervising attending physician
+
+DETECTION INSTRUCTIONS:
+- Look for transition markers like: "${markers}"
+- Staffing typically occurs when:
+  * Dr. Sweeney says he needs to "talk with my supervising doctor" or similar
+  * The conversation shifts to discussing the patient in third person
+  * Treatment planning language emerges (e.g., "I'm thinking we should...")
+  * A new speaker (the attending) joins the discussion
+
+STAFFING SECTION EXTRACTION:
+- Identify where the staffing conversation begins and ends
+- Extract key clinical points from the attending physician:
+  * Diagnostic impressions or revisions
+  * Medication recommendations (specific agents, doses, rationale)
+  * Therapy modality recommendations
+  * Safety considerations or precautions
+  * Follow-up timing and monitoring plans
+  * Teaching points or differential diagnosis considerations
+
+PLAN SECTION PRIORITY (CRITICAL):
+⚠️ The Plan section MUST heavily weight the attending's recommendations from the staffing conversation.
+- Medications: Use specific agents, doses, and rationales discussed with attending
+- Therapy: Follow attending's guidance on modality and focus
+- Follow-up: Align with attending's recommended timeline
+- If the attending contradicted or refined an initial plan, use the FINAL plan from staffing
+- Document the plan as if it's Dr. Sweeney's plan (not "attending recommended..." but "Start sertraline...")
+
+EXAMPLE PATTERN:
+[Patient interview content] → [Transition: "Let me staff this with my attending"] → [Staffing discussion with clinical recommendations] → Generate Plan heavily based on staffing recommendations
+`;
+  }
+
+  // Add separate staffing instructions if configured
+  if (hasSeparateStaffing) {
+    prompt += `
+⚠️ SEPARATE STAFFING CONVERSATION PROVIDED (CRITICAL FOR THIS VISIT TYPE) ⚠️
+
+This is a residency training setting. You will receive TWO separate transcripts:
+1. PATIENT INTERVIEW TRANSCRIPT: The conversation between Dr. Sweeney and the patient
+2. STAFFING TRANSCRIPT: A separate recording of Dr. Sweeney discussing the case with the supervising attending physician
+
+STAFFING TRANSCRIPT HANDLING:
+- The staffing transcript is recorded END-OF-DAY after all patient visits
+- Extract key clinical recommendations from the attending physician:
+  * Diagnostic impressions or revisions
+  * Medication recommendations (specific agents, doses, rationale)
+  * Therapy modality recommendations
+  * Safety considerations or precautions
+  * Follow-up timing and monitoring plans
+  * Teaching points or differential diagnosis considerations
+
+PLAN SECTION PRIORITY (CRITICAL):
+⚠️ The Plan section MUST heavily weight the attending's recommendations from the staffing transcript.
+- Medications: Use specific agents, doses, and rationales discussed with attending
+- Therapy: Follow attending's guidance on modality and focus
+- Follow-up: Align with attending's recommended timeline
+- If the attending contradicted or refined an initial plan, use the FINAL plan from staffing
+- Document the plan as if it's Dr. Sweeney's plan (not "attending recommended..." but "Start sertraline...")
+
+INTEGRATION PATTERN:
+Use the PATIENT TRANSCRIPT for all clinical content (HPI, Psych Hx, ROS, MSE, Formulation) → Use the STAFFING TRANSCRIPT primarily for the Plan section
+`;
+  }
+
+  prompt += `
 SMARTLIST DEFINITIONS:
 ${smartListDefinitions}
 
@@ -310,9 +394,25 @@ TEMPLATE SECTIONS:
     prompt += '\n---\n';
   });
 
-  prompt += `
+  // Add transcripts
+  if (hasSeparateStaffing && staffingTranscript) {
+    prompt += `
+PATIENT INTERVIEW TRANSCRIPT:
+${transcript}
+
+---
+
+STAFFING TRANSCRIPT (END-OF-DAY DISCUSSION WITH ATTENDING):
+${staffingTranscript}
+`;
+  } else {
+    prompt += `
 TRANSCRIPT:
 ${transcript}
+`;
+  }
+
+  prompt += `
 
 GENERATION INSTRUCTIONS:
 1. Process each section according to its specific instructions and temperature setting
@@ -320,7 +420,15 @@ GENERATION INSTRUCTIONS:
 3. For Psychiatric History: Extract facts precisely (temperature 0.3)
 4. For ROS and MSE: Select SmartList options carefully (temperature 0.2)
 5. For Formulation: Follow exact 4-paragraph structure (temperature 0.5)
-6. For Plan: Use exact formatting with subsections (temperature 0.3)
+6. For Plan: Use exact formatting with subsections (temperature 0.3)`;
+
+  if (hasSeparateStaffing) {
+    prompt += `
+7. For Plan section: HEAVILY weight the staffing transcript - use attending's specific recommendations
+`;
+  }
+
+  prompt += `
 
 OUTPUT: Generate the complete note following the template structure. Do not include any meta-commentary or section headers beyond what's in the template.`;
 

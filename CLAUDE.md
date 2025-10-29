@@ -10,11 +10,13 @@
 
 ### ✅ What's Working
 - **Note Generation**: Full workflow with Gemini API integration
-- **Template System**: 12 templates in Supabase database with section-level editing
+- **Template System**: 14 templates in Supabase database with section-level editing
 - **SmartList System**: 86 SmartLists loaded (database + file fallback)
 - **Google Integration**: Calendar/Meet/Drive integration for encounters
 - **Deployment**: Successfully deployed to Vercel
 - **Database**: Supabase with patients, encounters, templates, smartlists tables
+- **Staffing Workflows**: Automated attending staffing conversation detection and integration
+- **Therapy Notes**: BHIDC therapy-focused templates (First Visit, Follow-up)
 
 ### ⚠️ Known Issues & Technical Debt
 
@@ -23,13 +25,14 @@
    - Must fix linting errors before production
    - Run `pnpm lint` to see all issues
 
-2. **Template Loading Architecture** (FIXED)
-   - ✅ Generate API now loads from database (not in-memory)
-   - ✅ Visit type normalization for Redwood "Consultation Visit" → "Intake"
-
-3. **Environment Variables**
+2. **Environment Variables**
    - Need comprehensive documentation
    - Add runtime validation for critical vars
+
+3. **Staffing Workflows** (TESTING REQUIRED)
+   - ⚠️ Inline staffing (HMHI RCC) not yet tested with real transcripts
+   - ⚠️ Separate staffing (Davis, Redwood) not yet tested with real transcripts
+   - ⚠️ BHIDC therapy templates not yet tested with real sessions
 
 ---
 
@@ -152,9 +155,15 @@ if (setting === 'Redwood Clinic MHI' && visitType === 'Consultation Visit') {
   template_id: string,  // e.g., "rcc_intake_v1"
   name: string,
   setting: string,      // "HMHI Downtown RCC" | "Redwood Clinic MHI" | ...
-  visit_type: string,   // "Intake" | "Transfer of Care" | "Follow-up"
+  visit_type: string,   // "Intake" | "Transfer of Care" | "Follow-up" | "First Visit"
   sections: TemplateSection[],
   smarttools: SmartTool[],
+  staffing_config: {    // NEW: Attending staffing configuration
+    mode: 'inline' | 'separate' | 'none',
+    visitTypes: string[],
+    markers?: string[],  // For inline detection
+    weight?: 'heavy' | 'moderate' | 'light'
+  } | null,
   version: number,
   active: boolean
 }
@@ -191,9 +200,17 @@ if (setting === 'Redwood Clinic MHI' && visitType === 'Consultation Visit') {
 
 ### Settings × Visit Types
 1. **HMHI Downtown RCC**: Intake, Transfer of Care, Follow-up
+   - **Staffing**: `inline` (Intake only) - attending conversation in same transcript
+   - **Markers**: "supervising doctor", "staff this", "talk with my attending"
 2. **Redwood Clinic MHI**: Consultation Visit (→ Intake), Transfer of Care, Follow-up
+   - **Staffing**: `separate` (all visits) - end-of-day staffing in separate recording
 3. **Davis Behavioral Health**: Intake, Transfer of Care, Follow-up
+   - **Staffing**: `separate` (all visits) - end-of-day staffing in separate recording
 4. **Moonlit Psychiatry**: Intake, Transfer of Care, Follow-up
+   - **Staffing**: `none` (private practice - no staffing)
+5. **BHIDC therapy**: First Visit, Follow-up
+   - **Note Type**: Therapy-focused (no medication management)
+   - **Staff Intake**: Optional BHIDC staff screener intake note (First Visit only)
 
 ### Required Environment Variables
 ```bash
@@ -231,8 +248,11 @@ GOOGLE_REFRESH_TOKEN=
 1. Go to `/encounters` or `/generate`
 2. Select Setting × Visit Type
 3. Paste transcript (and prior note for TOC/FU)
-4. Click Generate
-5. Copy note to clipboard
+4. **Optional fields based on setting:**
+   - **Davis/Redwood**: Paste separate staffing transcript (if applicable)
+   - **BHIDC First Visit**: Paste BHIDC staff screener intake note (if available)
+5. Click Generate
+6. Copy note to clipboard
 
 ---
 
@@ -251,11 +271,30 @@ GOOGLE_REFRESH_TOKEN=
 
 ### Prompt Builder Flow
 ```
-SYSTEM + TASK + SMARTTOOLS RULES + TEMPLATE + PRIOR NOTE? + TRANSCRIPT
+SYSTEM + TASK + SMARTTOOLS RULES + TEMPLATE + PRIOR NOTE? + STAFFING TRANSCRIPT? + TRANSCRIPT
 → Gemini API
 → Validation (SmartLists, structure, format)
 → Generated Note
 ```
+
+### Staffing Configuration System
+**Three modes of attending physician staffing:**
+
+1. **Inline Staffing** (HMHI RCC Intake)
+   - Staffing conversation recorded in same transcript as patient visit
+   - LLM detects transition markers ("supervising doctor", "staff this")
+   - Extracts attending recommendations
+   - Plan section heavily weighted on staffing discussion
+
+2. **Separate Staffing** (Davis, Redwood)
+   - End-of-day staffing recorded separately
+   - UI provides optional "Staffing Discussion Transcript" field
+   - Patient transcript used for clinical sections
+   - Staffing transcript used primarily for Plan section
+
+3. **No Staffing** (Moonlit, BHIDC)
+   - Private practice or therapy-only settings
+   - No attending staffing workflow
 
 ---
 
@@ -291,6 +330,12 @@ SYSTEM + TASK + SMARTTOOLS RULES + TEMPLATE + PRIOR NOTE? + TRANSCRIPT
 - SmartLists Service: `/services/note/src/smartlists/smartlist-service.ts`
 - Note Generation: `/apps/web/app/api/generate/route.ts`
 - Prompt Builder: `/services/note/src/prompts/psychiatric-prompt-builder.ts`
+- Staffing Config: Templates table `staffing_config` JSONB column
+
+**Recent Migrations:**
+- `005_add_staffing_config_complete.sql` - Added staffing_config column, updated HMHI RCC
+- `006_add_separate_staffing_configs.sql` - Updated Davis/Redwood with separate staffing
+- `007_add_bhidc_therapy_templates_v2.sql` - Added BHIDC therapy templates
 
 ---
 

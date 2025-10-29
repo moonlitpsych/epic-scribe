@@ -6,7 +6,7 @@ import { getPromptBuilder } from '@epic-scribe/note-service/src/prompts/prompt-b
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { encounterId, patientId, setting, visitType, transcript, priorNote } = body;
+    const { encounterId, patientId, setting, visitType, transcript, priorNote, staffingTranscript } = body;
 
     // Validation
     if (!setting || !visitType || !transcript) {
@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
       template,
       transcript,
       previousNote: priorNote,
+      staffingTranscript, // Include staffing transcript if provided
       patientContext, // Include patient clinical context if available
       setting: setting as Setting,
       visitType

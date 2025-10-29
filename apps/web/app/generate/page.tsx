@@ -16,6 +16,8 @@ function GeneratePageContent() {
   const [visitType, setVisitType] = useState<string>('Intake');
   const [transcript, setTranscript] = useState('');
   const [previousNote, setPreviousNote] = useState('');
+  const [staffingTranscript, setStaffingTranscript] = useState('');
+  const [bhidcIntakeNote, setBhidcIntakeNote] = useState(''); // BHIDC staff screener intake
   const [loadingTranscript, setLoadingTranscript] = useState(false);
 
   // UI state
@@ -81,12 +83,25 @@ function GeneratePageContent() {
     if (setting === 'Redwood Clinic MHI') {
       return ['Consultation Visit', 'Transfer of Care', 'Follow-up'];
     }
+    if (setting === 'BHIDC therapy') {
+      return ['First Visit', 'Follow-up'];
+    }
     return ['Intake', 'Transfer of Care', 'Follow-up'];
   };
 
   // Check if previous note is required
   const isPreviousNoteRequired = (): boolean => {
     return visitType === 'Transfer of Care' || visitType === 'Follow-up';
+  };
+
+  // Check if staffing transcript is needed (Davis and Redwood have separate staffing)
+  const isStaffingTranscriptAvailable = (): boolean => {
+    return setting === 'Davis Behavioral Health' || setting === 'Redwood Clinic MHI';
+  };
+
+  // Check if BHIDC staff intake note is needed (only for First Visit)
+  const isBhidcIntakeNoteAvailable = (): boolean => {
+    return setting === 'BHIDC therapy' && visitType === 'First Visit';
   };
 
   // Handle setting change
@@ -113,7 +128,8 @@ function GeneratePageContent() {
           setting,
           visitType,
           transcript,
-          priorNote: previousNote
+          priorNote: previousNote || bhidcIntakeNote || undefined, // Use BHIDC intake for First Visit
+          staffingTranscript: staffingTranscript || undefined
         })
       });
 
@@ -166,7 +182,8 @@ function GeneratePageContent() {
           setting,
           visitType,
           transcript,
-          priorNote: previousNote || undefined
+          priorNote: previousNote || bhidcIntakeNote || undefined, // Use BHIDC intake for First Visit
+          staffingTranscript: staffingTranscript || undefined
         })
       });
 
@@ -316,6 +333,62 @@ She has never participated in therapy previously and is motivated to begin. She 
               </p>
             )}
           </div>
+
+          {/* BHIDC Staff Intake Note (BHIDC First Visit only) */}
+          {isBhidcIntakeNoteAvailable() && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                BHIDC Staff Intake Note
+                <span className="text-gray-500 ml-1">(Optional)</span>
+                <span className="block text-xs text-gray-500 mt-1">
+                  The screener intake note completed by BHIDC staff before your first session
+                </span>
+              </label>
+              <textarea
+                value={bhidcIntakeNote}
+                onChange={(e) => setBhidcIntakeNote(e.target.value)}
+                rows={6}
+                placeholder="Paste the BHIDC staff screener intake note here (if available)..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
+              {bhidcIntakeNote && (
+                <p className="text-sm text-gray-500 mt-1">
+                  {bhidcIntakeNote.split(/\s+/).filter(w => w).length} words
+                </p>
+              )}
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                💡 Key information will be extracted and summarized in the BHIDC Staff Intake Summary section
+              </p>
+            </div>
+          )}
+
+          {/* Staffing Transcript (Davis and Redwood only) */}
+          {isStaffingTranscriptAvailable() && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Staffing Discussion Transcript
+                <span className="text-gray-500 ml-1">(Optional)</span>
+                <span className="block text-xs text-gray-500 mt-1">
+                  For {setting}: Paste the separate end-of-day staffing conversation with your attending here
+                </span>
+              </label>
+              <textarea
+                value={staffingTranscript}
+                onChange={(e) => setStaffingTranscript(e.target.value)}
+                rows={6}
+                placeholder="Paste the staffing discussion transcript here (recorded separately from patient visit)..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
+              {staffingTranscript && (
+                <p className="text-sm text-gray-500 mt-1">
+                  {staffingTranscript.split(/\s+/).filter(w => w).length} words
+                </p>
+              )}
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                💡 The Plan section will be heavily based on attending recommendations from this transcript
+              </p>
+            </div>
+          )}
 
           {/* Error Messages */}
           {errors.length > 0 && (

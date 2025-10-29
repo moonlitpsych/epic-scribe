@@ -112,6 +112,12 @@ export interface Database {
             description: string;
             smartListId?: string;
           }> | null;
+          staffing_config: {
+            mode: 'inline' | 'separate' | 'none';
+            visitTypes: string[];
+            markers?: string[];
+            weight?: 'heavy' | 'moderate' | 'light';
+          } | null;
           active: boolean;
           created_at: string;
           updated_at: string;
@@ -137,6 +143,12 @@ export interface Database {
             description: string;
             smartListId?: string;
           }> | null;
+          staffing_config?: {
+            mode: 'inline' | 'separate' | 'none';
+            visitTypes: string[];
+            markers?: string[];
+            weight?: 'heavy' | 'moderate' | 'light';
+          } | null;
           active?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -162,6 +174,12 @@ export interface Database {
             description: string;
             smartListId?: string;
           }> | null;
+          staffing_config?: {
+            mode: 'inline' | 'separate' | 'none';
+            visitTypes: string[];
+            markers?: string[];
+            weight?: 'heavy' | 'moderate' | 'light';
+          } | null;
           active?: boolean;
           created_at?: string;
           updated_at?: string;

@@ -20,6 +20,7 @@ export interface PromptBuilderOptions {
   template: Template;
   transcript: string;
   previousNote?: string;
+  staffingTranscript?: string; // Separate staffing conversation transcript
   patientContext?: string;  // Clinical context from patient record
   setting: Setting;
   visitType: VisitType | string;
@@ -37,6 +38,7 @@ export interface CompiledPrompt {
     extractedFromPrior?: ExtractedNoteData;  // NEW: Extracted data for follow-ups
     template: string;
     previousNote?: string;
+    staffingTranscript?: string; // Separate staffing transcript
     transcript: string;
   };
   metadata: {
@@ -139,7 +141,7 @@ export class PromptBuilder {
    * Build a complete prompt from components
    */
   async build(options: PromptBuilderOptions): Promise<CompiledPrompt> {
-    const { template, transcript, previousNote, patientContext, setting, visitType } = options;
+    const { template, transcript, previousNote, staffingTranscript, patientContext, setting, visitType } = options;
 
     // Check if this is a psychiatric-focused template
     const isPsychiatricFocused = template.name?.includes('Focused Psychiatric') ||
@@ -155,7 +157,7 @@ export class PromptBuilder {
     if (isPsychiatricFocused) {
       // Use the psychiatric-focused prompt builder
       console.log('[PromptBuilder] Using psychiatric-focused prompt builder');
-      prompt = buildPsychiatricPrompt(template, transcript, smartListDefinitions);
+      prompt = buildPsychiatricPrompt(template, transcript, smartListDefinitions, staffingTranscript);
 
       sections = {
         system: 'Psychiatric note generator for Dr. Rufus Sweeney',
@@ -165,6 +167,7 @@ export class PromptBuilder {
         patientContext,
         template: 'Using psychiatric-focused template',
         previousNote,
+        staffingTranscript,
         transcript: transcript
       };
     } else {

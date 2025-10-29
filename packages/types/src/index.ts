@@ -11,7 +11,8 @@ export const VISIT_TYPES = [
   'Intake',
   'Consultation Visit', // Redwood alias for Intake
   'Transfer of Care',
-  'Follow-up'
+  'Follow-up',
+  'First Visit' // BHIDC therapy first session
 ] as const;
 
 export type Setting = typeof SETTINGS[number];
@@ -130,6 +131,7 @@ export interface GenerateNoteRequest {
   visitType: VisitType;
   transcript: string;
   priorNote?: string;
+  staffingTranscript?: string; // Optional separate staffing conversation transcript
 }
 
 export interface GenerateNoteResponse {
