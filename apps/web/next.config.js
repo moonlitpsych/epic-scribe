@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: 'standalone',
   transpilePackages: ['@epic-scribe/types', '@epic-scribe/utils', '@epic-scribe/note-service'],
   eslint: {
     // Warning: This allows production builds to successfully complete even if
