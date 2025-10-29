@@ -49,11 +49,17 @@ export async function getTemplateBySettingAndVisitType(
   setting: string,
   visitType: string
 ): Promise<Template | null> {
+  // Handle Redwood's "Consultation Visit" alias for "Intake"
+  let normalizedVisitType = visitType;
+  if (setting === 'Redwood Clinic MHI' && visitType === 'Consultation Visit') {
+    normalizedVisitType = 'Intake';
+  }
+
   const { data, error } = await supabase
     .from('templates')
     .select('*')
     .eq('setting', setting)
-    .eq('visit_type', visitType)
+    .eq('visit_type', normalizedVisitType)
     .eq('active', true)
     .single();
 
