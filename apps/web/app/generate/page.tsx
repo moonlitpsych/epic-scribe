@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SETTINGS, VISIT_TYPES, Setting, VisitType } from '@epic-scribe/types';
 import { moonlitTheme } from '@/lib/moonlit-theme';
 
-// Force dynamic rendering since we use useSearchParams
+// Force dynamic rendering - no static generation
 export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+export const revalidate = 0;
 
-export default function GeneratePage() {
+function GeneratePageContent() {
   const searchParams = useSearchParams();
 
   // Form state
@@ -553,5 +555,13 @@ She has never participated in therapy previously and is motivated to begin. She 
         )}
       </div>
     </div>
+  );
+}
+
+export default function GeneratePage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+      <GeneratePageContent />
+    </Suspense>
   );
 }
