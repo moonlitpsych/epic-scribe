@@ -627,21 +627,21 @@ SYSTEM + TASK + SMARTTOOLS RULES + TEMPLATE + PRIOR NOTE? + STAFFING TRANSCRIPT?
 Update these in Vercel Dashboard:
 ```bash
 # Google OAuth (from .env.local)
-GOOGLE_CLIENT_ID=1040402296542-n05n394qaemohkvulsqhrpc8qvat4veb.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=<your-google-client-id>.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-<your-google-client-secret>
 
 # NextAuth (already set)
 NEXTAUTH_URL=https://epic-scribe.vercel.app
-NEXTAUTH_SECRET=<your-secret>
+NEXTAUTH_SECRET=<your-nextauth-secret>
 
 # Gemini (from .env.local)
-GEMINI_API_KEY=AIzaSyDos9KPZe_i-gMvMG9HSNlV36SyydxD8TA
+GEMINI_API_KEY=AIzaSy<your-gemini-api-key>
 GEMINI_MODEL=gemini-1.5-pro
 
 # Supabase (already set)
-NEXT_PUBLIC_SUPABASE_URL=https://trdxiqergjlcgpnapodf.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_iOJ4j4wJeDKe8buOLZ-_Pw_SBbD6goh
-SUPABASE_SERVICE_ROLE_KEY=sb_secret_Xiqj_S3ZQLmhIOM-LsiMNg_ajpYu4ov
+NEXT_PUBLIC_SUPABASE_URL=https://<your-project>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<your-supabase-service-role-key>
 ```
 
 ### Files Created/Modified
