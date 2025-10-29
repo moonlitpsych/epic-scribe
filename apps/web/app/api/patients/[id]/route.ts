@@ -15,6 +15,7 @@ import {
   deletePatient,
   getPatientWithEncounterCount,
 } from '@/lib/db';
+import { getNotesByPatientId } from '@/lib/db/notes';
 
 export async function GET(
   request: NextRequest,
@@ -39,6 +40,10 @@ export async function GET(
     // Get patient details
     const patient = await getPatientById(patientId);
 
+    if (!patient) {
+      return NextResponse.json({ error: 'Patient not found' }, { status: 404 });
+    }
+
     // Get encounters for this patient (optional - table may not exist yet)
     let encounters = [];
     try {
@@ -49,7 +54,16 @@ export async function GET(
       // Continue without encounters
     }
 
-    return NextResponse.json({ patient, encounters });
+    // Get generated notes for this patient
+    let notes = [];
+    try {
+      notes = await getNotesByPatientId(patientId);
+    } catch (error) {
+      console.warn('Could not fetch notes:', error);
+      // Continue without notes
+    }
+
+    return NextResponse.json({ patient, encounters, notes });
   } catch (error) {
     console.error('Error fetching patient:', error);
     return NextResponse.json(

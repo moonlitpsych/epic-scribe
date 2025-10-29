@@ -113,3 +113,126 @@ export async function deleteGeneratedNote(id: string) {
     throw new Error('Failed to delete generated note');
   }
 }
+
+/**
+ * Get all notes for a specific patient
+ * Joins with encounters to get notes for all patient encounters
+ */
+export async function getNotesByPatientId(patientId: string) {
+  const supabase = getSupabaseClient(true);
+
+  const { data, error } = await supabase
+    .from('generated_notes')
+    .select(`
+      *,
+      encounters!inner(
+        id,
+        patient_id,
+        setting,
+        visit_type,
+        scheduled_start,
+        scheduled_end
+      )
+    `)
+    .eq('encounters.patient_id', patientId)
+    .order('generated_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching patient notes:', error);
+    throw new Error('Failed to fetch patient notes');
+  }
+
+  return data as any[];
+}
+
+/**
+ * Finalize a note - mark it as final and store the content
+ */
+export async function finalizeNote(
+  noteId: string,
+  finalContent: string,
+  userId?: string
+) {
+  const supabase = getSupabaseClient(true);
+
+  const updates: any = {
+    final_note_content: finalContent,
+    is_final: true,
+    finalized_at: new Date().toISOString(),
+  };
+
+  if (userId) {
+    updates.finalized_by = userId;
+  }
+
+  const { data, error } = await supabase
+    .from('generated_notes')
+    .update(updates)
+    .eq('id', noteId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error finalizing note:', error);
+    throw new Error('Failed to finalize note');
+  }
+
+  return data;
+}
+
+/**
+ * Get recent final notes for a patient
+ * Used to provide context for follow-up visits
+ */
+export async function getRecentFinalNotesForPatient(
+  patientId: string,
+  limit: number = 3
+) {
+  const supabase = getSupabaseClient(true);
+
+  // Use the database function for optimized retrieval
+  const { data, error } = await supabase
+    .rpc('get_recent_final_notes_for_patient', {
+      p_patient_id: patientId,
+      p_limit: limit,
+    });
+
+  if (error) {
+    console.error('Error fetching recent final notes:', error);
+    throw new Error('Failed to fetch recent final notes');
+  }
+
+  return data || [];
+}
+
+/**
+ * Get all final notes for a patient
+ */
+export async function getFinalNotesForPatient(patientId: string) {
+  const supabase = getSupabaseClient(true);
+
+  const { data, error } = await supabase
+    .from('generated_notes')
+    .select(`
+      *,
+      encounters!inner(
+        id,
+        patient_id,
+        setting,
+        visit_type,
+        scheduled_start,
+        scheduled_end
+      )
+    `)
+    .eq('encounters.patient_id', patientId)
+    .eq('is_final', true)
+    .not('final_note_content', 'is', null)
+    .order('finalized_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching final notes:', error);
+    throw new Error('Failed to fetch final notes');
+  }
+
+  return data as any[];
+}

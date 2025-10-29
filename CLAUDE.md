@@ -6,16 +6,21 @@
 
 ---
 
-## 🎯 CURRENT STATUS (2025-10-28)
+## 🎯 CURRENT STATUS (2025-10-29)
 
 ### ✅ What's Working
 - **Note Generation**: Full workflow with Gemini API integration (LOCAL ONLY)
 - **Template System**: 14 templates in Supabase database with section-level editing
 - **SmartList System**: 86 SmartLists loaded (database + file fallback)
-- **Google Integration**: Calendar/Meet/Drive integration for encounters
+- **Google OAuth**: Successfully configured with External app for trymoonlit.com workspace
+- **Google Integration**: Calendar/Meet/Drive integration for encounters - TESTED & WORKING
+- **Patient Management**: Full CRUD operations with database RLS policies configured
+- **Patient Selector**: Integrated into workflow page with search and inline creation
 - **Local Development**: Full app works perfectly on `pnpm dev`
 - **Local Builds**: Production builds succeed with `pnpm build`
-- **Database**: Supabase with patients, encounters, templates, smartlists tables
+- **Database**: Supabase with patients, encounters, templates, smartlists, generated_notes tables
+- **Database Permissions**: All RLS policies and table grants properly configured
+- **Final Note Storage**: Database schema ready for storing finalized notes
 - **Staffing Workflows**: Automated attending staffing conversation detection and integration (untested)
 - **Therapy Notes**: BHIDC therapy-focused templates (First Visit, Follow-up) (untested)
 
@@ -45,35 +50,57 @@
 ## 📋 NEXT PRIORITIES
 
 ### Immediate (Week 1-2)
-1. **Fix ESLint/TypeScript Warnings**
+1. ✅ **Patient Management UI** - COMPLETED (2025-10-29)
+   - ✅ Created `/patients` page with list/search
+   - ✅ Replaced free-text patient names with database references
+   - ✅ Linked encounters to patient records
+   - ✅ Integrated patient selector into workflow
+
+2. ✅ **Google OAuth Setup** - COMPLETED (2025-10-29)
+   - ✅ Configured External OAuth app for trymoonlit.com
+   - ✅ Fixed authentication flow and credentials
+   - ✅ Tested and working with Google Calendar/Meet/Drive
+
+3. ✅ **Database Permissions** - COMPLETED (2025-10-29)
+   - ✅ Configured RLS policies for all tables
+   - ✅ Set up PostgreSQL table-level grants
+   - ✅ Service role and authenticated role access working
+
+4. **Note Finalization Flow** - IN PROGRESS
+   - Add "Finalize Note" button to NoteResultsStep
+   - Save final edited note content to database
+   - Link finalized notes to patient records
+
+5. **Fix ESLint/TypeScript Warnings**
    - Remove `ignoreDuringBuilds` hack
    - Fix unescaped quotes, unused vars, console statements
 
-2. **Patient Management UI**
-   - Create `/patients` page with list/search
-   - Replace free-text patient names with database references
-   - Link encounters to patient records
-
-3. **Environment Variable Documentation**
-   - Document all required vars in `.env.example`
-   - Add validation at startup
-
 ### Medium Priority (Phase 1.5)
-4. **Encounter Delete Functionality**
+6. **Historical Note Context**
+   - Fetch last 3 finalized notes for follow-up visits
+   - Pass historical context to generation API
+   - Improve continuity in follow-up notes
+
+7. **Enhanced Patient Profile**
+   - Display all finalized notes chronologically
+   - Show encounter timeline with notes
+   - Quick access to generate new note
+
+8. **Encounter Delete Functionality**
    - Add delete button to encounters table
    - Sync deletion with Google Calendar
 
-5. **Transcript Auto-Attachment**
+9. **Transcript Auto-Attachment**
    - Drive watcher for automatic transcript indexing
    - Attach transcripts to encounters within 60s
 
 ### Future (Phase 2)
-6. **Prompt Control & Observability**
+10. **Prompt Control & Observability**
    - Prompt preview before generation
    - Prompt receipts with version/hash tracking
    - Golden prompt snapshot tests
 
-7. **IntakeQ Integration** (Moonlit only)
+11. **IntakeQ Integration** (Moonlit only)
    - Auto-fetch prior notes for Transfer of Care / Follow-up
 
 ---
@@ -521,6 +548,147 @@ SYSTEM + TASK + SMARTTOOLS RULES + TEMPLATE + PRIOR NOTE? + STAFFING TRANSCRIPT?
 - `005_add_staffing_config_complete.sql` - Added staffing_config column, updated HMHI RCC
 - `006_add_separate_staffing_configs.sql` - Updated Davis/Redwood with separate staffing
 - `007_add_bhidc_therapy_templates_v2.sql` - Added BHIDC therapy templates
+- `008_add_final_note_storage.sql` - Added final_note_content, is_final, finalized_at fields for persistent note storage
+
+---
+
+## 🎉 SESSION NOTES (2025-10-29)
+
+### What We Accomplished
+
+**1. Google OAuth Setup - COMPLETE ✅**
+- Created fresh OAuth 2.0 client in Google Cloud Console
+- Configured as **External** app (supports personal Gmail + Workspace accounts)
+- Set up test users for trymoonlit.com workspace
+- Updated OAuth credentials in both `.env` and `.env.local`
+- Client ID: `1040402296542-n05n394qaemohkvulsqhrpc8qvat4veb.apps.googleusercontent.com`
+- Successfully tested authentication flow
+- Google Calendar/Meet/Drive integration working
+
+**2. Patient Management System - COMPLETE ✅**
+- Created comprehensive `PatientSelector` component with:
+  - Real-time patient search with debouncing
+  - Inline patient creation modal
+  - Google Calendar encounter creation
+  - Automatic Google Meet link generation
+- Enhanced patient API endpoints:
+  - `GET /api/patients/[id]` - Fetch patient with encounters and notes
+  - Added `getNotesByPatientId()` function
+- Integrated patient selection into `/workflow` page
+- Patient creation working in both `/workflow` and `/encounters` views
+
+**3. Database Permissions - COMPLETE ✅**
+- Fixed Supabase RLS policies for authenticated users
+- Set up PostgreSQL table-level grants:
+  - `authenticated` role: full access to patients, encounters, generated_notes
+  - `service_role`: full access to all tables
+  - Sequence permissions for auto-increment IDs
+- Resolved "permission denied" errors
+- Patient CRUD operations now working flawlessly
+
+**4. Final Note Storage Schema - COMPLETE ✅**
+- Created migration `008_add_final_note_storage.sql`
+- Added fields to `generated_notes` table:
+  - `final_note_content` (TEXT) - Stores the edited final version
+  - `is_final` (BOOLEAN) - Marks note as finalized
+  - `finalized_at` (TIMESTAMPTZ) - Timestamp of finalization
+  - `finalized_by` (UUID) - User who finalized the note
+- Created database function `get_recent_final_notes_for_patient()` for efficient retrieval
+- Added helper functions in `/lib/db/notes.ts`:
+  - `finalizeNote()`
+  - `getRecentFinalNotesForPatient()`
+  - `getFinalNotesForPatient()`
+
+**5. Documentation**
+- Created `GOOGLE-OAUTH-EXTERNAL-SETUP.md` - Complete guide for External OAuth apps
+- Created `TRANSFER-OAUTH-TO-MOONLIT.md` - Migration guide for workspace transfer
+- Created `APPLY_FINAL_NOTES_MIGRATION.md` - Instructions for database migration
+- Updated `UPDATE_OAUTH_CREDENTIALS.md` - Troubleshooting guide
+
+### Key Fixes & Decisions
+
+**OAuth Configuration:**
+- **Decision:** Use External OAuth (not Internal) to support both personal Gmail and Workspace accounts
+- **Benefit:** More flexible for testing, supports up to 100 test users, no verification needed
+- **Tradeoff:** Shows "unverified app" warning (acceptable for internal tool)
+
+**Database Architecture:**
+- **Decision:** Store final note content in database (not just Google Drive)
+- **Benefit:** Fast retrieval for historical context in follow-up visits
+- **Implementation:** `generated_notes` table with `final_note_content` field
+
+**Patient Selector UX:**
+- **Decision:** Integrate patient selection into workflow page (not separate screen)
+- **Benefit:** Smoother user experience, fewer page transitions
+- **Implementation:** `PatientSelector` component with inline modals
+
+### Environment Variables (Vercel Update Required)
+
+Update these in Vercel Dashboard:
+```bash
+# Google OAuth (from .env.local)
+GOOGLE_CLIENT_ID=1040402296542-n05n394qaemohkvulsqhrpc8qvat4veb.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=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
+
+# NextAuth (already set)
+NEXTAUTH_URL=https://epic-scribe.vercel.app
+NEXTAUTH_SECRET=<your-secret>
+
+# Gemini (from .env.local)
+GEMINI_API_KEY=AIzaSyDos9KPZe_i-gMvMG9HSNlV36SyydxD8TA
+GEMINI_MODEL=gemini-1.5-pro
+
+# Supabase (already set)
+NEXT_PUBLIC_SUPABASE_URL=https://trdxiqergjlcgpnapodf.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_iOJ4j4wJeDKe8buOLZ-_Pw_SBbD6goh
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_Xiqj_S3ZQLmhIOM-LsiMNg_ajpYu4ov
+```
+
+### Files Created/Modified
+
+**New Files:**
+- `/apps/web/src/components/workflow/PatientSelector.tsx` - Patient selection UI
+- `/supabase/migrations/008_add_final_note_storage.sql` - Database schema
+- `/GOOGLE-OAUTH-EXTERNAL-SETUP.md` - OAuth documentation
+- `/TRANSFER-OAUTH-TO-MOONLIT.md` - Migration guide
+- `/APPLY_FINAL_NOTES_MIGRATION.md` - Migration instructions
+- `/UPDATE_OAUTH_CREDENTIALS.md` - Troubleshooting guide
+
+**Modified Files:**
+- `/apps/web/src/lib/db/notes.ts` - Added patient note functions
+- `/apps/web/app/api/patients/[id]/route.ts` - Enhanced with notes
+- `/apps/web/src/components/workflow/WorkflowWizard.tsx` - Patient state management
+- `/apps/web/src/components/workflow/GenerateInputStep.tsx` - Integrated PatientSelector
+- `/.env` - Updated OAuth credentials
+- `/apps/web/.env.local` - Updated OAuth credentials
+- `/CLAUDE.md` - Updated status and priorities
+
+### Testing Completed
+
+✅ Google OAuth sign-in with rufussweeney@gmail.com
+✅ Google OAuth sign-in with hello@trymoonlit.com
+✅ Patient creation in workflow page
+✅ Patient search functionality
+✅ Patient selection and persistence
+✅ Database permissions for all operations
+✅ Encounters page patient creation
+
+### Next Session Priorities
+
+1. **Implement note finalization UI**
+   - Add "Finalize Note" button in NoteResultsStep
+   - Create API endpoint to save final note content
+   - Test complete flow from generation to finalization
+
+2. **Add historical context to note generation**
+   - Fetch last 3 finalized notes for patient
+   - Pass to generation API for better continuity
+   - Update prompt builder to include historical context
+
+3. **Enhance patient profile page**
+   - Display finalized notes chronologically
+   - Show encounter timeline
+   - Add quick "Generate New Note" action
 
 ---
 

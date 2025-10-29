@@ -3,16 +3,28 @@
 import { useState, useEffect } from 'react';
 import { Template, Setting } from '@epic-scribe/types';
 import { ChevronLeft, Sparkles, Eye, AlertCircle } from 'lucide-react';
+import PatientSelector from './PatientSelector';
+
+interface Patient {
+  id: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth: string;
+  mrn?: string;
+  notes?: string;
+}
 
 interface GenerateInputStepProps {
   setting: Setting;
   visitType: string;
   template: Template;
-  onGenerate: (transcript: string, previousNote: string) => void;
+  onGenerate: (transcript: string, previousNote: string, patient: Patient | null, encounterId: string | null) => void;
   onBack: () => void;
   isGenerating: boolean;
   initialTranscript?: string;
   initialPreviousNote?: string;
+  selectedPatient?: Patient | null;
+  encounterId?: string | null;
 }
 
 export default function GenerateInputStep({
@@ -24,12 +36,16 @@ export default function GenerateInputStep({
   isGenerating,
   initialTranscript = '',
   initialPreviousNote = '',
+  selectedPatient: initialPatient = null,
+  encounterId: initialEncounterId = null,
 }: GenerateInputStepProps) {
   const [transcript, setTranscript] = useState(initialTranscript);
   const [previousNote, setPreviousNote] = useState(initialPreviousNote);
   const [showPromptPreview, setShowPromptPreview] = useState(false);
   const [promptPreview, setPromptPreview] = useState('');
   const [loadingPreview, setLoadingPreview] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(initialPatient);
+  const [encounterId, setEncounterId] = useState<string | null>(initialEncounterId);
 
   // Check if previous note is required
   const requiresPreviousNote = visitType === 'Transfer of Care' || visitType === 'Follow-up';
@@ -68,8 +84,14 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
 
   const handleGenerate = () => {
     if (canGenerate) {
-      onGenerate(transcript, previousNote);
+      onGenerate(transcript, previousNote, selectedPatient, encounterId);
     }
+  };
+
+  const handleCreateEncounter = async (patient: Patient, startTime: Date, endTime: Date) => {
+    // This will be handled by the PatientSelector component
+    // which creates the encounter and updates the encounterId
+    // We'll get the encounter ID from the response
   };
 
   return (
@@ -93,6 +115,15 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
           </button>
         </div>
       </div>
+
+      {/* Patient Selection */}
+      <PatientSelector
+        selectedPatient={selectedPatient}
+        onPatientSelect={setSelectedPatient}
+        onCreateEncounter={handleCreateEncounter}
+        setting={setting}
+        visitType={visitType}
+      />
 
       {/* Input Card */}
       <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-6">

@@ -16,6 +16,15 @@ interface ValidationResult {
   warnings: string[];
 }
 
+interface Patient {
+  id: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth: string;
+  mrn?: string;
+  notes?: string;
+}
+
 export default function WorkflowWizard() {
   // Step management
   const [currentStep, setCurrentStep] = useState<Step>('review');
@@ -24,6 +33,10 @@ export default function WorkflowWizard() {
   const [setting, setSetting] = useState<Setting>();
   const [visitType, setVisitType] = useState<string>();
   const [template, setTemplate] = useState<Template | null>(null);
+
+  // Patient selection (Step 2)
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [encounterId, setEncounterId] = useState<string | null>(null);
 
   // Generation inputs (Step 2)
   const [transcript, setTranscript] = useState('');
@@ -51,9 +64,11 @@ export default function WorkflowWizard() {
     }
   };
 
-  const handleGenerate = async (trans: string, prevNote: string) => {
+  const handleGenerate = async (trans: string, prevNote: string, patient: Patient | null, encId: string | null) => {
     setTranscript(trans);
     setPreviousNote(prevNote);
+    setSelectedPatient(patient);
+    setEncounterId(encId);
     setIsGenerating(true);
 
     try {
@@ -65,6 +80,8 @@ export default function WorkflowWizard() {
           visitType,
           transcript: trans,
           priorNote: prevNote || undefined,
+          patientId: patient?.id,
+          encounterId: encId,
         }),
       });
 
@@ -179,6 +196,8 @@ export default function WorkflowWizard() {
           isGenerating={isGenerating}
           initialTranscript={transcript}
           initialPreviousNote={previousNote}
+          selectedPatient={selectedPatient}
+          encounterId={encounterId}
         />
       )}
 
