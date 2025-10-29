@@ -27,6 +27,7 @@ const VISIT_TYPES: Record<Setting, string[]> = {
   'Redwood Clinic MHI': ['Consultation Visit', 'Transfer of Care', 'Follow-up'],
   'Davis Behavioral Health': ['Intake', 'Transfer of Care', 'Follow-up'],
   'Moonlit Psychiatry': ['Intake', 'Transfer of Care', 'Follow-up'],
+  'BHIDC therapy': ['First Visit', 'Follow-up'],
 };
 
 export default function TemplateReviewStep({
