@@ -9,27 +9,33 @@
 ## 🎯 CURRENT STATUS (2025-10-28)
 
 ### ✅ What's Working
-- **Note Generation**: Full workflow with Gemini API integration
+- **Note Generation**: Full workflow with Gemini API integration (LOCAL ONLY)
 - **Template System**: 14 templates in Supabase database with section-level editing
 - **SmartList System**: 86 SmartLists loaded (database + file fallback)
 - **Google Integration**: Calendar/Meet/Drive integration for encounters
-- **Deployment**: Successfully deployed to Vercel
+- **Local Development**: Full app works perfectly on `pnpm dev`
+- **Local Builds**: Production builds succeed with `pnpm build`
 - **Database**: Supabase with patients, encounters, templates, smartlists tables
-- **Staffing Workflows**: Automated attending staffing conversation detection and integration
-- **Therapy Notes**: BHIDC therapy-focused templates (First Visit, Follow-up)
+- **Staffing Workflows**: Automated attending staffing conversation detection and integration (untested)
+- **Therapy Notes**: BHIDC therapy-focused templates (First Visit, Follow-up) (untested)
 
 ### ⚠️ Known Issues & Technical Debt
 
-1. **ESLint/TypeScript Warnings Ignored** (CRITICAL)
+1. **Vercel Deployment 404 Error** (CRITICAL BLOCKER)
+   - ⚠️ Build succeeds but app returns 404 on all routes
+   - ⚠️ See "Vercel Deployment Troubleshooting" section below for details
+   - Status: UNRESOLVED - requires investigation
+
+2. **ESLint/TypeScript Warnings Ignored** (CRITICAL)
    - `ignoreDuringBuilds: true` in next.config.js is temporary
    - Must fix linting errors before production
    - Run `pnpm lint` to see all issues
 
-2. **Environment Variables**
+3. **Environment Variables**
    - Need comprehensive documentation
    - Add runtime validation for critical vars
 
-3. **Staffing Workflows** (TESTING REQUIRED)
+4. **Staffing Workflows** (TESTING REQUIRED)
    - ⚠️ Inline staffing (HMHI RCC) not yet tested with real transcripts
    - ⚠️ Separate staffing (Davis, Redwood) not yet tested with real transcripts
    - ⚠️ BHIDC therapy templates not yet tested with real sessions
@@ -143,6 +149,154 @@ if (setting === 'Redwood Clinic MHI' && visitType === 'Consultation Visit') {
 - [ ] Verify environment variables
 - [ ] Test database connectivity
 - [ ] Post-deploy: test note generation end-to-end
+
+### Vercel Deployment Troubleshooting (2025-10-28)
+
+**PROBLEM:** Vercel deployment returns 404 on all routes despite successful build.
+
+**Symptoms:**
+- Build logs show successful compilation
+- All Next.js routes compile successfully (including Route (app) pages)
+- Installation completes: `Already up to date` with pnpm@10.13.1
+- Build output shows no errors
+- Deployed URL returns 404: Page Not Found
+- Next.js renders `/_not-found` route instead of actual pages
+
+**Context:**
+- This is a **pnpm monorepo** with structure: `/apps/web` (Next.js app), `/packages/*`, `/services/*`
+- Apps and packages linked via workspace protocol
+- Root `package.json` uses `"packageManager": "pnpm@10.13.1"`
+- Vercel detects Next.js framework automatically
+
+**Troubleshooting Steps Attempted:**
+
+1. ✅ **Fixed Missing BHIDC in TemplateReviewStep.tsx** (commit: 9c10d85)
+   - Added `'BHIDC therapy': ['First Visit', 'Follow-up']` to VISIT_TYPES Record
+   - Fixed TypeScript error that was blocking builds
+   - Result: Build succeeded, but 404 persisted
+
+2. ✅ **Added Missing Environment Variables to Vercel**
+   - User initially only had localhost URLs in Vercel environment variables
+   - Added production URLs for `NEXTAUTH_URL` and `NEXT_PUBLIC_APP_URL`
+   - Added all required Supabase, Gemini, and Google Workspace credentials
+   - Result: Build succeeded, but 404 persisted
+
+3. ❌ **Attempted to Set rootDirectory in vercel.json** (commit: reverted)
+   - Added `"rootDirectory": "apps/web"` to vercel.json
+   - Result: Schema validation error - `rootDirectory` is NOT a valid vercel.json property
+   - This property must be set in Vercel Dashboard UI, not in vercel.json
+
+4. ✅ **Set Root Directory in Vercel Dashboard UI**
+   - Navigated to Vercel project → Settings → General → Root Directory
+   - Set value to: `apps/web`
+   - Triggered redeploy
+   - Result: Build succeeded, but **404 STILL PERSISTS**
+
+**Current vercel.json Configuration:**
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd ../.. && npx pnpm@10.13.1 --filter=@epic-scribe/web build",
+  "devCommand": "pnpm --filter=@epic-scribe/web dev",
+  "installCommand": "npx pnpm@10.13.1 install",
+  "framework": null,
+  "outputDirectory": ".next"
+}
+```
+
+**Current Vercel Project Settings:**
+- Root Directory: `apps/web`
+- Framework Preset: Next.js (auto-detected, then overridden to null in vercel.json)
+- Build Command: Custom (defined in vercel.json)
+- Output Directory: `.next`
+- Install Command: Custom (defined in vercel.json)
+- Node.js Version: 20.x (from package.json engines)
+
+**Key Observations:**
+- Local development works perfectly (`pnpm dev` from root)
+- Local production build works (`pnpm build` from root)
+- Vercel build logs show successful compilation with no errors
+- Build cache is being used from previous deployments
+- `.vercelignore` excludes 50+ files (mostly .git and docs)
+
+**What's NOT the Issue:**
+- ❌ TypeScript errors (fixed)
+- ❌ Missing environment variables (added to Vercel)
+- ❌ Missing Root Directory setting (configured in Dashboard)
+- ❌ Build failures (build succeeds every time)
+- ❌ vercel.json syntax errors (schema validates)
+
+**Hypotheses to Investigate:**
+
+1. **Monorepo Routing Issue**
+   - Vercel may not be correctly resolving the Next.js app within the monorepo structure
+   - The `buildCommand` uses `cd ../..` which assumes it starts from `apps/web`
+   - If Root Directory is set to `apps/web`, the build command may be going to wrong location
+   - **Test:** Try removing `cd ../..` from buildCommand since Root Directory is already set
+
+2. **Output Directory Path Issue**
+   - `outputDirectory: ".next"` may need to be relative to root or absolute
+   - With Root Directory set to `apps/web`, Vercel might be looking for `.next` in wrong location
+   - **Test:** Try `apps/web/.next` as outputDirectory
+
+3. **Framework Detection Conflict**
+   - Setting `"framework": null` may interfere with Next.js routing
+   - Vercel auto-detects Next.js but we're overriding it
+   - **Test:** Remove `"framework": null` and let Vercel auto-detect
+
+4. **Workspace Dependencies Not Resolved**
+   - Monorepo packages may not be properly linked during Vercel build
+   - pnpm workspace protocol may need special handling
+   - **Test:** Check if Vercel needs special pnpm configuration
+
+5. **Build Output Location Mismatch**
+   - Next.js may be building to correct location but Vercel can't find it
+   - Need to verify where `.next` directory actually exists after build
+   - **Test:** Add debug step to list directory contents after build
+
+**Recommended Next Steps:**
+
+1. **Review Vercel Build Logs Completely**
+   - User's last log snippet stopped after installation
+   - Need to see full build output including Next.js compilation and deployment
+   - Look for warnings about missing files or incorrect paths
+
+2. **Try Simplified vercel.json**
+   ```json
+   {
+     "buildCommand": "pnpm --filter=@epic-scribe/web build",
+     "installCommand": "pnpm install"
+   }
+   ```
+   - Remove `cd ../..` since Root Directory handles path
+   - Remove `framework: null` to allow auto-detection
+   - Simplify install command
+
+3. **Check Vercel Function Logs**
+   - View runtime logs in Vercel dashboard
+   - Look for Next.js server errors or routing issues
+   - Check if pages are being served at all
+
+4. **Verify Package Resolution**
+   - Ensure `@epic-scribe/types`, `@epic-scribe/note-service` are resolved
+   - Check if Vercel is following workspace protocol
+   - May need to use `pnpm install --frozen-lockfile`
+
+5. **Test with Minimal Next.js App**
+   - Temporarily simplify app to single page
+   - Verify basic deployment works before adding complexity
+   - Rule out app-specific routing issues
+
+**Files to Review:**
+- `/apps/web/next.config.js` - Check for routing config
+- `/apps/web/app/layout.tsx` - Verify root layout
+- `/.vercelignore` - Ensure not excluding critical files
+- `/pnpm-lock.yaml` - Verify dependency resolution
+
+**Reference:**
+- Vercel Monorepo Docs: https://vercel.com/docs/monorepos
+- Vercel Next.js Docs: https://vercel.com/docs/frameworks/nextjs
+- pnpm Workspace Docs: https://pnpm.io/workspaces
 
 ---
 
@@ -313,7 +467,38 @@ SYSTEM + TASK + SMARTTOOLS RULES + TEMPLATE + PRIOR NOTE? + STAFFING TRANSCRIPT?
 
 ## 📖 FOR FUTURE SESSIONS
 
-**Start Here:**
+### 🚨 URGENT: Vercel 404 Deployment Issue
+
+**CRITICAL BLOCKER:** The application is currently NOT accessible on Vercel despite successful builds.
+
+**Your First Task:**
+1. Read the "Vercel Deployment Troubleshooting" section under DEPLOYMENT
+2. Ask user for complete Vercel build logs (full output, not just snippet)
+3. Review all 5 hypotheses and recommended next steps
+4. Focus on Hypothesis #1 (Monorepo Routing Issue) - most likely culprit
+5. Try the simplified vercel.json configuration first
+
+**Quick Context:**
+- Monorepo structure: `/apps/web` contains Next.js app
+- Build succeeds, all routes compile, but deployment returns 404
+- Root Directory is set to `apps/web` in Vercel Dashboard
+- Current buildCommand: `cd ../.. && pnpm --filter=@epic-scribe/web build`
+- Likely issue: `cd ../..` conflicts with Root Directory setting
+
+**What We've Already Tried:**
+- ✅ Fixed TypeScript errors
+- ✅ Added environment variables
+- ✅ Set Root Directory in Vercel Dashboard
+- ❌ All attempts still result in 404
+
+**Don't Waste Time On:**
+- Environment variables (already configured)
+- TypeScript errors (already fixed)
+- Build failures (build succeeds)
+
+---
+
+**Start Here (Normal Sessions):**
 1. Read "CURRENT STATUS" and "NEXT PRIORITIES"
 2. Check "Known Issues" for blockers
 3. Review recent git log for context
