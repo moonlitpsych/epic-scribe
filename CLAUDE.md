@@ -9,7 +9,8 @@
 ## 🎯 CURRENT STATUS (2025-10-30)
 
 ### ✅ What's Working
-- **Note Generation**: Full workflow with Gemini API integration (LOCAL ONLY)
+- **Note Generation**: Full workflow with Gemini API integration
+- **Authentication**: NextAuth middleware protecting /workflow, /templates, /patients, and all API routes
 - **Template System**: 14 templates in Supabase database with section-level editing
 - **SmartList System**: 97 SmartLists organized in 8 logical groups
 - **Template Editor**:
@@ -20,66 +21,85 @@
 - **Google Integration**: Calendar/Meet/Drive integration for encounters
 - **Patient Management**: Full CRUD operations with database RLS policies
 - **Patient Selector**: Integrated into workflow page with search and inline creation
+- **Note Saving**: Save finalized notes to database with edited content tracking
+- **Historical Context**: All patient notes automatically included in future prompts for continuity
+- **Therapy Note Generation**: Specialized BHIDC therapy prompt builder (not medication management)
 - **Local Development**: Full app works on `pnpm dev`
 - **Local Builds**: Production builds succeed with `pnpm build`
 - **Database**: Supabase with patients, encounters, templates, smartlists, generated_notes tables
-- **Final Note Storage**: Database schema with `final_note_content` field ready
 - **Staffing Workflows**: Inline (RCC) and separate (Davis/Redwood) staffing detection
-- **Therapy Notes**: BHIDC therapy templates (First Visit, Follow-up)
 
 ### ⚠️ Known Issues & Technical Debt
 
-1. **Vercel Deployment 404 Error** (CRITICAL BLOCKER)
+1. **Google OAuth Token Expiration**
+   - Calendar API calls fail with 401 after token expires
+   - **Workaround**: Sign out and sign back in to refresh tokens
+   - Token refresh logic exists in auth callback but may not trigger properly
+   - File: `apps/web/app/api/auth/[...nextauth]/route.ts`
+
+2. **Database Migration Required**
+   - Migration `010_add_note_content_fields.sql` must be run in Supabase dashboard
+   - Adds `generated_content`, `final_note_content`, `is_final`, `finalized_at`, `finalized_by` columns
+   - Required for note saving feature to work
+
+3. **Vercel Deployment 404 Error** (CRITICAL BLOCKER)
    - Build succeeds but app returns 404 on all routes
    - See `HANDOFF_VERCEL_404.md` for detailed troubleshooting
    - Status: UNRESOLVED
 
-2. **ESLint/TypeScript Warnings**
+4. **ESLint/TypeScript Warnings**
    - `ignoreDuringBuilds: true` in next.config.js is temporary
    - Run `pnpm lint` to see all issues
 
-3. **Testing Required**
+5. **Testing Required**
+   - Note saving and historical context feature not tested end-to-end
+   - Therapy note generation needs testing with real therapy transcripts
    - Staffing workflows (inline and separate) not tested with real transcripts
-   - BHIDC therapy templates not tested with real sessions
 
 ---
 
 ## 📋 NEXT PRIORITIES
 
 ### Immediate
-1. **Resolve Vercel 404 Deployment Issue**
+1. **Run Database Migration**
+   - Execute `supabase/migrations/010_add_note_content_fields.sql` in Supabase dashboard
+   - Required for note saving feature
+
+2. **Fix OAuth Token Refresh**
+   - Investigate why token refresh isn't triggering automatically
+   - Consider implementing token refresh interceptor for API calls
+   - File: `apps/web/app/api/auth/[...nextauth]/route.ts`
+
+3. **Test Note Saving End-to-End**
+   - Generate note → Edit → Save → Verify database entry
+   - Generate second note for same patient → Verify historical context included
+   - Test finalized notes display in patient profile
+
+4. **Resolve Vercel 404 Deployment Issue**
    - Most likely: monorepo routing or build output path issue
    - See HANDOFF_VERCEL_404.md for hypotheses
 
-2. **Note Finalization Flow**
-   - Add "Finalize Note" button to NoteResultsStep
-   - Save final edited note content to database
-   - Link finalized notes to patient records
-
-3. **Fix ESLint/TypeScript Warnings**
+5. **Fix ESLint/TypeScript Warnings**
    - Remove `ignoreDuringBuilds` hack
    - Fix unescaped quotes, unused vars, console statements
 
 ### Medium Priority
-4. **Historical Note Context**
-   - Fetch last 3 finalized notes for follow-up visits
-   - Pass historical context to generation API
-
-5. **Enhanced Patient Profile**
+6. **Enhanced Patient Profile**
    - Display all finalized notes chronologically
    - Show encounter timeline with notes
+   - Link to regenerate or view past notes
 
-6. **Transcript Auto-Attachment**
+7. **Transcript Auto-Attachment**
    - Drive watcher for automatic transcript indexing
    - Attach transcripts to encounters within 60s
 
 ### Future
-7. **Prompt Control & Observability**
+8. **Prompt Control & Observability**
    - Prompt preview before generation
    - Prompt receipts with version/hash tracking
    - Golden prompt snapshot tests
 
-8. **IntakeQ Integration** (Moonlit only)
+9. **IntakeQ Integration** (Moonlit only)
    - Auto-fetch prior notes for Transfer of Care / Follow-up
 
 ---
@@ -104,6 +124,44 @@ if (setting === 'Redwood Clinic MHI' && visitType === 'Consultation Visit') {
 }
 ```
 
+### Therapy Note Detection
+```typescript
+// Detect therapy templates and route to specialized prompt builder
+const isTherapyFocused = template.setting === 'BHIDC therapy' ||
+                        template.name?.toLowerCase().includes('therapy');
+
+if (isTherapyFocused) {
+  return buildTherapyPrompt({ template, transcript, ... });
+}
+```
+
+### Note Persistence Pattern
+```typescript
+// Save both generated and edited versions
+await saveGeneratedNote({
+  patientId,
+  encounterId,
+  templateId,
+  generatedContent: rawAIOutput,      // Original AI output
+  finalNoteContent: userEditedVersion, // After user edits
+  isFinal: true,                       // Mark as finalized
+});
+```
+
+### Historical Context Inclusion
+```typescript
+// Fetch all finalized notes for patient
+const notes = await getPatientFinalizedNotes(patientId);
+const historicalNotes = formatHistoricalNotes(notes);
+
+// Include in prompt for continuity of care
+const prompt = await promptBuilder.build({
+  template,
+  transcript,
+  historicalNotes, // All previous notes
+});
+```
+
 ### Monorepo Package Structure
 - Services expose barrel exports via `/src/index.ts`
 - `package.json` declares subpath exports
@@ -112,6 +170,12 @@ if (setting === 'Redwood Clinic MHI' && visitType === 'Consultation Visit') {
 ### Next.js Rendering
 - Pages with `useSearchParams()` must use Suspense boundaries
 - Add `export const dynamic = 'force-dynamic'` for dynamic rendering
+
+### Authentication Pattern
+- Middleware protects all sensitive routes and API endpoints
+- Server-side auth via `getServerSession(authOptions)`
+- Client-side auth via `useSession()` hook with redirect logic
+- AuthStatus component shows user email and sign-out option
 
 ---
 
@@ -281,15 +345,17 @@ NEXTAUTH_SECRET=
 
 ### Note Generation
 1. Go to `/workflow`
-2. Select patient (or create new)
-3. Select Setting × Visit Type
-4. Paste transcript (and prior note for TOC/FU)
-5. **Optional fields based on setting:**
+2. Sign in with Google (required for patient creation and encounters)
+3. Select patient (or create new)
+4. Select Setting × Visit Type
+5. Paste transcript (and prior note for TOC/FU)
+6. **Optional fields based on setting:**
    - **Davis/Redwood**: Paste separate staffing transcript
    - **BHIDC First Visit**: Paste BHIDC staff screener intake note
-6. Click Generate
-7. Review and edit note
-8. Copy to clipboard for Epic
+7. Click Generate
+8. Review and edit note (historical notes automatically included if patient has prior notes)
+9. Click "Save Note" to persist to database (optional)
+10. Copy to clipboard for Epic
 
 ---
 
@@ -333,30 +399,80 @@ For detailed setup and troubleshooting guides, see:
 
 ## 🎉 RECENT UPDATES (2025-10-30)
 
-### Session: Template Editor Improvements
+### Session: Authentication, Therapy Notes, and Note Persistence
+**Completed:**
+
+1. ✅ **Authentication Protection**
+   - Created middleware to protect sensitive routes and API endpoints
+   - Protected routes: `/workflow`, `/templates`, `/patients`, `/encounters`, `/designated-examiner`, all `/api/*` endpoints
+   - Created `AuthStatus` component with user email display and sign-out button
+   - Added client-side auth checks in workflow, templates, and home pages
+   - Redirects unauthenticated users to `/auth/signin`
+   - **Files:**
+     - `apps/web/middleware.ts` (created)
+     - `apps/web/src/components/AuthStatus.tsx` (created)
+     - `apps/web/app/workflow/page.tsx` (modified)
+     - `apps/web/app/templates/page.tsx` (modified)
+     - `apps/web/app/home/page.tsx` (modified)
+
+2. ✅ **Therapy Note Generation Fix**
+   - Created specialized therapy prompt builder for BHIDC therapy templates
+   - Routes therapy templates to `buildTherapyPrompt()` instead of clinical note builder
+   - Emphasizes: therapeutic interventions, client progress, session content
+   - Excludes: medication plans, lab orders, pharmacotherapy
+   - Uses client-centered language ("client" not "patient")
+   - **Detection logic:** `template.setting === 'BHIDC therapy'`
+   - **Files:**
+     - `services/note/src/prompts/therapy-prompt-builder.ts` (created)
+     - `services/note/src/prompts/prompt-builder.ts` (modified)
+
+3. ✅ **Note Saving and Historical Context**
+   - Created database migration for note persistence columns
+   - Created database functions for note CRUD operations
+   - Created API endpoint for saving and retrieving notes
+   - Added "Save Note" button to NoteResultsStep with loading/success states
+   - Implemented automatic historical notes fetching for continuity of care
+   - All finalized patient notes now included in future prompts
+   - **Schema changes:**
+     - `generated_content TEXT` - Raw AI output
+     - `final_note_content TEXT` - User-edited version
+     - `is_final BOOLEAN` - Finalization flag
+     - `finalized_at TIMESTAMPTZ` - Save timestamp
+     - `finalized_by TEXT` - User email
+   - **Files:**
+     - `supabase/migrations/010_add_note_content_fields.sql` (created)
+     - `apps/web/src/lib/db/notes.ts` (created)
+     - `apps/web/app/api/notes/route.ts` (created)
+     - `apps/web/app/api/generate/route.ts` (modified - adds historical notes)
+     - `apps/web/src/components/workflow/NoteResultsStep.tsx` (modified - Save button)
+     - `apps/web/src/components/workflow/WorkflowWizard.tsx` (modified - handleSaveNote)
+     - `services/note/src/prompts/prompt-builder.ts` (modified - historicalNotes param)
+
+4. ✅ **Security Improvements**
+   - Added `.gitignore` entry for `test-data/` directory to prevent PHI leaks
+
+**Known Issues Identified:**
+- Google OAuth tokens expire, causing 401 errors when creating encounters
+- Workaround: Sign out and sign back in to refresh tokens
+- Token refresh logic may not be triggering properly
+
+**Migration Required:**
+- Run `supabase/migrations/010_add_note_content_fields.sql` in Supabase dashboard before testing note saving feature
+
+**Testing Required:**
+- End-to-end note saving workflow
+- Historical context inclusion verification
+- Therapy note generation with real therapy transcripts
+- OAuth token refresh behavior
+
+---
+
+### Session: Template Editor Improvements (Earlier)
 **Completed:**
 1. ✅ Fixed BHIDC missing from workflow dropdown
-   - Imported `SETTINGS` from types package instead of hardcoding
-   - File: `apps/web/src/components/workflow/TemplateReviewStep.tsx`
-
 2. ✅ Fixed "Add SmartTool" error on templates page
-   - Generated SmartList groups structure (8 groups, 97 SmartLists)
-   - Groups: Mental Status Exam, Psychiatric ROS, Substance Use, Social History, etc.
-   - Files: `configs/smartlists-catalog.json`, `scripts/generate-smartlist-groups.js`
-
 3. ✅ Added section clone/copy functionality
-   - Created `SectionCloneModal` component for cloning sections between templates
-   - Added "Clone" button to TemplateEditor
-   - Supports replacing existing sections or creating new ones
-   - Files: `apps/web/src/components/SectionCloneModal.tsx`, `apps/web/src/components/TemplateEditor.tsx`
-
 4. ✅ Fixed build error
-   - Removed broken import of non-existent `smarttools/validator`
-   - File: `services/note/src/index.ts`
-
-**Commits:**
-- `f4154f1` - fix: Add BHIDC dropdown, fix SmartTool error, and add section clone feature
-- `37ef11a` - fix: Use object keys instead of identifiers in SmartList groups
 
 ---
 
