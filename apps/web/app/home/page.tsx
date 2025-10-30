@@ -1,9 +1,33 @@
+'use client';
+
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
+import AuthStatus from '@/components/AuthStatus';
 
 export default function HomePage() {
+  const { data: session, status } = useSession();
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-gray-900 border-r-transparent"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
+        {/* Auth Status Header */}
+        {session && (
+          <div className="flex justify-end mb-4">
+            <AuthStatus />
+          </div>
+        )}
+
         <h1 className="text-4xl font-bold text-gray-900 mb-2">
           Epic Scribe
         </h1>
@@ -19,6 +43,19 @@ export default function HomePage() {
               Epic Scribe transforms clinical transcripts into Epic-ready psychiatry notes
               with perfect SmartTools formatting. Select your setting and visit type to begin.
             </p>
+            {!session && (
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800 mb-2">
+                  Please sign in with Google to access all features and generate notes.
+                </p>
+                <Link
+                  href="/auth/signin"
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                >
+                  Sign In with Google
+                </Link>
+              </div>
+            )}
             <div className="flex items-center space-x-2 text-sm text-gray-500">
               <svg className="h-4 w-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -113,6 +150,24 @@ export default function HomePage() {
               <span>Generate Note</span>
               <svg className="ml-2 h-4 w-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                 <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+            </Link>
+          </div>
+
+          {/* Designated Examiner Card */}
+          <div className="bg-gradient-to-r from-red-50 to-rose-50 rounded-lg shadow-md p-6 border border-red-200">
+            <h2 className="text-2xl font-semibold mb-4 text-red-900">Designated Examiner</h2>
+            <p className="text-gray-700 mb-4">
+              Generate structured legal assessments for involuntary commitment hearings. Evaluates Utah's 5 criteria
+              and produces court-ready forensic testimony from designated examiner interviews.
+            </p>
+            <Link
+              href="/designated-examiner"
+              className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+            >
+              <span>Court Assessment</span>
+              <svg className="ml-2 h-4 w-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
               </svg>
             </Link>
           </div>

@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import WorkflowWizard from '@/components/workflow/WorkflowWizard';
+import AuthStatus from '@/components/AuthStatus';
 
 /**
  * Unified Workflow Page
@@ -10,12 +13,32 @@ import WorkflowWizard from '@/components/workflow/WorkflowWizard';
  */
 export default function WorkflowPage() {
   const [mounted, setMounted] = useState(false);
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin');
+    }
+  }, [status, router]);
+
+  if (!mounted || status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#F5F1ED] to-[#E5DDD6] flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#0A1F3D] border-r-transparent"></div>
+          <p className="mt-4 text-[#5A6B7D]">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
     return null;
   }
 
@@ -37,7 +60,14 @@ export default function WorkflowPage() {
             >
               Templates
             </Link>
+            <Link
+              href="/designated-examiner"
+              className="text-sm text-[#5A6B7D] hover:text-[#0A1F3D] transition-colors"
+            >
+              Designated Examiner
+            </Link>
           </div>
+          <AuthStatus />
         </div>
 
         <div className="mb-8">

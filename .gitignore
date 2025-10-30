@@ -54,6 +54,10 @@ Thumbs.db
 logs/
 *.log
 
+# Test data (may contain PHI or sensitive content)
+test-data/
+test_data/
+
 # History
 .history/
 

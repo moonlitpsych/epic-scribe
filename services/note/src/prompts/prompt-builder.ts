@@ -14,6 +14,7 @@ import {
 import { getSmartListService } from '../smartlists/smartlist-service';
 import { noteParser, ExtractedNoteData } from '../parsers/note-parser';
 import { buildPsychiatricPrompt, SECTION_PROMPT_CONFIGS } from './psychiatric-prompt-builder';
+import { buildTherapyPrompt } from './therapy-prompt-builder';
 import crypto from 'crypto';
 
 export interface PromptBuilderOptions {
@@ -143,6 +144,10 @@ export class PromptBuilder {
   async build(options: PromptBuilderOptions): Promise<CompiledPrompt> {
     const { template, transcript, previousNote, staffingTranscript, patientContext, setting, visitType } = options;
 
+    // Check if this is a therapy-focused template (BHIDC therapy)
+    const isTherapyFocused = template.setting === 'BHIDC therapy' ||
+                             template.name?.toLowerCase().includes('therapy');
+
     // Check if this is a psychiatric-focused template
     const isPsychiatricFocused = template.name?.includes('Focused Psychiatric') ||
                                  template.sections.some(s => SECTION_PROMPT_CONFIGS[s.name]);
@@ -154,7 +159,29 @@ export class PromptBuilder {
     let prompt: string;
     let sections: any;
 
-    if (isPsychiatricFocused) {
+    if (isTherapyFocused) {
+      // Use the therapy-focused prompt builder
+      console.log('[PromptBuilder] Using therapy-focused prompt builder');
+      prompt = buildTherapyPrompt({
+        template,
+        transcript,
+        bhidcStaffScreenerNote: patientContext, // Patient context acts as BHIDC screener note for first visit
+        previousNote,
+        patientContext
+      });
+
+      sections = {
+        system: 'Therapy note generator for Dr. Rufus Sweeney',
+        task: 'Generate therapy-focused clinical note',
+        smarttoolsRules: 'Integrated into therapy prompt',
+        smartlistDefinitions: smartListDefinitions || 'None for therapy notes',
+        patientContext,
+        template: 'Using therapy-focused template',
+        previousNote,
+        staffingTranscript: undefined, // Therapy notes don't use staffing transcripts
+        transcript: transcript
+      };
+    } else if (isPsychiatricFocused) {
       // Use the psychiatric-focused prompt builder
       console.log('[PromptBuilder] Using psychiatric-focused prompt builder');
       prompt = buildPsychiatricPrompt(template, transcript, smartListDefinitions, staffingTranscript);
