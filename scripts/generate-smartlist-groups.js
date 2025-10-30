@@ -19,13 +19,13 @@ Object.entries(catalog.smartLists || {}).forEach(([key, smartList]) => {
         smartLists: []
       };
     }
-    groupsMap[groupName].smartLists.push(smartList.identifier);
+    groupsMap[groupName].smartLists.push(key); // Use the key, not the identifier
   }
 });
 
 // Process top-level SmartLists (psych_ros_*, cocaine_use, etc.)
 Object.entries(catalog).forEach(([key, value]) => {
-  if (key !== 'smartLists' && typeof value === 'object' && value.group) {
+  if (key !== 'smartLists' && key !== 'groups' && typeof value === 'object' && value.group) {
     const groupName = value.group;
     if (groupName) {
       if (!groupsMap[groupName]) {
@@ -35,7 +35,7 @@ Object.entries(catalog).forEach(([key, value]) => {
           smartLists: []
         };
       }
-      groupsMap[groupName].smartLists.push(value.identifier);
+      groupsMap[groupName].smartLists.push(key); // Use the key, not the identifier
     }
   }
 });
