@@ -6,6 +6,7 @@ import { SmartToolsParser, SmartToolsTransformer } from '@epic-scribe/note-servi
 import { templateService } from '@epic-scribe/note-service/src/templates/template-service';
 import { SmartToolsInserter } from './SmartToolsInserter';
 import { SmartListEditModal } from './SmartListEditModal';
+import { SectionCloneModal } from './SectionCloneModal';
 import { generateExampleOutput, generateSimpleExample } from '@/utils/generateExampleOutput';
 
 const parser = new SmartToolsParser();
@@ -37,6 +38,10 @@ export function TemplateEditor() {
   // SmartList modal state
   const [selectedSmartList, setSelectedSmartList] = useState<{ epicId: string; displayName?: string } | null>(null);
   const [showSmartListModal, setShowSmartListModal] = useState(false);
+
+  // Clone modal state
+  const [showCloneModal, setShowCloneModal] = useState(false);
+  const [cloneSourceSection, setCloneSourceSection] = useState<any | null>(null);
 
   // Dynamic example outputs
   const [sectionExamples, setSectionExamples] = useState<{ [key: string]: string }>({});
@@ -169,6 +174,64 @@ export function TemplateEditor() {
     setSelectedSmartList(null);
   };
 
+  const handleCloneClick = (section: any) => {
+    setCloneSourceSection(section);
+    setShowCloneModal(true);
+  };
+
+  const handleCloneSection = async (
+    targetSetting: Setting,
+    targetVisitType: string,
+    targetSectionName: string,
+    isNewSection: boolean
+  ) => {
+    if (!cloneSourceSection) return;
+
+    try {
+      // Fetch target template
+      const response = await fetch(
+        `/api/templates?setting=${encodeURIComponent(targetSetting)}&visitType=${encodeURIComponent(targetVisitType)}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch target template');
+
+      const targetTemplate = await response.json();
+      const templateId = targetTemplate.template_id || targetTemplate.templateId;
+
+      // Prepare the update
+      const updatePayload: any = {
+        templateId,
+        setting: targetSetting,
+        visitType: targetVisitType,
+        sectionName: targetSectionName,
+        content: cloneSourceSection.content,
+        editReason: `Cloned from ${selectedSetting} - ${selectedVisitType} - ${cloneSourceSection.name}`
+      };
+
+      // If creating a new section, include order
+      if (isNewSection) {
+        updatePayload.order = (targetTemplate.sections?.length || 0) + 1;
+      }
+
+      // Save to API
+      const saveResponse = await fetch('/api/templates', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatePayload)
+      });
+
+      if (!saveResponse.ok) {
+        throw new Error('Failed to save cloned section');
+      }
+
+      alert(`Successfully cloned section to ${targetSetting} - ${targetVisitType}`);
+      setShowCloneModal(false);
+      setCloneSourceSection(null);
+    } catch (error) {
+      console.error('Error cloning section:', error);
+      throw error;
+    }
+  };
+
   const handleSectionSave = async (sectionName: string) => {
     if (currentTemplate) {
       try {
@@ -251,6 +314,13 @@ export function TemplateEditor() {
                   className="px-3 py-1 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors"
                 >
                   Add SmartTool
+                </button>
+                <button
+                  onClick={() => handleCloneClick(section)}
+                  className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+                  title="Clone this section to another template"
+                >
+                  Clone
                 </button>
               </>
             ) : (
@@ -426,6 +496,20 @@ export function TemplateEditor() {
           }}
           onSave={handleSmartListSave}
           readOnly={false}
+        />
+      )}
+
+      {/* Section Clone Modal */}
+      {showCloneModal && cloneSourceSection && (
+        <SectionCloneModal
+          sourceSetting={selectedSetting}
+          sourceVisitType={selectedVisitType}
+          sourceSection={cloneSourceSection}
+          onClose={() => {
+            setShowCloneModal(false);
+            setCloneSourceSection(null);
+          }}
+          onClone={handleCloneSection}
         />
       )}
 

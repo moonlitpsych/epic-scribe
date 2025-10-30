@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Template, Setting } from '@epic-scribe/types';
+import { Template, Setting, SETTINGS } from '@epic-scribe/types';
 import { ChevronRight, ExternalLink } from 'lucide-react';
 import SmartListExpander from './SmartListExpander';
 import { SmartToolsParser } from '@epic-scribe/note-service/src/smarttools';
@@ -14,13 +14,6 @@ interface TemplateReviewStepProps {
   initialSetting?: Setting;
   initialVisitType?: string;
 }
-
-const SETTINGS: Setting[] = [
-  'HMHI Downtown RCC',
-  'Redwood Clinic MHI',
-  'Davis Behavioral Health',
-  'Moonlit Psychiatry',
-];
 
 const VISIT_TYPES: Record<Setting, string[]> = {
   'HMHI Downtown RCC': ['Intake', 'Transfer of Care', 'Follow-up'],
