@@ -6,6 +6,29 @@ import { getGeminiClient } from '@epic-scribe/note-service/src/llm/gemini-client
 import { getSmartListService } from '@epic-scribe/note-service/src/smartlists/smartlist-service';
 import crypto from 'crypto';
 
+/**
+ * Format historical notes for inclusion in prompt
+ */
+function formatHistoricalNotes(notes: any[]): string {
+  let formatted = '═══════════════════════════════════════════════════════════\n';
+  formatted += `HISTORICAL NOTES (${notes.length} previous notes)\n`;
+  formatted += '═══════════════════════════════════════════════════════════\n\n';
+  formatted += 'Review these historical notes to maintain continuity of care and reference past diagnoses, medications, and treatment responses.\n\n';
+
+  notes.forEach((note, index) => {
+    const encounter = (note as any).encounters;
+    const dateStr = encounter?.scheduled_start ? new Date(encounter.scheduled_start).toLocaleDateString() : 'Unknown date';
+    const setting = encounter?.setting || 'Unknown';
+    const visitType = encounter?.visit_type || 'Unknown';
+
+    formatted += `--- Note ${index + 1} (${dateStr} - ${setting} - ${visitType}) ---\n\n`;
+    formatted += note.final_note_content || note.generated_content || '[No content]';
+    formatted += '\n\n';
+  });
+
+  return formatted;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: GenerateNoteRequest = await request.json();
@@ -19,20 +42,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch patient clinical context if available
+    // Fetch patient clinical context and historical notes if available
     let patientContext: string | undefined;
+    let actualPatientId: string | undefined = patientId;
+    let historicalNotes: string | undefined;
 
     if (encounterId) {
       // Fetch encounter and then fetch patient separately
       const { getEncounterById } = await import('@/lib/db/encounters');
       const { getPatientById } = await import('@/lib/db/patients');
+      const { getPatientFinalizedNotes } = await import('@/lib/db/notes');
       try {
         const encounter = await getEncounterById(encounterId);
         if (encounter && encounter.patient_id) {
+          actualPatientId = encounter.patient_id;
           const patient = await getPatientById(encounter.patient_id);
           if (patient && patient.notes) {
             patientContext = patient.notes;
             console.log(`[Generate] Loaded patient context from encounter ${encounterId}: ${patientContext.length} chars`);
+          }
+
+          // Fetch historical notes for this patient
+          const notes = await getPatientFinalizedNotes(encounter.patient_id);
+          if (notes && notes.length > 0) {
+            historicalNotes = formatHistoricalNotes(notes);
+            console.log(`[Generate] Loaded ${notes.length} historical notes for patient ${encounter.patient_id}`);
           }
         }
       } catch (error) {
@@ -41,11 +75,19 @@ export async function POST(request: NextRequest) {
     } else if (patientId) {
       // Fetch patient directly
       const { getPatientById } = await import('@/lib/db/patients');
+      const { getPatientFinalizedNotes } = await import('@/lib/db/notes');
       try {
         const patient = await getPatientById(patientId);
         if (patient && patient.notes) {
           patientContext = patient.notes;
           console.log(`[Generate] Loaded patient context from patient ${patientId}: ${patientContext.length} chars`);
+        }
+
+        // Fetch historical notes for this patient
+        const notes = await getPatientFinalizedNotes(patientId);
+        if (notes && notes.length > 0) {
+          historicalNotes = formatHistoricalNotes(notes);
+          console.log(`[Generate] Loaded ${notes.length} historical notes for patient ${patientId}`);
         }
       } catch (error) {
         console.warn(`[Generate] Could not fetch patient ${patientId}:`, error);
@@ -94,6 +136,7 @@ export async function POST(request: NextRequest) {
       previousNote: priorNote,
       staffingTranscript, // Include staffing transcript if provided
       patientContext, // Include patient clinical context if available
+      historicalNotes, // Include all previous finalized notes for continuity
       setting: setting as Setting,
       visitType
     });

@@ -23,6 +23,7 @@ export interface PromptBuilderOptions {
   previousNote?: string;
   staffingTranscript?: string; // Separate staffing conversation transcript
   patientContext?: string;  // Clinical context from patient record
+  historicalNotes?: string;  // All previous finalized notes for this patient
   setting: Setting;
   visitType: VisitType | string;
 }
@@ -142,7 +143,7 @@ export class PromptBuilder {
    * Build a complete prompt from components
    */
   async build(options: PromptBuilderOptions): Promise<CompiledPrompt> {
-    const { template, transcript, previousNote, staffingTranscript, patientContext, setting, visitType } = options;
+    const { template, transcript, previousNote, staffingTranscript, patientContext, historicalNotes, setting, visitType } = options;
 
     // Check if this is a therapy-focused template (BHIDC therapy)
     const isTherapyFocused = template.setting === 'BHIDC therapy' ||
@@ -224,6 +225,7 @@ export class PromptBuilder {
         smarttoolsRules: this.buildSmartToolsRules(examples),
         smartlistDefinitions: smartListDefinitions,
         patientContext: patientContext ? this.buildPatientContextSection(patientContext) : undefined,
+        historicalNotes,
         extractedFromPrior,
         template: templateSection,
         previousNote,
@@ -231,7 +233,7 @@ export class PromptBuilder {
       };
 
       // Compile final prompt
-      prompt = this.compilePrompt(sections, isFollowUp);
+      prompt = this.compilePrompt(sections, isFollowUp, historicalNotes);
     }
 
     // Generate hash
@@ -357,11 +359,12 @@ export class PromptBuilder {
     smarttoolsRules: string;
     smartlistDefinitions: string;
     patientContext?: string;
+    historicalNotes?: string;
     extractedFromPrior?: ExtractedNoteData;
     template: string;
     previousNote?: string;
     transcript: string;
-  }, isFollowUp: boolean = false): string {
+  }, isFollowUp: boolean = false, historicalNotes?: string): string {
     let prompt = '';
 
     // System prompt
@@ -413,6 +416,17 @@ export class PromptBuilder {
       prompt += `${sections.patientContext}\n\n`;
       prompt += `This patient context provides background information to inform your note. `;
       prompt += `Use it to maintain clinical continuity and reference relevant history where appropriate.\n\n`;
+    }
+
+    // Historical notes (if provided)
+    if (historicalNotes) {
+      prompt += `${historicalNotes}\n\n`;
+      prompt += `INSTRUCTIONS FOR HISTORICAL NOTES:\n`;
+      prompt += `- Review these notes to understand the patient's longitudinal treatment journey\n`;
+      prompt += `- Reference prior diagnoses, medications, and treatment responses as appropriate\n`;
+      prompt += `- Maintain consistency with previous clinical impressions and plans\n`;
+      prompt += `- Note any changes or progression in symptoms over time\n`;
+      prompt += `- For follow-up visits: The most recent note is particularly important for understanding the current treatment plan\n\n`;
     }
 
     // Template

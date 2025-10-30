@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Template, Setting } from '@epic-scribe/types';
-import { Copy, RefreshCw, RotateCcw, ExternalLink, CheckCircle2, AlertCircle, AlertTriangle, Info } from 'lucide-react';
+import { Copy, RefreshCw, RotateCcw, ExternalLink, CheckCircle2, AlertCircle, AlertTriangle, Info, Save } from 'lucide-react';
 
 interface ValidationResult {
   valid: boolean;
@@ -18,6 +18,7 @@ interface NoteResultsStepProps {
   validationResult: ValidationResult | null;
   onRegenerate: () => void;
   onStartOver: () => void;
+  onSaveNote?: () => Promise<void>;
   setting: Setting;
   visitType: string;
 }
@@ -30,10 +31,13 @@ export default function NoteResultsStep({
   validationResult,
   onRegenerate,
   onStartOver,
+  onSaveNote,
   setting,
   visitType,
 }: NoteResultsStepProps) {
   const [copySuccess, setCopySuccess] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const handleCopy = async () => {
     try {
@@ -43,6 +47,22 @@ export default function NoteResultsStep({
     } catch (error) {
       console.error('Failed to copy:', error);
       alert('Failed to copy to clipboard');
+    }
+  };
+
+  const handleSave = async () => {
+    if (!onSaveNote) return;
+
+    setSaving(true);
+    try {
+      await onSaveNote();
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (error) {
+      console.error('Failed to save note:', error);
+      alert('Failed to save note. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -66,6 +86,17 @@ export default function NoteResultsStep({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {onSaveNote && (
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex items-center gap-2 px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#059669] transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saveSuccess ? <CheckCircle2 size={16} /> : <Save size={16} />}
+                {saving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save Note'}
+              </button>
+            )}
+
             <button
               onClick={handleCopy}
               className="flex items-center gap-2 px-4 py-2 bg-[#E89C8A] text-white rounded-lg hover:bg-[#0A1F3D] transition-colors font-semibold"

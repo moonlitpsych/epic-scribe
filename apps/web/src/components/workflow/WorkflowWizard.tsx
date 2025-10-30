@@ -121,6 +121,43 @@ export default function WorkflowWizard() {
     setValidationResult(null);
   };
 
+  const handleSaveNote = async () => {
+    if (!template || !receipt || !selectedPatient) {
+      alert('Missing required data to save note. Please ensure a patient is selected.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientId: selectedPatient.id,
+          encounterId: encounterId || undefined,
+          templateId: template.templateId,
+          promptVersion: receipt.promptVersion,
+          promptHash: receipt.promptHash,
+          generatedContent: generatedNote,
+          finalNoteContent: editedNote,
+          isFinal: true, // Mark as finalized when user clicks Save
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save note');
+      }
+
+      const data = await response.json();
+      console.log('Note saved successfully:', data.note);
+
+      // Note is now saved to database with patient association
+    } catch (error) {
+      console.error('Error saving note:', error);
+      throw error; // Re-throw so the button component can handle the error
+    }
+  };
+
   // Progress indicator
   const steps = [
     { key: 'review', label: 'Review Template' },
@@ -210,6 +247,7 @@ export default function WorkflowWizard() {
           validationResult={validationResult}
           onRegenerate={handleBackToGenerate}
           onStartOver={handleStartOver}
+          onSaveNote={selectedPatient ? handleSaveNote : undefined}
           setting={setting!}
           visitType={visitType!}
         />
