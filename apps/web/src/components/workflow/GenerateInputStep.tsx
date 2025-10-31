@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { Template, Setting } from '@epic-scribe/types';
 import { ChevronLeft, Sparkles, Eye, AlertCircle } from 'lucide-react';
 import PatientSelector from './PatientSelector';
+import EncountersList from './EncountersList';
+import { CalendarEncounter } from '@/google-calendar';
 
 interface Patient {
   id: string;
@@ -47,11 +49,64 @@ export default function GenerateInputStep({
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(initialPatient);
   const [encounterId, setEncounterId] = useState<string | null>(initialEncounterId);
 
+  // Encounters state
+  const [encounters, setEncounters] = useState<CalendarEncounter[]>([]);
+  const [loadingEncounters, setLoadingEncounters] = useState(false);
+  const [selectedEncounterId, setSelectedEncounterId] = useState<string | null>(null);
+
   // Check if previous note is required
   const requiresPreviousNote = visitType === 'Transfer of Care' || visitType === 'Follow-up';
 
   const wordCount = transcript.trim().split(/\s+/).filter(Boolean).length;
   const canGenerate = transcript.trim().length > 0 && (!requiresPreviousNote || previousNote.trim().length > 0);
+
+  // Fetch encounters when patient is selected
+  useEffect(() => {
+    if (selectedPatient) {
+      fetchPatientEncounters();
+    } else {
+      setEncounters([]);
+      setSelectedEncounterId(null);
+    }
+  }, [selectedPatient]);
+
+  const fetchPatientEncounters = async () => {
+    if (!selectedPatient) return;
+
+    setLoadingEncounters(true);
+    try {
+      const response = await fetch('/api/encounters');
+      if (response.ok) {
+        const data = await response.json();
+        // Filter encounters for this patient
+        const patientEncounters = data.encounters.filter(
+          (enc: any) => enc.patientId === selectedPatient.id
+        );
+        setEncounters(patientEncounters);
+      }
+    } catch (error) {
+      console.error('Error fetching encounters:', error);
+    } finally {
+      setLoadingEncounters(false);
+    }
+  };
+
+  const handleSelectEncounter = (encounter: CalendarEncounter) => {
+    setSelectedEncounterId(encounter.id);
+    setEncounterId(encounter.id);
+    // Note: transcript loading would happen here if we have transcript_file_id
+  };
+
+  const handleEncounterCreated = (data: any) => {
+    // Refresh encounters list
+    fetchPatientEncounters();
+
+    // Set the new encounter as selected
+    if (data.calendarEncounter) {
+      setSelectedEncounterId(data.calendarEncounter.id);
+      setEncounterId(data.calendarEncounter.id);
+    }
+  };
 
   const handlePreviewPrompt = async () => {
     setLoadingPreview(true);
@@ -121,9 +176,20 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
         selectedPatient={selectedPatient}
         onPatientSelect={setSelectedPatient}
         onCreateEncounter={handleCreateEncounter}
+        onEncounterCreated={handleEncounterCreated}
         setting={setting}
         visitType={visitType}
       />
+
+      {/* Encounters List (shown when patient is selected) */}
+      {selectedPatient && (
+        <EncountersList
+          encounters={encounters}
+          selectedEncounterId={selectedEncounterId}
+          onSelectEncounter={handleSelectEncounter}
+          loading={loadingEncounters}
+        />
+      )}
 
       {/* Input Card */}
       <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-6">

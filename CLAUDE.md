@@ -6,7 +6,7 @@
 
 ---
 
-## 🎯 CURRENT STATUS (2025-10-30)
+## 🎯 CURRENT STATUS (2025-10-31)
 
 ### ✅ What's Working
 - **Note Generation**: Full workflow with Gemini API integration
@@ -19,6 +19,11 @@
   - SmartList groups UI (Mental Status Exam, Psychiatric ROS, etc.)
 - **Google OAuth**: External app configured for trymoonlit.com workspace
 - **Google Integration**: Calendar/Meet/Drive integration for encounters
+  - **Shared Calendar Integration**: All Meet links created in shared calendar owned by hello@trymoonlit.com for HIPAA compliance
+  - **Encounter Management in /workflow**: View and select patient encounters directly in workflow page
+  - **Enhanced Encounter Creation**: Prominent "Schedule New Encounter" button with improved UX
+  - **Automatic List Refresh**: Newly created encounters appear immediately in workflow
+  - **Simplified Setup**: No service account keys required - just share a Google Calendar!
 - **Patient Management**: Full CRUD operations with database RLS policies
 - **Patient Selector**: Integrated into workflow page with search and inline creation
 - **Note Saving**: Save finalized notes to database with edited content tracking
@@ -31,13 +36,22 @@
 
 ### ⚠️ Known Issues & Technical Debt
 
-1. **Google OAuth Token Expiration**
-   - Calendar API calls fail with 401 after token expires
+1. **Shared Calendar Setup Required** (CRITICAL for HIPAA Compliance)
+   - Create a shared Google Calendar in hello@trymoonlit.com account
+   - Follow `SHARED-CALENDAR-SETUP.md` for step-by-step instructions
+   - Much simpler than service account approach - no JSON keys or complex permissions!
+   - Without this: Meet links will be created under individual user accounts (not HIPAA compliant)
+   - Environment variable needed:
+     - `SHARED_CALENDAR_ID=calendar-id@group.calendar.google.com`
+
+2. **Google OAuth Token Expiration**
+   - Calendar API calls fail with 401 after token expires (typically ~1 hour)
    - **Workaround**: Sign out and sign back in to refresh tokens
    - Token refresh logic exists in auth callback but may not trigger properly
    - File: `apps/web/app/api/auth/[...nextauth]/route.ts`
+   - **Note**: With shared calendar approach, user OAuth is used for both reading and creating events
 
-2. **Database Migration Required**
+3. **Database Migration Required**
    - Migration `010_add_note_content_fields.sql` must be run in Supabase dashboard
    - Adds `generated_content`, `final_note_content`, `is_final`, `finalized_at`, `finalized_by` columns
    - Required for note saving feature to work
@@ -61,16 +75,29 @@
 ## 📋 NEXT PRIORITIES
 
 ### Immediate
-1. **Run Database Migration**
+1. **Set Up Shared Calendar** (CRITICAL - Required for Production)
+   - Follow `SHARED-CALENDAR-SETUP.md` to create and configure shared calendar
+   - Add `SHARED_CALENDAR_ID` to env vars
+   - Test encounter creation to verify Meet links are hosted by hello@trymoonlit.com
+   - This is required before production use to ensure HIPAA compliance
+   - **Much simpler than service account approach!**
+
+2. **Run Database Migration**
    - Execute `supabase/migrations/010_add_note_content_fields.sql` in Supabase dashboard
    - Required for note saving feature
 
-2. **Fix OAuth Token Refresh**
+3. **Test Encounter Workflow in /workflow**
+   - Select patient → View encounters list
+   - Create new encounter → Verify it appears in list
+   - Click "Open Meet" button → Verify Meet link works
+   - Select encounter → Verify encounter ID is tracked
+
+4. **Fix OAuth Token Refresh**
    - Investigate why token refresh isn't triggering automatically
    - Consider implementing token refresh interceptor for API calls
    - File: `apps/web/app/api/auth/[...nextauth]/route.ts`
 
-3. **Test Note Saving End-to-End**
+5. **Test Note Saving End-to-End**
    - Generate note → Edit → Save → Verify database entry
    - Generate second note for same patient → Verify historical context included
    - Test finalized notes display in patient profile
@@ -388,6 +415,8 @@ pnpm build
 ## 📚 REFERENCE DOCUMENTATION
 
 For detailed setup and troubleshooting guides, see:
+- **SHARED-CALENDAR-SETUP.md** - Shared calendar setup for HIPAA-compliant Meet hosting (NEW - RECOMMENDED)
+- **GOOGLE-SERVICE-ACCOUNT-SETUP.md** - Alternative service account approach (more complex, deprecated in favor of shared calendar)
 - **GOOGLE-OAUTH-EXTERNAL-SETUP.md** - OAuth configuration
 - **SUPABASE_SETUP.md** - Database setup and RLS policies
 - **UPDATE_OAUTH_CREDENTIALS.md** - OAuth troubleshooting
@@ -397,9 +426,99 @@ For detailed setup and troubleshooting guides, see:
 
 ---
 
-## 🎉 RECENT UPDATES (2025-10-30)
+## 🎉 RECENT UPDATES (2025-10-31)
 
-### Session: Authentication, Therapy Notes, and Note Persistence
+### Session: Shared Calendar Integration & Encounter Management in /workflow
+**Completed:**
+
+1. ✅ **Shared Calendar Approach** (Replaced Service Account)
+   - **Pivot**: Organization policy blocked service account key creation (`iam.disableServiceAccountKeyCreation`)
+   - Switched to simpler shared calendar approach - no JSON keys required!
+   - Shared calendar owned by hello@trymoonlit.com ensures HIPAA compliance
+   - All Meet links created in shared calendar are automatically hosted by hello@trymoonlit.com
+   - Uses existing user OAuth tokens instead of service account
+   - Calendar ID configured in `.env.local` (see SHARED-CALENDAR-SETUP.md for instructions)
+   - **Files:**
+     - `SHARED-CALENDAR-SETUP.md` (created - simple setup guide)
+     - `apps/web/src/google-calendar.ts` (modified - removed service account, added `getSharedCalendarId()`)
+     - `.env.example` (updated with shared calendar documentation)
+     - `GOOGLE-SERVICE-ACCOUNT-SETUP.md` (deprecated, kept for reference)
+
+2. ✅ **Encounter Management Integrated into /workflow**
+   - Created `EncountersList` component to display patient encounters
+   - Shows: date/time, setting, visit type, Meet link (with "Open Meet" button)
+   - Encounters automatically fetched when patient selected
+   - Click encounter to select it (highlights, sets encounter ID)
+   - Real-time list refresh after creating new encounter
+   - Responsive design with max-height and scroll
+   - **Files:**
+     - `apps/web/src/components/workflow/EncountersList.tsx` (created)
+     - `apps/web/src/components/workflow/GenerateInputStep.tsx` (modified - integrates EncountersList, fetch logic)
+
+3. ✅ **Enhanced Encounter Creation UX**
+   - Made "Create Encounter" button highly visible with gradient background and 2px border
+   - Moved to prominent card (gradient indigo-50 to blue-50) with visual emphasis
+   - Shows contextual info: patient, setting, visit type
+   - Button scales on hover for better discoverability
+   - User feedback: "no longer missable"
+   - **Files:**
+     - `apps/web/src/components/workflow/PatientSelector.tsx` (modified - prominent button styling)
+
+4. ✅ **Post-Creation Behavior**
+   - Encounters list automatically refreshes after creation
+   - Newly created encounter auto-selected
+   - Encounter ID tracked for note generation
+   - Meet link immediately accessible
+   - Callback system for seamless workflow
+   - **Files:**
+     - `apps/web/src/components/workflow/PatientSelector.tsx` (modified - added `onEncounterCreated` callback)
+     - `apps/web/src/components/workflow/GenerateInputStep.tsx` (modified - `handleEncounterCreated` callback)
+
+5. ✅ **Login Redirect to /workflow**
+   - Changed default landing page from `/encounters` to `/workflow`
+   - Users now go directly to main workflow after authentication
+   - Makes workflow the central hub for all activities
+   - **Files:**
+     - `apps/web/app/auth/signin/page.tsx` (modified - line 12 callbackUrl changed)
+
+6. ✅ **Bug Fix: Note Saving Database Query**
+   - Fixed Supabase PostgREST ordering syntax error
+   - Can't order by joined table columns with dot notation
+   - Changed from `order('encounters.scheduled_start')` to `order('generated_at')`
+   - Applied to both `getPatientFinalizedNotes()` and `getMostRecentFinalizedNote()`
+   - **Error:** `PGRST100: "failed to parse order (encounters.scheduled_start.asc)"`
+   - **Files:**
+     - `apps/web/src/lib/db/notes.ts` (modified - lines 156, 178)
+
+**Environment Variables Required:**
+```bash
+SHARED_CALENDAR_ID=your_calendar_id@group.calendar.google.com  # Get from SHARED-CALENDAR-SETUP.md
+```
+
+**Setup Required:**
+- Follow `SHARED-CALENDAR-SETUP.md` to:
+  1. Create shared calendar in hello@trymoonlit.com account
+  2. Get Calendar ID from settings
+  3. Share with team members (optional)
+  4. Add `SHARED_CALENDAR_ID` to environment variables
+
+**Testing Required:**
+- Encounter creation → Verify Meet hosted by hello@trymoonlit.com
+- Encounters list refresh after creation
+- OAuth token behavior (may need sign-out/sign-in after ~1 hour)
+- Note saving with historical context inclusion
+- End-to-end workflow: select patient → create encounter → open Meet → generate note
+
+**Advantages of Shared Calendar Approach:**
+- ✅ Simpler setup (no JSON keys, no domain-wide delegation)
+- ✅ Same HIPAA compliance outcome
+- ✅ Easier to manage permissions
+- ✅ No organization policy conflicts
+- ✅ Uses existing OAuth flow
+
+---
+
+### Session: Authentication, Therapy Notes, and Note Persistence (2025-10-30)
 **Completed:**
 
 1. ✅ **Authentication Protection**

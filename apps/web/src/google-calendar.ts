@@ -3,6 +3,11 @@
  *
  * Fetches encounters from Google Calendar with 7-day lookahead.
  * Naming convention: "<Patient Last, First> — <Setting> — <VisitType>"
+ *
+ * Authentication:
+ * - Uses shared calendar for HIPAA-compliant Meet hosting (hello@trymoonlit.com)
+ * - Uses user OAuth for all operations (create and read)
+ * - All events created in shared calendar instead of user's primary calendar
  */
 
 import { google } from 'googleapis';
@@ -53,7 +58,15 @@ function getCalendarClient(accessToken: string) {
 }
 
 /**
- * Fetch encounters for the next 7 days from user's primary calendar.
+ * Get the shared calendar ID for creating encounters.
+ * Falls back to 'primary' if not configured.
+ */
+function getSharedCalendarId(): string {
+  return process.env.SHARED_CALENDAR_ID || 'primary';
+}
+
+/**
+ * Fetch encounters for the next 7 days from shared calendar.
  */
 export async function getUpcomingEncounters(
   session: Session
@@ -63,6 +76,7 @@ export async function getUpcomingEncounters(
   }
 
   const calendar = getCalendarClient(session.accessToken);
+  const calendarId = getSharedCalendarId();
 
   // Calculate time range: now to 7 days from now
   const now = new Date();
@@ -71,7 +85,7 @@ export async function getUpcomingEncounters(
 
   try {
     const response = await calendar.events.list({
-      calendarId: 'primary',
+      calendarId: calendarId,
       timeMin: now.toISOString(),
       timeMax: sevenDaysLater.toISOString(),
       singleEvents: true,
@@ -111,6 +125,7 @@ export async function getUpcomingEncounters(
 
 /**
  * Create or update a calendar event with a Google Meet link.
+ * Uses shared calendar so Meet is hosted by hello@trymoonlit.com.
  */
 export async function ensureMeetLink(
   session: Session,
@@ -121,11 +136,12 @@ export async function ensureMeetLink(
   }
 
   const calendar = getCalendarClient(session.accessToken);
+  const calendarId = getSharedCalendarId();
 
   try {
     // First, get the event to check if it already has a Meet link
     const event = await calendar.events.get({
-      calendarId: 'primary',
+      calendarId: calendarId,
       eventId,
     });
 
@@ -136,7 +152,7 @@ export async function ensureMeetLink(
 
     // Otherwise, update the event to add conferencing
     const updatedEvent = await calendar.events.patch({
-      calendarId: 'primary',
+      calendarId: calendarId,
       eventId,
       requestBody: {
         conferenceData: {
@@ -158,6 +174,7 @@ export async function ensureMeetLink(
 
 /**
  * Create a new calendar event with patient encounter details.
+ * Uses shared calendar so event and Meet link are owned by hello@trymoonlit.com (HIPAA-compliant).
  */
 export async function createEncounter(
   session: Session,
@@ -182,12 +199,13 @@ export async function createEncounter(
   }
 
   const calendar = getCalendarClient(session.accessToken);
+  const calendarId = getSharedCalendarId();
 
   const summary = `${patient} — ${setting} — ${visitType}`;
 
   try {
     const event = await calendar.events.insert({
-      calendarId: 'primary',
+      calendarId: calendarId,
       conferenceDataVersion: 1,
       requestBody: {
         summary,
@@ -224,7 +242,7 @@ export async function createEncounter(
 }
 
 /**
- * Delete a calendar event by ID.
+ * Delete a calendar event by ID from the shared calendar.
  */
 export async function deleteEncounter(
   session: Session,
@@ -235,10 +253,11 @@ export async function deleteEncounter(
   }
 
   const calendar = getCalendarClient(session.accessToken);
+  const calendarId = getSharedCalendarId();
 
   try {
     await calendar.events.delete({
-      calendarId: 'primary',
+      calendarId: calendarId,
       eventId,
     });
   } catch (error) {

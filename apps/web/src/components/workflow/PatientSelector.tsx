@@ -19,6 +19,7 @@ interface PatientSelectorProps {
   selectedPatient: Patient | null;
   onPatientSelect: (patient: Patient) => void;
   onCreateEncounter?: (patient: Patient, startTime: Date, endTime: Date) => void;
+  onEncounterCreated?: (encounter: any) => void; // Callback for successful creation
   setting?: string;
   visitType?: string;
 }
@@ -27,6 +28,7 @@ export default function PatientSelector({
   selectedPatient,
   onPatientSelect,
   onCreateEncounter,
+  onEncounterCreated,
   setting,
   visitType,
 }: PatientSelectorProps) {
@@ -170,9 +172,14 @@ export default function PatientSelector({
         const data = await response.json();
         setShowEncounterModal(false);
 
+        // Notify parent component
+        if (onEncounterCreated) {
+          onEncounterCreated(data);
+        }
+
         // Open Google Meet link if available
-        if (data.encounter?.meet_link) {
-          window.open(data.encounter.meet_link, '_blank');
+        if (data.calendarEncounter?.meetLink) {
+          window.open(data.calendarEncounter.meetLink, '_blank');
         }
       } else {
         alert('Failed to create encounter');
@@ -281,15 +288,26 @@ export default function PatientSelector({
               )}
             </div>
 
-            {/* Create Encounter Button */}
+            {/* Create Encounter Button - Prominent */}
             {setting && visitType && (
-              <button
-                onClick={() => setShowEncounterModal(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#0A1F3D] text-white rounded-lg hover:bg-[#0A1F3D]/90 transition-colors"
-              >
-                <Calendar size={18} />
-                Create Encounter & Meet Link
-              </button>
+              <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-300 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Video className="text-indigo-600" size={20} />
+                  <h4 className="text-sm font-semibold text-indigo-900">
+                    Ready to Schedule
+                  </h4>
+                </div>
+                <p className="text-xs text-indigo-700 mb-3">
+                  Create a Google Meet encounter for {setting} • {visitType}
+                </p>
+                <button
+                  onClick={() => setShowEncounterModal(true)}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white text-base font-semibold rounded-lg hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02]"
+                >
+                  <Calendar size={20} />
+                  Schedule New Encounter & Meet
+                </button>
+              </div>
             )}
           </>
         )}

@@ -153,7 +153,7 @@ export async function getPatientFinalizedNotes(patientId: string): Promise<Gener
     `)
     .eq('encounters.patient_id', patientId)
     .eq('is_final', true)
-    .order('encounters.scheduled_start', { ascending: true });
+    .order('generated_at', { ascending: true });
 
   if (error) {
     console.error('[getPatientFinalizedNotes] Error fetching notes:', error);
@@ -175,7 +175,7 @@ export async function getMostRecentFinalizedNote(patientId: string): Promise<Gen
     `)
     .eq('encounters.patient_id', patientId)
     .eq('is_final', true)
-    .order('encounters.scheduled_start', { ascending: false })
+    .order('generated_at', { ascending: false })
     .limit(1)
     .single();
 
