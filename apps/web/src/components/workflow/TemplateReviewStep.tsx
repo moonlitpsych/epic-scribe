@@ -21,6 +21,7 @@ const VISIT_TYPES: Record<Setting, string[]> = {
   'Davis Behavioral Health': ['Intake', 'Transfer of Care', 'Follow-up'],
   'Moonlit Psychiatry': ['Intake', 'Transfer of Care', 'Follow-up'],
   'BHIDC therapy': ['First Visit', 'Follow-up'],
+  'Teenscope South': ['Intake', 'Follow-up'],
 };
 
 export default function TemplateReviewStep({

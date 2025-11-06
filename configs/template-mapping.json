@@ -65,5 +65,15 @@
       "templateId": "bhidc_therapy_followup_v1",
       "version": 1
     }
+  },
+  "Teenscope South": {
+    "Intake": {
+      "templateId": "teenscope_south_intake_v1",
+      "version": 1
+    },
+    "Follow-up": {
+      "templateId": "teenscope_south_followup_v1",
+      "version": 1
+    }
   }
 }

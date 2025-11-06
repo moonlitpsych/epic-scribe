@@ -20,9 +20,12 @@ export async function GET(request: NextRequest) {
     // Try database first
     try {
       if (setting && visitType) {
+        console.log(`[API] Looking for template: ${setting} - ${visitType}`);
         const template = await getTemplateBySettingAndVisitType(setting, visitType);
         if (!template) {
-          return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+          console.log(`[API] Template not found in database for ${setting} - ${visitType}`);
+          // Don't return 404 yet, let it fall through to in-memory fallback
+          throw new Error('Template not in database');
         }
         return NextResponse.json(template);
       }
@@ -34,8 +37,13 @@ export async function GET(request: NextRequest) {
 
       // Fallback to in-memory service
       if (setting && visitType) {
+        console.log(`[API] Trying in-memory service for ${setting} - ${visitType}`);
         const template = templateService.getTemplate(setting, visitType);
+        console.log(`[API] In-memory result:`, template ? 'Found' : 'Not found');
         if (!template) {
+          // List all available templates for debugging
+          const allTemplates = templateService.listTemplates();
+          console.log(`[API] Available templates:`, allTemplates.map(t => `${t.setting} - ${t.visitType}`));
           return NextResponse.json({ error: 'Template not found' }, { status: 404 });
         }
         return NextResponse.json(template);

@@ -1,8 +1,9 @@
+// apps/web/src/components/workflow/GenerateInputStep.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import { Template, Setting } from '@epic-scribe/types';
-import { ChevronLeft, Sparkles, Eye, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle } from 'lucide-react';
 import PatientSelector from './PatientSelector';
 import EncountersList from './EncountersList';
 import { CalendarEncounter } from '@/google-calendar';
@@ -49,6 +50,12 @@ export default function GenerateInputStep({
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(initialPatient);
   const [encounterId, setEncounterId] = useState<string | null>(initialEncounterId);
 
+  // Translation-related state
+  const [isSpanishTranscript, setIsSpanishTranscript] = useState(false);
+  const [spanishTranscript, setSpanishTranscript] = useState('');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [hasTranslated, setHasTranslated] = useState(false);
+
   // Encounters state
   const [encounters, setEncounters] = useState<CalendarEncounter[]>([]);
   const [loadingEncounters, setLoadingEncounters] = useState(false);
@@ -57,8 +64,15 @@ export default function GenerateInputStep({
   // Check if previous note is required
   const requiresPreviousNote = visitType === 'Transfer of Care' || visitType === 'Follow-up';
 
-  const wordCount = transcript.trim().split(/\s+/).filter(Boolean).length;
-  const canGenerate = transcript.trim().length > 0 && (!requiresPreviousNote || previousNote.trim().length > 0);
+  // Word count for display
+  const activeTranscript = isSpanishTranscript ? spanishTranscript : transcript;
+  const wordCount = activeTranscript.trim().split(/\s+/).filter(Boolean).length;
+
+  // Can proceed to translation or generation
+  const canTranslate = isSpanishTranscript && spanishTranscript.trim().length > 0 && !hasTranslated;
+  const canGenerate = transcript.trim().length > 0 &&
+    (!requiresPreviousNote || previousNote.trim().length > 0) &&
+    (!isSpanishTranscript || hasTranslated);
 
   // Fetch encounters when patient is selected
   useEffect(() => {
@@ -78,7 +92,6 @@ export default function GenerateInputStep({
       const response = await fetch('/api/encounters');
       if (response.ok) {
         const data = await response.json();
-        // Filter encounters for this patient
         const patientEncounters = data.encounters.filter(
           (enc: any) => enc.patientId === selectedPatient.id
         );
@@ -94,31 +107,77 @@ export default function GenerateInputStep({
   const handleSelectEncounter = (encounter: CalendarEncounter) => {
     setSelectedEncounterId(encounter.id);
     setEncounterId(encounter.id);
-    // Note: transcript loading would happen here if we have transcript_file_id
   };
 
   const handleEncounterCreated = (data: any) => {
-    // Refresh encounters list
     fetchPatientEncounters();
-
-    // Set the new encounter as selected
     if (data.calendarEncounter) {
       setSelectedEncounterId(data.calendarEncounter.id);
       setEncounterId(data.calendarEncounter.id);
     }
   };
 
+  const handleCreateEncounter = async (patient: Patient, startTime: Date, endTime: Date) => {
+    // Handled by PatientSelector component
+  };
+
+  const handleTranslate = async () => {
+    if (!canTranslate) return;
+
+    setIsTranslating(true);
+    try {
+      const response = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: spanishTranscript,
+          sourceLanguage: 'Spanish',
+          targetLanguage: 'English',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Translation failed');
+      }
+
+      const data = await response.json();
+      setTranscript(data.translatedText);
+      setHasTranslated(true);
+
+      // Show success message
+      console.log(`Translation completed in ${data.latencyMs}ms`);
+    } catch (error) {
+      console.error('Error translating transcript:', error);
+      alert('Failed to translate transcript. Please try again.');
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  const handleLanguageToggle = () => {
+    if (hasTranslated) {
+      // Reset if already translated
+      if (confirm('Switching language will reset the translation. Continue?')) {
+        setIsSpanishTranscript(!isSpanishTranscript);
+        setHasTranslated(false);
+        setTranscript('');
+        setSpanishTranscript('');
+      }
+    } else {
+      setIsSpanishTranscript(!isSpanishTranscript);
+    }
+  };
+
   const handlePreviewPrompt = async () => {
     setLoadingPreview(true);
     try {
-      // Build a preview of what the prompt would look like
-      // For now, we'll show a simplified preview
       const preview = `SYSTEM:
 You are a HIPAA-compliant clinical documentation assistant for Dr. Rufus Sweeney.
 
 TEMPLATE: ${template.name}
 Setting: ${setting}
 Visit Type: ${visitType}
+${hasTranslated ? 'Note: Transcript was translated from Spanish' : ''}
 
 TRANSCRIPT (${wordCount} words):
 ${transcript}
@@ -141,12 +200,6 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
     if (canGenerate) {
       onGenerate(transcript, previousNote, selectedPatient, encounterId);
     }
-  };
-
-  const handleCreateEncounter = async (patient: Patient, startTime: Date, endTime: Date) => {
-    // This will be handled by the PatientSelector component
-    // which creates the encounter and updates the encounterId
-    // We'll get the encounter ID from the response
   };
 
   return (
@@ -191,34 +244,119 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
         />
       )}
 
-      {/* Input Card */}
+      {/* Language Toggle Card */}
       <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-6">
-        <h2 className="text-2xl font-serif text-[#0A1F3D] mb-4">Input Clinical Data</h2>
-
-        {/* Transcript Input */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-[#0A1F3D] mb-2">
-            Transcript <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            value={transcript}
-            onChange={(e) => setTranscript(e.target.value)}
-            placeholder="Paste or type the clinical encounter transcript here..."
-            rows={12}
-            className="w-full px-4 py-3 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm"
-          />
-          <div className="flex items-center justify-between mt-2">
-            <p className="text-sm text-[#5A6B7D]">
-              {wordCount} words
-            </p>
-            {transcript.trim().length === 0 && (
-              <p className="text-sm text-red-500">Transcript is required</p>
-            )}
-          </div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-serif text-[#0A1F3D]">Transcript Language</h2>
+          <button
+            onClick={handleLanguageToggle}
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded-lg transition-all
+              ${isSpanishTranscript
+                ? 'bg-[#E89C8A] text-white hover:bg-[#0A1F3D]'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
+            `}
+          >
+            <Languages size={20} />
+            {isSpanishTranscript ? 'Spanish Transcript' : 'English Transcript'}
+          </button>
         </div>
 
+        {isSpanishTranscript && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <div className="flex items-start gap-2">
+              <Globe className="text-blue-600 mt-1" size={20} />
+              <div>
+                <p className="text-sm font-semibold text-blue-900">Translation Workflow</p>
+                <p className="text-sm text-blue-700 mt-1">
+                  1. Paste your Spanish transcript from Google Meet<br />
+                  2. Click "Translate to English" to convert the transcript<br />
+                  3. Review the translation and proceed with note generation
+                </p>
+                {hasTranslated && (
+                  <div className="flex items-center gap-2 mt-2 text-green-600">
+                    <CheckCircle size={16} />
+                    <span className="text-sm font-medium">Translation completed successfully</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Input Card */}
+      <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-6">
+        <h2 className="text-2xl font-serif text-[#0A1F3D] mb-4">
+          {isSpanishTranscript && !hasTranslated ? 'Spanish Transcript Input' : 'Clinical Data Input'}
+        </h2>
+
+        {/* Spanish Transcript Input (when Spanish mode is active and not yet translated) */}
+        {isSpanishTranscript && !hasTranslated && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-[#0A1F3D] mb-2">
+              Spanish Transcript <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={spanishTranscript}
+              onChange={(e) => setSpanishTranscript(e.target.value)}
+              placeholder="Pegue aquí la transcripción en español de Google Meet..."
+              rows={12}
+              className="w-full px-4 py-3 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm"
+              disabled={isTranslating}
+            />
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-sm text-[#5A6B7D]">
+                {wordCount} palabras
+              </p>
+              {spanishTranscript.trim().length === 0 && (
+                <p className="text-sm text-red-500">Spanish transcript is required</p>
+              )}
+            </div>
+
+            {/* Translation Button */}
+            <button
+              onClick={handleTranslate}
+              disabled={!canTranslate || isTranslating}
+              className="mt-4 flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Globe size={20} />
+              {isTranslating ? 'Translating...' : 'Translate to English'}
+            </button>
+          </div>
+        )}
+
+        {/* English Transcript Input (when in English mode or after translation) */}
+        {(!isSpanishTranscript || hasTranslated) && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-[#0A1F3D] mb-2">
+              {hasTranslated ? 'Translated English Transcript' : 'Transcript'}
+              <span className="text-red-500"> *</span>
+              {hasTranslated && (
+                <span className="ml-2 text-green-600 text-xs">✓ Translated from Spanish</span>
+              )}
+            </label>
+            <textarea
+              value={transcript}
+              onChange={(e) => setTranscript(e.target.value)}
+              placeholder="Paste or type the clinical encounter transcript here..."
+              rows={12}
+              className="w-full px-4 py-3 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm"
+              disabled={isGenerating}
+            />
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-sm text-[#5A6B7D]">
+                {transcript.trim().split(/\s+/).filter(Boolean).length} words
+              </p>
+              {transcript.trim().length === 0 && (
+                <p className="text-sm text-red-500">Transcript is required</p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Previous Note Input (conditional) */}
-        {requiresPreviousNote && (
+        {requiresPreviousNote && (!isSpanishTranscript || hasTranslated) && (
           <div className="mb-6">
             <label className="block text-sm font-medium text-[#0A1F3D] mb-2">
               Previous Note <span className="text-red-500">*</span>
@@ -237,28 +375,30 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handlePreviewPrompt}
-            disabled={!canGenerate || loadingPreview}
-            className="flex items-center gap-2 px-4 py-2 border border-[#C5A882] text-[#0A1F3D] rounded-lg hover:bg-[#F5F1ED] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Eye size={16} />
-            {loadingPreview ? 'Loading...' : 'Preview Prompt'}
-          </button>
+        {/* Action Buttons (shown when ready to generate) */}
+        {(!isSpanishTranscript || hasTranslated) && (
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handlePreviewPrompt}
+              disabled={!canGenerate || loadingPreview}
+              className="flex items-center gap-2 px-4 py-2 border border-[#C5A882] text-[#0A1F3D] rounded-lg hover:bg-[#F5F1ED] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Eye size={16} />
+              {loadingPreview ? 'Loading...' : 'Preview Prompt'}
+            </button>
 
-          <button
-            onClick={handleGenerate}
-            disabled={!canGenerate || isGenerating}
-            className="flex items-center gap-2 px-6 py-3 bg-[#E89C8A] text-white rounded-lg hover:bg-[#0A1F3D] transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Sparkles size={20} />
-            {isGenerating ? 'Generating...' : 'Generate Note'}
-          </button>
-        </div>
+            <button
+              onClick={handleGenerate}
+              disabled={!canGenerate || isGenerating}
+              className="flex items-center gap-2 px-6 py-3 bg-[#E89C8A] text-white rounded-lg hover:bg-[#0A1F3D] transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Sparkles size={20} />
+              {isGenerating ? 'Generating...' : 'Generate Note'}
+            </button>
+          </div>
+        )}
 
-        {!canGenerate && (
+        {!canGenerate && (!isSpanishTranscript || hasTranslated) && (
           <div className="mt-4 p-3 bg-[#FFF4E6] border border-[#FFA500]/30 rounded-lg flex items-start gap-2">
             <AlertCircle size={16} className="text-[#FFA500] mt-0.5 flex-shrink-0" />
             <p className="text-sm text-[#8B4513]">
@@ -272,27 +412,20 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
 
       {/* Prompt Preview Modal */}
       {showPromptPreview && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-[#C5A882]/20">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl max-h-[80vh] overflow-auto p-6 mx-4">
+            <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold text-[#0A1F3D]">Prompt Preview</h3>
-              <p className="text-sm text-[#5A6B7D] mt-1">
-                This is a simplified preview of what will be sent to the AI
-              </p>
-            </div>
-            <div className="p-6 overflow-y-auto flex-1">
-              <pre className="text-sm font-mono bg-[#F5F1ED] p-4 rounded border border-[#C5A882]/20 whitespace-pre-wrap">
-                {promptPreview}
-              </pre>
-            </div>
-            <div className="p-6 border-t border-[#C5A882]/20 flex justify-end">
               <button
                 onClick={() => setShowPromptPreview(false)}
-                className="px-4 py-2 bg-[#0A1F3D] text-white rounded-lg hover:bg-[#E89C8A] transition-colors"
+                className="text-[#5A6B7D] hover:text-[#0A1F3D]"
               >
-                Close
+                ✕
               </button>
             </div>
+            <pre className="whitespace-pre-wrap font-mono text-sm bg-gray-50 p-4 rounded-lg">
+              {promptPreview}
+            </pre>
           </div>
         </div>
       )}

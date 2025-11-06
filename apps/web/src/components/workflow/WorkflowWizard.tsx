@@ -64,7 +64,7 @@ export default function WorkflowWizard() {
     }
   };
 
-  const handleGenerate = async (trans: string, prevNote: string, patient: Patient | null, encId: string | null) => {
+  const handleGenerate = async (trans: string, prevNote: string, patient: Patient | null, encId: string | null, collateralTrans?: string) => {
     setTranscript(trans);
     setPreviousNote(prevNote);
     setSelectedPatient(patient);
@@ -80,6 +80,7 @@ export default function WorkflowWizard() {
           visitType,
           transcript: trans,
           priorNote: prevNote || undefined,
+          collateralTranscript: collateralTrans || undefined,
           patientId: patient?.id,
           encounterId: encId,
         }),
@@ -128,13 +129,31 @@ export default function WorkflowWizard() {
     }
 
     try {
+      // Database template uses snake_case (template_id), not camelCase (templateId)
+      const templateId = (template as any).template_id || (template as any).templateId;
+
+      if (!templateId) {
+        console.error('Template ID not found. Template object:', template);
+        throw new Error('Template ID is missing from template object');
+      }
+
+      console.log('[SaveNote] Preparing to save note:', {
+        templateId,
+        promptVersion: receipt.promptVersion,
+        promptHash: receipt.promptHash,
+        hasGeneratedContent: !!generatedNote,
+        hasFinalContent: !!editedNote,
+        patientId: selectedPatient.id,
+        encounterId: encounterId || 'none',
+      });
+
       const response = await fetch('/api/notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patientId: selectedPatient.id,
           encounterId: encounterId || undefined,
-          templateId: template.templateId,
+          templateId,
           promptVersion: receipt.promptVersion,
           promptHash: receipt.promptHash,
           generatedContent: generatedNote,
@@ -145,15 +164,16 @@ export default function WorkflowWizard() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('[SaveNote] API error:', errorData);
         throw new Error(errorData.message || 'Failed to save note');
       }
 
       const data = await response.json();
-      console.log('Note saved successfully:', data.note);
+      console.log('[SaveNote] Note saved successfully:', data.note);
 
       // Note is now saved to database with patient association
     } catch (error) {
-      console.error('Error saving note:', error);
+      console.error('[SaveNote] Error saving note:', error);
       throw error; // Re-throw so the button component can handle the error
     }
   };
@@ -250,6 +270,8 @@ export default function WorkflowWizard() {
           onSaveNote={selectedPatient ? handleSaveNote : undefined}
           setting={setting!}
           visitType={visitType!}
+          selectedPatient={selectedPatient}
+          onPatientSelect={setSelectedPatient}
         />
       )}
     </div>

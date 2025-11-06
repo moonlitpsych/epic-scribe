@@ -1,13 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Template, Setting } from '@epic-scribe/types';
-import { Copy, RefreshCw, RotateCcw, ExternalLink, CheckCircle2, AlertCircle, AlertTriangle, Info, Save } from 'lucide-react';
+import { Copy, RefreshCw, RotateCcw, ExternalLink, CheckCircle2, AlertCircle, AlertTriangle, Info, Save, UserPlus } from 'lucide-react';
+import PatientSelector from './PatientSelector';
 
 interface ValidationResult {
   valid: boolean;
   errors: string[];
   warnings: string[];
+}
+
+interface Patient {
+  id: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth: string;
+  mrn?: string;
+  notes?: string;
 }
 
 interface NoteResultsStepProps {
@@ -21,6 +32,8 @@ interface NoteResultsStepProps {
   onSaveNote?: () => Promise<void>;
   setting: Setting;
   visitType: string;
+  selectedPatient?: Patient | null;
+  onPatientSelect?: (patient: Patient) => void;
 }
 
 export default function NoteResultsStep({
@@ -34,10 +47,29 @@ export default function NoteResultsStep({
   onSaveNote,
   setting,
   visitType,
+  selectedPatient,
+  onPatientSelect,
 }: NoteResultsStepProps) {
+  const { data: session, status } = useSession();
   const [copySuccess, setCopySuccess] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showAuthWarning, setShowAuthWarning] = useState(false);
+
+  // Save note data to sessionStorage whenever it changes (auto-backup)
+  useEffect(() => {
+    if (editedNote) {
+      const noteBackup = {
+        editedNote,
+        generatedNote,
+        timestamp: new Date().toISOString(),
+        setting,
+        visitType,
+      };
+      sessionStorage.setItem('epic-scribe-note-backup', JSON.stringify(noteBackup));
+      console.log('[NoteBackup] Auto-saved note to sessionStorage');
+    }
+  }, [editedNote, generatedNote, setting, visitType]);
 
   const handleCopy = async () => {
     try {
@@ -53,14 +85,35 @@ export default function NoteResultsStep({
   const handleSave = async () => {
     if (!onSaveNote) return;
 
+    // Check authentication status
+    if (status === 'unauthenticated') {
+      setShowAuthWarning(true);
+      return;
+    }
+
+    if (status === 'loading') {
+      alert('Please wait while we verify your session...');
+      return;
+    }
+
     setSaving(true);
     try {
       await onSaveNote();
       setSaveSuccess(true);
+      // Clear backup after successful save
+      sessionStorage.removeItem('epic-scribe-note-backup');
+      console.log('[NoteBackup] Cleared backup after successful save');
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {
       console.error('Failed to save note:', error);
-      alert('Failed to save note. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save note';
+
+      // Check if it's an auth error
+      if (errorMessage.includes('Unauthorized') || errorMessage.includes('401')) {
+        setShowAuthWarning(true);
+      } else {
+        alert(`Failed to save note: ${errorMessage}\n\nYour note is automatically backed up and won't be lost.`);
+      }
     } finally {
       setSaving(false);
     }
@@ -70,6 +123,66 @@ export default function NoteResultsStep({
 
   return (
     <div className="space-y-6">
+      {/* Authentication Warning */}
+      {showAuthWarning && (
+        <div className="bg-[#FEF2F2] border-2 border-[#EF4444] rounded-lg p-6">
+          <div className="flex items-start gap-4">
+            <AlertCircle size={24} className="text-[#DC2626] flex-shrink-0 mt-1" />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-[#991B1B] mb-2">
+                Sign In Required to Save Notes
+              </h3>
+              <p className="text-[#DC2626] mb-4">
+                You must be signed in to save notes to your account. Don't worry—your note has been automatically
+                backed up and won't be lost!
+              </p>
+              <div className="flex gap-3">
+                <a
+                  href="/api/auth/signin?callbackUrl=/workflow"
+                  className="px-4 py-2 bg-[#E89C8A] text-white rounded-lg hover:bg-[#0A1F3D] transition-colors font-semibold"
+                >
+                  Sign In Now
+                </a>
+                <button
+                  onClick={() => setShowAuthWarning(false)}
+                  className="px-4 py-2 border border-[#C5A882] text-[#0A1F3D] rounded-lg hover:bg-[#F5F1ED] transition-colors"
+                >
+                  Continue Without Saving
+                </button>
+              </div>
+              <p className="text-xs text-[#DC2626] mt-3">
+                💾 Your note is auto-saved in your browser and will persist across page refreshes
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Patient Selection (if not selected) */}
+      {!selectedPatient && onPatientSelect && (
+        <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-6">
+          <div className="flex items-start gap-4">
+            <UserPlus size={24} className="text-amber-600 flex-shrink-0 mt-1" />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-amber-800 mb-2">
+                Select a Patient to Enable Saving
+              </h3>
+              <p className="text-amber-700 mb-4">
+                To save this note and maintain patient history, please select or create a patient.
+                Once selected, you'll be able to save this note and it will be automatically included
+                in future visits for this patient.
+              </p>
+              <PatientSelector
+                selectedPatient={selectedPatient}
+                onPatientSelect={onPatientSelect}
+                setting={setting}
+                visitType={visitType}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header with Actions */}
       <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-6">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -87,14 +200,32 @@ export default function NoteResultsStep({
 
           <div className="flex flex-wrap items-center gap-3">
             {onSaveNote && (
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#059669] transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saveSuccess ? <CheckCircle2 size={16} /> : <Save size={16} />}
-                {saving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save Note'}
-              </button>
+              <div className="relative group">
+                <button
+                  onClick={handleSave}
+                  disabled={saving || status === 'loading'}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed ${
+                    status === 'unauthenticated'
+                      ? 'bg-[#FFA500] text-white hover:bg-[#FF8C00]'
+                      : 'bg-[#10B981] text-white hover:bg-[#059669]'
+                  }`}
+                  title={status === 'unauthenticated' ? 'Click to sign in and save' : 'Save note to database'}
+                >
+                  {saveSuccess ? <CheckCircle2 size={16} /> : <Save size={16} />}
+                  {saving
+                    ? 'Saving...'
+                    : saveSuccess
+                    ? 'Saved!'
+                    : status === 'unauthenticated'
+                    ? 'Sign In to Save'
+                    : 'Save Note'}
+                </button>
+                {status === 'authenticated' && (
+                  <span className="hidden group-hover:block absolute top-full left-0 mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap z-10">
+                    Signed in as {session?.user?.email}
+                  </span>
+                )}
+              </div>
             )}
 
             <button

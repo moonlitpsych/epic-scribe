@@ -22,6 +22,7 @@ export interface PromptBuilderOptions {
   transcript: string;
   previousNote?: string;
   staffingTranscript?: string; // Separate staffing conversation transcript
+  collateralTranscript?: string; // Collateral (parent/guardian) transcript for Teenscope
   patientContext?: string;  // Clinical context from patient record
   historicalNotes?: string;  // All previous finalized notes for this patient
   setting: Setting;
@@ -41,6 +42,7 @@ export interface CompiledPrompt {
     template: string;
     previousNote?: string;
     staffingTranscript?: string; // Separate staffing transcript
+    collateralTranscript?: string; // Collateral transcript for Teenscope
     transcript: string;
   };
   metadata: {
@@ -143,7 +145,7 @@ export class PromptBuilder {
    * Build a complete prompt from components
    */
   async build(options: PromptBuilderOptions): Promise<CompiledPrompt> {
-    const { template, transcript, previousNote, staffingTranscript, patientContext, historicalNotes, setting, visitType } = options;
+    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, patientContext, historicalNotes, setting, visitType } = options;
 
     // Check if this is a therapy-focused template (BHIDC therapy)
     const isTherapyFocused = template.setting === 'BHIDC therapy' ||
@@ -152,6 +154,9 @@ export class PromptBuilder {
     // Check if this is a psychiatric-focused template
     const isPsychiatricFocused = template.name?.includes('Focused Psychiatric') ||
                                  template.sections.some(s => SECTION_PROMPT_CONFIGS[s.name]);
+
+    // Check if this is a Teenscope South template (adolescent psychiatry with collateral)
+    const isTeenscope = setting === 'Teenscope South';
 
     // Get SmartList definitions from template
     const smartListIds = this.extractSmartListIds(template);
@@ -229,11 +234,12 @@ export class PromptBuilder {
         extractedFromPrior,
         template: templateSection,
         previousNote,
+        collateralTranscript,
         transcript: this.buildTranscriptSection(transcript)
       };
 
       // Compile final prompt
-      prompt = this.compilePrompt(sections, isFollowUp, historicalNotes);
+      prompt = this.compilePrompt(sections, isFollowUp, historicalNotes, isTeenscope);
     }
 
     // Generate hash
@@ -363,8 +369,9 @@ export class PromptBuilder {
     extractedFromPrior?: ExtractedNoteData;
     template: string;
     previousNote?: string;
+    collateralTranscript?: string;
     transcript: string;
-  }, isFollowUp: boolean = false, historicalNotes?: string): string {
+  }, isFollowUp: boolean = false, historicalNotes?: string, isTeenscope: boolean = false): string {
     let prompt = '';
 
     // System prompt
@@ -440,6 +447,22 @@ export class PromptBuilder {
 
     // Transcript
     prompt += `${sections.transcript}\n\n`;
+
+    // Collateral Transcript (for Teenscope South)
+    if (isTeenscope) {
+      if (sections.collateralTranscript) {
+        prompt += `COLLATERAL TRANSCRIPT (Parent/Guardian conversation):\n`;
+        prompt += `${sections.collateralTranscript}\n\n`;
+        prompt += `COLLATERAL INSTRUCTIONS:\n`;
+        prompt += `- Incorporate information from the collateral conversation into the "Per Collateral" section of the HPI\n`;
+        prompt += `- Synthesize parent/guardian observations about the patient's behavior at home\n`;
+        prompt += `- Include their concerns and perspectives on treatment\n\n`;
+      } else {
+        prompt += `COLLATERAL NOT AVAILABLE:\n`;
+        prompt += `For the "Per Collateral" section in the HPI, use the following text:\n`;
+        prompt += `"I attempted to reach [relationship], patient's [parent/guardian], to obtain collateral information, but they were unavailable. Will attempt to reach later this week."\n\n`;
+      }
+    }
 
     // Final instruction
     prompt += `OUTPUT INSTRUCTIONS:\n`;

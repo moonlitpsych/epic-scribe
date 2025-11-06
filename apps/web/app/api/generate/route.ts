@@ -32,7 +32,7 @@ function formatHistoricalNotes(notes: any[]): string {
 export async function POST(request: NextRequest) {
   try {
     const body: GenerateNoteRequest = await request.json();
-    const { encounterId, patientId, setting, visitType, transcript, priorNote, staffingTranscript } = body;
+    const { encounterId, patientId, setting, visitType, transcript, priorNote, staffingTranscript, collateralTranscript } = body;
 
     // Validation
     if (!setting || !visitType || !transcript) {
@@ -99,7 +99,13 @@ export async function POST(request: NextRequest) {
     try {
       const { getTemplateBySettingAndVisitType } = await import('@/lib/db/templates');
       template = await getTemplateBySettingAndVisitType(setting, visitType);
-      console.log(`[Generate] Loaded template from database for ${setting} - ${visitType}`);
+      if (template) {
+        console.log(`[Generate] Loaded template from database for ${setting} - ${visitType}`);
+      } else {
+        // Database didn't have it, try in-memory
+        console.log(`[Generate] Template not in database for ${setting} - ${visitType}, trying in-memory`);
+        template = templateService.getTemplate(setting as Setting, visitType as string);
+      }
     } catch (dbError) {
       console.log('[Generate] Database not available, using in-memory template:', dbError);
       template = templateService.getTemplate(setting as Setting, visitType as string);
@@ -135,6 +141,7 @@ export async function POST(request: NextRequest) {
       transcript,
       previousNote: priorNote,
       staffingTranscript, // Include staffing transcript if provided
+      collateralTranscript, // Include collateral transcript for Teenscope
       patientContext, // Include patient clinical context if available
       historicalNotes, // Include all previous finalized notes for continuity
       setting: setting as Setting,

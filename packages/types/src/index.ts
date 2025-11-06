@@ -4,7 +4,8 @@ export const SETTINGS = [
   'Redwood Clinic MHI',
   'Davis Behavioral Health',
   'Moonlit Psychiatry',
-  'BHIDC therapy'
+  'BHIDC therapy',
+  'Teenscope South'
 ] as const;
 
 export const VISIT_TYPES = [
@@ -132,6 +133,7 @@ export interface GenerateNoteRequest {
   transcript: string;
   priorNote?: string;
   staffingTranscript?: string; // Optional separate staffing conversation transcript
+  collateralTranscript?: string; // Optional collateral (parent/guardian) conversation transcript for Teenscope
 }
 
 export interface GenerateNoteResponse {

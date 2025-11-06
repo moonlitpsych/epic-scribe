@@ -40,7 +40,7 @@ export interface SaveNoteParams {
  * Save a generated note (initial generation or finalized version)
  */
 export async function saveGeneratedNote(params: SaveNoteParams): Promise<GeneratedNote> {
-  const {
+  let {
     encounterId,
     patientId,
     templateId,
@@ -52,8 +52,15 @@ export async function saveGeneratedNote(params: SaveNoteParams): Promise<Generat
     finalizedBy,
   } = params;
 
+  console.log('[saveGeneratedNote] Starting with:', {
+    hasEncounterId: !!encounterId,
+    hasPatientId: !!patientId,
+    templateId,
+  });
+
   // If encounter doesn't exist, create it
   if (!encounterId && patientId) {
+    console.log('[saveGeneratedNote] Creating placeholder encounter for patient:', patientId);
     // Create a placeholder encounter for standalone note generation
     const { data: encounter, error: encounterError } = await supabase
       .from('encounters')
@@ -69,9 +76,19 @@ export async function saveGeneratedNote(params: SaveNoteParams): Promise<Generat
       .select()
       .single();
 
-    if (encounterError) throw encounterError;
+    if (encounterError) {
+      console.error('[saveGeneratedNote] Error creating encounter:', encounterError);
+      throw encounterError;
+    }
     // Use the new encounter ID
-    params.encounterId = encounter.id;
+    encounterId = encounter.id;
+    console.log('[saveGeneratedNote] Created encounter:', encounterId);
+  }
+
+  if (!encounterId) {
+    const error = new Error('encounterId is required but was not provided and could not be created');
+    console.error('[saveGeneratedNote] Missing encounterId:', { encounterId, patientId });
+    throw error;
   }
 
   const noteData = {
@@ -86,6 +103,8 @@ export async function saveGeneratedNote(params: SaveNoteParams): Promise<Generat
     finalized_by: isFinal ? finalizedBy : null,
     edited: generatedContent !== finalNoteContent,
   };
+
+  console.log('[saveGeneratedNote] Inserting note with encounter_id:', encounterId);
 
   const { data, error } = await supabase
     .from('generated_notes')
