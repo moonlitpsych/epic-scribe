@@ -33,7 +33,20 @@ export async function POST(request: NextRequest) {
 
     console.log('[POST /api/notes] Session verified:', session.user?.email);
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      console.error('[POST /api/notes] Failed to parse request body:', parseError);
+      return NextResponse.json(
+        {
+          error: 'Invalid request',
+          message: 'Failed to parse request body',
+        },
+        { status: 400 }
+      );
+    }
+
     console.log('[POST /api/notes] Received fields:', Object.keys(body));
 
     const {
@@ -96,11 +109,52 @@ export async function POST(request: NextRequest) {
       finalizedBy: session.user?.email || 'unknown',
     };
 
+    console.log('[POST /api/notes] Attempting to save with params:', {
+      hasEncounterId: !!params.encounterId,
+      hasPatientId: !!params.patientId,
+      templateId: params.templateId,
+      promptVersion: params.promptVersion,
+      promptHashPrefix: params.promptHash?.substring(0, 8),
+      generatedContentLength: params.generatedContent?.length,
+      finalContentLength: params.finalNoteContent?.length,
+      isFinal: params.isFinal,
+      finalizedBy: params.finalizedBy,
+    });
+
     const savedNote = await saveGeneratedNote(params);
+
+    console.log('[POST /api/notes] Note saved successfully with ID:', savedNote.id);
 
     return NextResponse.json({ note: savedNote }, { status: 201 });
   } catch (error) {
-    console.error('Error saving note:', error);
+    console.error('[POST /api/notes] Error saving note:', error);
+
+    // Check for specific database schema errors
+    if (error instanceof Error) {
+      if (error.message.includes('Database schema is missing required columns')) {
+        return NextResponse.json(
+          {
+            error: 'Database schema error',
+            message: error.message,
+            action: 'Please run the database migration in your Supabase dashboard.',
+          },
+          { status: 500 }
+        );
+      }
+
+      // Check for Supabase-specific errors
+      if (error.message.includes('column') || error.message.includes('relation')) {
+        return NextResponse.json(
+          {
+            error: 'Database error',
+            message: `Database schema issue: ${error.message}`,
+            action: 'Please ensure all database migrations have been applied.',
+          },
+          { status: 500 }
+        );
+      }
+    }
+
     return NextResponse.json(
       {
         error: 'Failed to save note',

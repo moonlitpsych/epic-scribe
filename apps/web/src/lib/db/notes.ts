@@ -100,7 +100,7 @@ export async function saveGeneratedNote(params: SaveNoteParams): Promise<Generat
     final_note_content: finalNoteContent,
     is_final: isFinal,
     finalized_at: isFinal ? new Date().toISOString() : null,
-    finalized_by: isFinal ? finalizedBy : null,
+    finalized_by: isFinal ? (finalizedBy || null) : null,
     edited: generatedContent !== finalNoteContent,
   };
 
@@ -114,6 +114,26 @@ export async function saveGeneratedNote(params: SaveNoteParams): Promise<Generat
 
   if (error) {
     console.error('[saveGeneratedNote] Error saving note:', error);
+    console.error('[saveGeneratedNote] Error details:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+
+    // Check if this is a missing column error
+    if (error.message?.includes('column') && (
+      error.message.includes('generated_content') ||
+      error.message.includes('final_note_content') ||
+      error.message.includes('is_final') ||
+      error.message.includes('finalized_at') ||
+      error.message.includes('finalized_by')
+    )) {
+      throw new Error(
+        'Database schema is missing required columns. Please run migration 010_add_note_content_fields.sql in your Supabase dashboard.'
+      );
+    }
+
     throw error;
   }
 

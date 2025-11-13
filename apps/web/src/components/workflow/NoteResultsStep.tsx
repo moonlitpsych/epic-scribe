@@ -111,6 +111,15 @@ export default function NoteResultsStep({
       // Check if it's an auth error
       if (errorMessage.includes('Unauthorized') || errorMessage.includes('401')) {
         setShowAuthWarning(true);
+      } else if (errorMessage.includes('Database schema') || errorMessage.includes('missing required columns')) {
+        // Database migration needed
+        alert(
+          'Database Migration Required:\n\n' +
+          'The database is missing required columns for saving notes.\n\n' +
+          'Please run the following migration in your Supabase dashboard:\n' +
+          'supabase/migrations/010_add_note_content_fields.sql\n\n' +
+          'Your note has been automatically backed up and won\'t be lost.'
+        );
       } else {
         alert(`Failed to save note: ${errorMessage}\n\nYour note is automatically backed up and won't be lost.`);
       }
