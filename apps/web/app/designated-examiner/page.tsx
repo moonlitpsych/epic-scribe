@@ -172,9 +172,29 @@ export default function DesignatedExaminerPage() {
               ← Back to Clinical Notes
             </Link>
           </div>
-          <p className="text-[#5A6B7D]">
+          <p className="text-[#5A6B7D] mb-4">
             Involuntary Commitment Assessment — Utah Mental Health Court
           </p>
+
+          {/* New Presentation Helper Button */}
+          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-300 rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  🎯 New: Court Presentation Helper
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Structured format for presenting to judges with all sections you need
+                </p>
+              </div>
+              <Link
+                href="/designated-examiner/presentation"
+                className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg hover:from-indigo-700 hover:to-blue-700 transition-all transform hover:scale-105"
+              >
+                Open Presentation Helper
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Input Step */}
