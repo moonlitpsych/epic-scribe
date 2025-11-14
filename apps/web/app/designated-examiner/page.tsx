@@ -187,12 +187,20 @@ export default function DesignatedExaminerPage() {
                   Structured format for presenting to judges with all sections you need
                 </p>
               </div>
-              <Link
-                href="/designated-examiner/presentation"
-                className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg hover:from-indigo-700 hover:to-blue-700 transition-all transform hover:scale-105"
-              >
-                Open Presentation Helper
-              </Link>
+              <div className="flex gap-2">
+                <Link
+                  href="/designated-examiner/presentations"
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all"
+                >
+                  View All Presentations
+                </Link>
+                <Link
+                  href="/designated-examiner/presentation"
+                  className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg hover:from-indigo-700 hover:to-blue-700 transition-all transform hover:scale-105"
+                >
+                  Create New Presentation
+                </Link>
+              </div>
             </div>
           </div>
         </div>

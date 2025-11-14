@@ -1,14 +1,15 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { ChevronLeft, Save, FileText, Monitor, Speaker } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { ChevronLeft, Save, FileText, Monitor, Speaker, Sparkles, X, Download, List } from 'lucide-react';
 import { PresentationSection, TextAreaField, InputField, MedicationList } from '@/components/designated-examiner/PresentationSection';
 import { UtahCriteriaChecklist } from '@/components/designated-examiner/UtahCriteriaChecklist';
 import type {
   DEPresentation,
   DEPresentationData,
-  DECriteriaAssessment
+  DECriteriaAssessment,
+  PresentationSectionKey
 } from '@/types/designated-examiner';
 
 // Initialize empty presentation data
@@ -46,6 +47,9 @@ const getEmptyPresentationData = (): DEPresentationData => ({
 
 export default function DEPresentationPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const presentationId = searchParams.get('id');
+
   const [presentation, setPresentation] = useState<DEPresentation>({
     id: '',
     patient_name: '',
@@ -70,6 +74,32 @@ export default function DEPresentationPage() {
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [showAIPanel, setShowAIPanel] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [enhancingSection, setEnhancingSection] = useState<PresentationSectionKey | null>(null);
+  const [enhancingAll, setEnhancingAll] = useState(false);
+
+  // Load existing presentation if ID provided
+  useEffect(() => {
+    if (presentationId) {
+      fetchPresentation(presentationId);
+    }
+  }, [presentationId]);
+
+  const fetchPresentation = async (id: string) => {
+    try {
+      const response = await fetch(`/api/designated-examiner/presentation/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setPresentation(data);
+        if (data.criteria_assessment) {
+          setCriteriaAssessment(data.criteria_assessment);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load presentation:', error);
+    }
+  };
 
   // Auto-save functionality
   useEffect(() => {
@@ -136,6 +166,53 @@ export default function DEPresentationPage() {
     }
   };
 
+  // Handle AI enhancement for sections
+  const handleEnhanceSection = async (section: PresentationSectionKey) => {
+    if (!transcript) {
+      alert('Please add a transcript in the AI panel first');
+      setShowAIPanel(true);
+      return;
+    }
+
+    setEnhancingSection(section);
+    try {
+      const response = await fetch('/api/designated-examiner/enhance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          section,
+          transcript,
+          existing_data: presentation.presentation_data
+        })
+      });
+
+      if (response.ok) {
+        const { enhanced_content } = await response.json();
+        // Update the specific section with enhanced content
+        updateField(section, enhanced_content);
+        setPresentation(prev => ({
+          ...prev,
+          ai_enhanced_sections: [...(prev.ai_enhanced_sections || []), section]
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to enhance section:', error);
+    } finally {
+      setEnhancingSection(null);
+    }
+  };
+
+  // Handle export
+  const handleExport = async (format: 'pdf' | 'speaking-notes' | 'screen-reference') => {
+    if (!presentation.id) {
+      alert('Please save the presentation first');
+      return;
+    }
+
+    const url = `/api/designated-examiner/presentation/${presentation.id}/export?format=${format}`;
+    window.open(url, '_blank');
+  };
+
   const data = presentation.presentation_data!;
 
   return (
@@ -163,6 +240,27 @@ export default function DEPresentationPage() {
                   Saved {lastSaved.toLocaleTimeString()}
                 </span>
               )}
+
+              <button
+                onClick={() => router.push('/designated-examiner/presentations')}
+                className="px-3 py-1.5 text-gray-600 hover:text-gray-900 flex items-center gap-2"
+              >
+                <List className="h-4 w-4" />
+                My Presentations
+              </button>
+
+              <button
+                onClick={() => setShowAIPanel(!showAIPanel)}
+                className={`px-3 py-1.5 rounded-lg flex items-center gap-2 ${
+                  showAIPanel
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                }`}
+              >
+                <Sparkles className="h-4 w-4" />
+                AI Enhance
+              </button>
+
               <button
                 onClick={handleSave}
                 disabled={!isDirty || isSaving}
@@ -171,14 +269,27 @@ export default function DEPresentationPage() {
                 <Save className="h-4 w-4" />
                 {isSaving ? 'Saving...' : 'Save'}
               </button>
+
               <div className="flex gap-1 border-l pl-3">
-                <button title="Screen View" className="p-2 hover:bg-gray-100 rounded">
+                <button
+                  title="Screen View"
+                  onClick={() => handleExport('screen-reference')}
+                  className="p-2 hover:bg-gray-100 rounded"
+                >
                   <Monitor className="h-4 w-4" />
                 </button>
-                <button title="Speaking Notes" className="p-2 hover:bg-gray-100 rounded">
+                <button
+                  title="Speaking Notes"
+                  onClick={() => handleExport('speaking-notes')}
+                  className="p-2 hover:bg-gray-100 rounded"
+                >
                   <Speaker className="h-4 w-4" />
                 </button>
-                <button title="Export PDF" className="p-2 hover:bg-gray-100 rounded">
+                <button
+                  title="Export PDF"
+                  onClick={() => handleExport('pdf')}
+                  className="p-2 hover:bg-gray-100 rounded"
+                >
                   <FileText className="h-4 w-4" />
                 </button>
               </div>
@@ -231,7 +342,13 @@ export default function DEPresentationPage() {
         </section>
 
         {/* 1. One-Liner */}
-        <PresentationSection title="Patient One-Liner" aiEnhanceable>
+        <PresentationSection
+          title="Patient One-Liner"
+          aiEnhanceable
+          onEnhance={() => handleEnhanceSection('one_liner')}
+          isEnhancing={enhancingSection === 'one_liner'}
+          aiEnhanced={presentation.ai_enhanced_sections?.includes('one_liner')}
+        >
           <TextAreaField
             value={data.one_liner}
             onChange={(v) => updateField('one_liner', v)}
@@ -419,6 +536,147 @@ export default function DEPresentationPage() {
         </PresentationSection>
 
       </main>
+
+      {/* Enhanced AI Panel */}
+      {showAIPanel && (
+        <div className="fixed right-0 top-[57px] h-[calc(100vh-57px)] w-96 bg-white border-l shadow-lg overflow-hidden flex flex-col z-50">
+          {/* Panel Header */}
+          <div className="p-4 border-b bg-purple-50">
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold text-purple-900 flex items-center gap-2">
+                <Sparkles className="h-5 w-5" />
+                AI Enhancement
+              </h3>
+              <button
+                onClick={() => setShowAIPanel(false)}
+                className="p-1 hover:bg-purple-100 rounded"
+              >
+                <X className="h-4 w-4 text-purple-700" />
+              </button>
+            </div>
+          </div>
+
+          {/* Panel Content */}
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Patient Interview Transcript
+                </label>
+                <textarea
+                  value={transcript}
+                  onChange={(e) => setTranscript(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 text-sm"
+                  rows={12}
+                  placeholder="Paste the patient interview transcript here. The AI will extract relevant information for each section based on this transcript..."
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  {transcript.split(' ').length} words
+                </p>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-700">Quick Actions</h4>
+
+                <button
+                  onClick={async () => {
+                    if (!transcript) {
+                      alert('Please add a transcript first');
+                      return;
+                    }
+                    setEnhancingAll(true);
+
+                    // Enhance all sections sequentially
+                    const sections: PresentationSectionKey[] = [
+                      'one_liner', 'demographics', 'admission', 'initial_presentation',
+                      'relevant_history', 'medications', 'hospital_course', 'interview'
+                    ];
+
+                    for (const section of sections) {
+                      await handleEnhanceSection(section);
+                    }
+
+                    setEnhancingAll(false);
+                  }}
+                  disabled={!transcript || enhancingAll}
+                  className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {enhancingAll ? (
+                    <>Processing...</>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      Enhance All Sections
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (confirm('This will clear all AI-enhanced content. Continue?')) {
+                      setPresentation(prev => ({
+                        ...prev,
+                        presentation_data: getEmptyPresentationData(),
+                        ai_enhanced_sections: []
+                      }));
+                      setTranscript('');
+                      setIsDirty(true);
+                    }
+                  }}
+                  className="w-full px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50"
+                >
+                  Clear All Content
+                </button>
+              </div>
+
+              {/* Section Status */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-700">Section Status</h4>
+                <div className="space-y-1">
+                  {[
+                    { key: 'one_liner', label: 'One-Liner' },
+                    { key: 'demographics', label: 'Demographics' },
+                    { key: 'admission', label: 'Admission' },
+                    { key: 'initial_presentation', label: 'Initial Presentation' },
+                    { key: 'relevant_history', label: 'Relevant History' },
+                    { key: 'medications', label: 'Medications' },
+                    { key: 'hospital_course', label: 'Hospital Course' },
+                    { key: 'interview', label: 'Patient Interview' }
+                  ].map(section => (
+                    <div
+                      key={section.key}
+                      className="flex justify-between items-center px-2 py-1 rounded hover:bg-gray-50"
+                    >
+                      <span className="text-sm">{section.label}</span>
+                      {presentation.ai_enhanced_sections?.includes(section.key as PresentationSectionKey) ? (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                          Enhanced
+                        </span>
+                      ) : (
+                        <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded">
+                          Manual
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tips */}
+              <div className="bg-blue-50 rounded-lg p-3">
+                <h4 className="text-sm font-medium text-blue-900 mb-1">Tips</h4>
+                <ul className="text-xs text-blue-700 space-y-1">
+                  <li>• Add transcript first, then enhance sections</li>
+                  <li>• You can enhance individual sections or all at once</li>
+                  <li>• Manual edits are preserved unless you clear content</li>
+                  <li>• Save regularly to avoid losing work</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
