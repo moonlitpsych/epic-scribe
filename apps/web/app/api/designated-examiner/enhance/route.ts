@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '../../auth/[...nextauth]/route';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { SectionEnhanceRequest, DEPresentationData } from '@/types/designated-examiner';
 

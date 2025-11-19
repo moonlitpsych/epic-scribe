@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '../../../../auth/[...nextauth]/route';
 import { getPresentation } from '@/lib/db/de-presentations';
 import type { DEPresentation, ExportFormat } from '@/types/designated-examiner';
 
@@ -364,7 +364,7 @@ INTERVIEW FINDINGS
 • Thought process: ${data?.interview.objective.thought_process || 'Describe'}
 • Orientation: ${data?.interview.objective.orientation || 'Note status'}
 • Insight: ${data?.interview.subjective.insight || 'Assess understanding'}
-• Follow-up plan: ${data?.interview.subjective.follow_up_plan || 'Patient's plan'}
+• Follow-up plan: ${data?.interview.subjective.follow_up_plan || "Patient's plan"}
 
 UTAH CRITERIA - ${metCount}/5 MET
 ----------------------------------
