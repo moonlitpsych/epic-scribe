@@ -142,6 +142,28 @@ export const SECTION_PROMPT_CONFIGS: Record<string, SectionPromptConfig> = {
     format: 'smartlist_only'
   },
 
+  'Diagnoses': {
+    sectionName: 'Diagnoses',
+    temperature: 0.5,
+    instructions: `List all relevant psychiatric diagnoses with their ICD-10 codes.
+
+FORMAT REQUIREMENTS:
+- List each diagnosis on its own line
+- Format: [Diagnosis, specify severity if applicable] - [ICD-10 code]
+- Include primary diagnosis first, then any secondary diagnoses
+- Use proper DSM-5-TR terminology
+- Include appropriate specifiers (severity, with/without features, etc.)
+
+EXAMPLES:
+Major Depressive Disorder, Single Episode, Moderate - F32.1
+Generalized Anxiety Disorder - F41.1
+Attention-Deficit/Hyperactivity Disorder, Combined Presentation - F90.2
+Post-Traumatic Stress Disorder - F43.10
+
+CRITICAL: Only include diagnoses that are supported by the clinical evidence from the transcript and patient history.`,
+    format: 'list'
+  },
+
   'Formulation': {
     sectionName: 'Formulation',
     temperature: 0.6,
@@ -155,7 +177,7 @@ Example: "Jeremy Montoya is a 35 year old male with history of Major Depressive 
 CRITICAL: This must be ONE sentence only. Include all relevant psychiatric diagnoses from the patient's history.
 
 PARAGRAPH 2 - Diagnosis with DSM Criteria and Biopsychosocial Formulation:
-Start with: "The patient's diagnosis is most consistent with [Primary Diagnosis, specify severity] ([ICD-10 code]) based on [list specific DSM-5-TR criteria met from the transcript]."
+Start with: "The patient's diagnosis is most consistent with [Primary Diagnosis, specify severity] based on [list specific DSM-5-TR criteria met from the transcript]."
 
 Then MUST include ALL three perspectives in this order:
 "From a biological perspective, [discuss genetics, family history, medical conditions, substance effects, neurotransmitter considerations]. Psychologically, [discuss cognitive patterns, personality factors, coping mechanisms, learned behaviors, trauma impacts]. Socially, [discuss environmental stressors, support system, cultural factors, socioeconomic issues, relationship dynamics]."
@@ -188,6 +210,44 @@ FORMATTING REQUIREMENTS:
 ✓ Paragraph 4: Must end with colon (:)
 ✓ Use precise clinical terminology throughout`,
     format: 'four_paragraph_structure'
+  },
+
+  'Assessment': {
+    sectionName: 'Assessment',
+    temperature: 0.5,
+    instructions: `Generate a concise 2-paragraph assessment for this follow-up/transfer of care visit.
+
+PARAGRAPH 1 - Patient One-Liner (ONE SENTENCE ONLY):
+Format: "[patient name] is a [age] year old [sex/gender] with history of [psychiatric diagnoses] who presents for [follow-up for medication management/transfer of care/etc.]."
+
+Example: "Sarah Johnson is a 42 year old female with history of Bipolar I Disorder and Generalized Anxiety Disorder who presents for follow-up for medication management."
+
+PARAGRAPH 2 - Interval Update:
+Start with: "Since the last visit [timeframe if mentioned], the patient reports..."
+
+Include ALL of the following elements that are discussed in the transcript:
+
+SUBJECTIVE (Patient-reported):
+- Medication adherence: Is the patient taking medications as prescribed?
+- Side effects and tolerance: Any adverse effects from medications?
+- Medication response: How effective have the medications been for symptoms?
+- Symptom changes: Improvement, worsening, or stability of psychiatric symptoms
+- Life stressors: New or ongoing stressors, life changes, or circumstances
+- Sleep, appetite, energy changes
+- Any concerning symptoms or behaviors
+
+OBJECTIVE (Clinician-observed):
+- Mental Status Exam findings: Notable changes in appearance, behavior, mood, affect, thought process
+- Mood questionnaires or rating scales if administered (PHQ-9, GAD-7, etc.)
+- Observable improvement or deterioration
+- Functional status changes
+
+Format as a flowing narrative paragraph, not a bulleted list. Focus on clinically relevant changes and current status.
+
+Example: "Since the last visit 4 weeks ago, the patient reports good adherence to sertraline 100mg daily with no side effects and moderate improvement in depressive symptoms. She notes improved sleep (now 6-7 hours nightly), stable appetite, and better energy levels. Anxiety remains elevated in social situations but is more manageable. She started a new job 2 weeks ago which has been stressful but rewarding. No suicidal ideation, self-harm, or substance use reported. On mental status exam, she appears well-groomed with bright affect, linear thought process, and improved eye contact compared to prior visit. PHQ-9 score decreased from 15 to 10, indicating mild depression."
+
+CRITICAL: Only include information explicitly discussed in the transcript. Do not invent or assume details.`,
+    format: 'two_paragraph_interval'
   },
 
   'Plan': {
@@ -253,22 +313,157 @@ CRITICAL REQUIREMENTS:
 ✓ Follow-up MUST end with "or sooner if needed"
 ✓ Plan MUST end with "Rufus Sweeney, MD" as the final line`,
     format: 'structured_subsections_required'
+  },
+
+  'Plan_Followup': {
+    sectionName: 'Plan',
+    temperature: 0.4,
+    instructions: `Format the plan with these EXACT 5 subsections in this EXACT order. ALL subsections are REQUIRED - do not skip any.
+
+Medications:
+CRITICAL FOR FOLLOW-UP VISITS:
+- For medications that are UNCHANGED from prior visit: Use "Continue [medication] [dose] [frequency]"
+- For medications that are CHANGED: Use action verb (Increase/Decrease) with explanation
+- For medications being STOPPED: Use "Discontinue [medication] - [reason]"
+- For NEW medications: Use "Start [medication] [dose] [frequency] for [indication]"
+
+${process.env.PREVIOUS_MEDICATIONS ? `
+MEDICATIONS FROM PREVIOUS NOTE (use as baseline):
+${process.env.PREVIOUS_MEDICATIONS}
+` : ''}
+
+Format for EACH medication: "[Action] [medication name] [dose] [frequency]"
+Examples for follow-up:
+- "Continue sertraline 100mg daily"
+- "Continue lithium 900mg daily"
+- "Increase lamotrigine from 100mg to 150mg daily - partial response at current dose"
+- "Start propranolol 10mg TID PRN for anxiety"
+- "Discontinue hydroxyzine - patient reports excessive sedation"
+
+IMPORTANT: Do NOT include medication response or side effects here - those belong in the Assessment's Interval Update section.
+
+If no changes to any medications: "Continue current medication regimen without changes"
+NEVER use bullets or dashes - each medication on its own line
+
+Referral to Psychotherapy:
+State whether referring to NEW therapy OR continuing EXISTING therapy.
+For NEW referral: "Refer to [therapist name if known, or type of therapist] for [therapy type: CBT, DBT, EMDR, psychodynamic, etc.] [frequency: weekly, biweekly] focusing on [specific treatment goals]"
+If insurance verified: "Patient has verified insurance coverage for [number] sessions"
+For CONTINUING therapy: "Continue [frequency] individual psychotherapy with current therapist [name if known] focusing on [current goals]"
+If DECLINED: "Patient declined psychotherapy referral at this time; will revisit at next appointment"
+If already in therapy: "Patient to continue established therapy with [therapist name/practice]"
+
+Therapy:
+Document the therapy YOU provided in TODAY'S session. This is REQUIRED.
+MUST include ALL of the following:
+1. Type of therapy provided (supportive, CBT techniques, psychoeducation, motivational interviewing, crisis intervention)
+2. Main themes or issues discussed
+3. Specific interventions or techniques used
+4. Patient's response and engagement level
+5. Session duration in minutes
+6. TIMESTAMPS: If psychotherapy discussion is detected in transcript with timestamps [HH:MM:SS], include them
+
+Example with timestamps: "Supportive psychotherapy provided from [00:15:30] to [00:35:45] focusing on processing grief related to mother's recent diagnosis, validating emotional responses, and developing coping strategies. Utilized cognitive restructuring for catastrophic thoughts about the future. Patient became tearful but engaged well with interventions. Session duration: 20 minutes."
+
+If minimal therapy: "Brief supportive counseling provided from [00:05:00] to [00:10:00] focusing on medication education and adherence strategies. Session duration: 5 minutes."
+
+Follow-up:
+Format: "Return in [specific timeframe] for [purpose of visit]"
+Use these placeholders for Epic: .DATE and .TIME
+Specify modality: in-person, telehealth, or phone
+MUST end with "or sooner if needed"
+
+Examples:
+- "Return in 4 weeks for medication monitoring and supportive therapy, or sooner if needed"
+- "Return in 2 weeks via telehealth for follow-up after medication adjustment, or sooner if needed"
+- "Return in 3 months for stable medication management, or sooner if needed"
+
+SIGNATURE (REQUIRED - must be last line):
+
+Rufus Sweeney, MD
+
+CRITICAL REQUIREMENTS:
+✓ ALL 5 subsections are REQUIRED (Medications, Referral to Psychotherapy, Therapy, Follow-up, Signature)
+✓ Maintain exact order as shown
+✓ Each subsection must have content - no empty sections
+✓ Use "Continue" for unchanged medications in follow-up visits
+✓ Include timestamps from transcript when available for therapy section
+✓ Therapy section MUST include session duration
+✓ Follow-up MUST end with "or sooner if needed"
+✓ Plan MUST end with "Rufus Sweeney, MD" as the final line`,
+    format: 'structured_subsections_followup'
   }
 };
 
 /**
- * Build section-specific prompt instructions
+ * Ensure proper section ordering with Diagnoses before Formulation
  */
-export function buildSectionPrompt(section: TemplateSection): string {
-  const config = SECTION_PROMPT_CONFIGS[section.name];
+function ensureProperSectionOrdering(template: Template): Template {
+  const sections = [...template.sections];
+  const formulationIndex = sections.findIndex(s => s.name === 'Formulation');
+  const diagnosesIndex = sections.findIndex(s => s.name === 'Diagnoses');
+
+  // If we have Formulation but no Diagnoses section, insert Diagnoses before Formulation
+  if (formulationIndex !== -1 && diagnosesIndex === -1) {
+    const diagnosesSection: TemplateSection = {
+      order: formulationIndex,
+      name: 'Diagnoses',
+      content: 'DIAGNOSES:\n[Primary and secondary psychiatric diagnoses with ICD-10 codes]',
+      exemplar: 'DIAGNOSES:\nMajor Depressive Disorder, Single Episode, Moderate - F32.1\nGeneralized Anxiety Disorder - F41.1'
+    };
+
+    // Insert Diagnoses section before Formulation
+    sections.splice(formulationIndex, 0, diagnosesSection);
+
+    // Reorder the sections
+    sections.forEach((section, index) => {
+      section.order = index + 1;
+    });
+
+    return {
+      ...template,
+      sections
+    };
+  }
+
+  return template;
+}
+
+/**
+ * Build section-specific prompt instructions with visit type awareness
+ */
+export function buildSectionPrompt(section: TemplateSection, visitType?: string, previousMedications?: string): string {
+  const isFollowUp = visitType === 'Follow-up' || visitType === 'Transfer of Care';
+
+  // Choose the appropriate config based on section name and visit type
+  let configName = section.name;
+  if (section.name === 'Formulation' && isFollowUp) {
+    configName = 'Assessment';  // Use Assessment for follow-ups instead of Formulation
+  } else if (section.name === 'Plan' && isFollowUp) {
+    configName = 'Plan_Followup';  // Use follow-up specific Plan config
+  }
+
+  const config = SECTION_PROMPT_CONFIGS[configName];
   if (!config) {
     return `Generate content for ${section.name} based on the transcript.`;
   }
 
-  let prompt = `\n=== ${section.name.toUpperCase()} ===\n`;
+  // For follow-up Plan section, inject previous medications if available
+  let instructions = config.instructions;
+  if (configName === 'Plan_Followup' && previousMedications) {
+    instructions = instructions.replace(
+      '${process.env.PREVIOUS_MEDICATIONS ? `',
+      `
+MEDICATIONS FROM PREVIOUS NOTE (use as baseline):
+${previousMedications}
+`
+    ).replace('${process.env.PREVIOUS_MEDICATIONS}', previousMedications).replace('` : \'\'}', '');
+  }
+
+  let prompt = `\n=== ${config.sectionName.toUpperCase()} ===\n`;
   prompt += `Temperature Setting: ${config.temperature || 0.4}\n`;
   prompt += `Format: ${config.format}\n\n`;
-  prompt += `Instructions:\n${config.instructions}\n\n`;
+  prompt += `Instructions:\n${instructions}\n\n`;
 
   if (section.exemplar) {
     prompt += `Exemplar (target style):\n${section.exemplar}\n\n`;
@@ -286,7 +481,9 @@ export function buildPsychiatricPrompt(
   template: Template,
   transcript: string,
   smartListDefinitions: string,
-  staffingTranscript?: string
+  staffingTranscript?: string,
+  visitType?: string,
+  previousNote?: string
 ): string {
   // Check for staffing configuration
   const staffingConfig = template.staffing_config;
@@ -381,6 +578,17 @@ Use the PATIENT TRANSCRIPT for all clinical content (HPI, Psych Hx, ROS, MSE, Fo
 `;
   }
 
+  // Extract medications from previous note if available
+  let previousMedications = '';
+  if (previousNote) {
+    // Simple extraction of medications from Plan section
+    const planMatch = previousNote.match(/Plan[:|\n]([\s\S]*?)(?=\n\n|\n[A-Z]|$)/i);
+    const medicationsMatch = planMatch?.[1]?.match(/Medications?[:|\n]([\s\S]*?)(?=\nReferral|$)/i);
+    if (medicationsMatch) {
+      previousMedications = medicationsMatch[1].trim();
+    }
+  }
+
   prompt += `
 SMARTLIST DEFINITIONS:
 ${smartListDefinitions}
@@ -388,9 +596,12 @@ ${smartListDefinitions}
 TEMPLATE SECTIONS:
 `;
 
+  // Ensure proper section ordering with Diagnoses before Formulation/Assessment
+  const ensuredTemplate = ensureProperSectionOrdering(template);
+
   // Add each section with its specific instructions
-  template.sections.forEach(section => {
-    prompt += buildSectionPrompt(section);
+  ensuredTemplate.sections.forEach(section => {
+    prompt += buildSectionPrompt(section, visitType, previousMedications);
     prompt += '\n---\n';
   });
 
@@ -412,6 +623,8 @@ ${transcript}
 `;
   }
 
+  const isFollowUp = visitType === 'Follow-up' || visitType === 'Transfer of Care';
+
   prompt += `
 
 GENERATION INSTRUCTIONS:
@@ -419,8 +632,8 @@ GENERATION INSTRUCTIONS:
 2. For HPI: Generate detailed narrative (temperature 0.7) - do NOT over-condense
 3. For Psychiatric History: Extract facts precisely (temperature 0.3)
 4. For ROS and MSE: Select SmartList options carefully (temperature 0.2)
-5. For Formulation: Follow exact 4-paragraph structure (temperature 0.5)
-6. For Plan: Use exact formatting with subsections (temperature 0.3)`;
+5. For ${isFollowUp ? 'Assessment' : 'Formulation'}: Follow ${isFollowUp ? '2-paragraph interval update structure' : 'exact 4-paragraph structure'} (temperature 0.5)
+6. For Plan: ${isFollowUp ? 'Use "Continue" for unchanged medications, include timestamps for therapy' : 'Use exact formatting with subsections'} (temperature 0.3)`;
 
   if (hasSeparateStaffing) {
     prompt += `

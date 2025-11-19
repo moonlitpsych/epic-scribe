@@ -190,7 +190,7 @@ export class PromptBuilder {
     } else if (isPsychiatricFocused) {
       // Use the psychiatric-focused prompt builder
       console.log('[PromptBuilder] Using psychiatric-focused prompt builder');
-      prompt = buildPsychiatricPrompt(template, transcript, smartListDefinitions, staffingTranscript);
+      prompt = buildPsychiatricPrompt(template, transcript, smartListDefinitions, staffingTranscript, visitType, previousNote);
 
       sections = {
         system: 'Psychiatric note generator for Dr. Rufus Sweeney',
@@ -319,15 +319,52 @@ export class PromptBuilder {
   }
 
   /**
+   * Ensure proper section ordering with Diagnoses before Formulation
+   */
+  private ensureProperSectionOrdering(template: Template): Template {
+    const sections = [...template.sections];
+    const formulationIndex = sections.findIndex(s => s.name === 'Formulation');
+    const diagnosesIndex = sections.findIndex(s => s.name === 'Diagnoses');
+
+    // If we have Formulation but no Diagnoses section, insert Diagnoses before Formulation
+    if (formulationIndex !== -1 && diagnosesIndex === -1) {
+      const diagnosesSection: TemplateSection = {
+        order: formulationIndex,
+        name: 'Diagnoses',
+        content: 'DIAGNOSES:\n[Primary and secondary psychiatric diagnoses with ICD-10 codes]',
+        exemplar: 'DIAGNOSES:\nMajor Depressive Disorder, Single Episode, Moderate - F32.1\nGeneralized Anxiety Disorder - F41.1'
+      };
+
+      // Insert Diagnoses section before Formulation
+      sections.splice(formulationIndex, 0, diagnosesSection);
+
+      // Reorder the sections
+      sections.forEach((section, index) => {
+        section.order = index + 1;
+      });
+
+      return {
+        ...template,
+        sections
+      };
+    }
+
+    return template;
+  }
+
+  /**
    * Build template section with exemplars
    */
   private buildTemplateSection(template: Template): string {
-    let content = `TEMPLATE: ${template.name}\n`;
-    content += `Setting: ${template.setting}\n`;
-    content += `Visit Type: ${template.visitType}\n\n`;
+    // Ensure proper section ordering
+    const orderedTemplate = this.ensureProperSectionOrdering(template);
+
+    let content = `TEMPLATE: ${orderedTemplate.name}\n`;
+    content += `Setting: ${orderedTemplate.setting}\n`;
+    content += `Visit Type: ${orderedTemplate.visitType}\n\n`;
     content += '=== TEMPLATE SECTIONS ===\n\n';
 
-    template.sections.forEach(section => {
+    orderedTemplate.sections.forEach(section => {
       content += `--- ${section.name} ---\n`;
       content += `Content Template:\n${section.content}\n`;
 
