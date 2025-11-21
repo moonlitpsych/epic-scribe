@@ -40,7 +40,7 @@ export class GeminiClient {
   constructor(config: GeminiConfig = {}) {
     this.config = {
       apiKey: config.apiKey || process.env.GEMINI_API_KEY || '',
-      model: config.model || process.env.GEMINI_MODEL || 'gemini-1.5-pro',
+      model: config.model || process.env.GEMINI_MODEL || 'gemini-3-pro-preview',
       temperature: config.temperature ?? 0.4, // Balanced default for psychiatric notes
       maxOutputTokens: config.maxOutputTokens ?? 8192,
       topP: config.topP ?? 0.95,

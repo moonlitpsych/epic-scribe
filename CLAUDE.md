@@ -337,7 +337,7 @@ const prompt = await promptBuilder.build({
 ```bash
 # Gemini
 GEMINI_API_KEY=
-GEMINI_MODEL=gemini-1.5-pro
+GEMINI_MODEL=gemini-3-pro-preview
 
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=
