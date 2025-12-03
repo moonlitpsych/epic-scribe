@@ -6,6 +6,7 @@ import { Template, Setting } from '@epic-scribe/types';
 import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle } from 'lucide-react';
 import PatientSelector from './PatientSelector';
 import EncountersList from './EncountersList';
+import ManualNotePanel from './ManualNotePanel';
 import { CalendarEncounter } from '@/google-calendar';
 
 interface Patient {
@@ -241,6 +242,17 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
           selectedEncounterId={selectedEncounterId}
           onSelectEncounter={handleSelectEncounter}
           loading={loadingEncounters}
+        />
+      )}
+
+      {/* Manual Note Panel (collapsible - shown when patient is selected) */}
+      {selectedPatient && (
+        <ManualNotePanel
+          patient={selectedPatient}
+          onNoteSaved={() => {
+            // Could refresh notes list if displayed elsewhere
+            console.log('Manual note saved for patient:', selectedPatient.id);
+          }}
         />
       )}
 

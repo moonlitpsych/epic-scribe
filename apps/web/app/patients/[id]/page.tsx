@@ -28,6 +28,17 @@ interface Encounter {
   meet_link: string | null;
 }
 
+interface PatientNote {
+  id: string;
+  patient_id: string;
+  note_type: 'clinical_note' | 'quick_memo';
+  title: string | null;
+  content: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function PatientDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -35,6 +46,7 @@ export default function PatientDetailPage() {
 
   const [patient, setPatient] = useState<Patient | null>(null);
   const [encounters, setEncounters] = useState<Encounter[]>([]);
+  const [patientNotes, setPatientNotes] = useState<PatientNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +54,13 @@ export default function PatientDetailPage() {
   // Clinical context state
   const [clinicalContext, setClinicalContext] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Add note form state
+  const [showAddNoteForm, setShowAddNoteForm] = useState(false);
+  const [newNoteType, setNewNoteType] = useState<'clinical_note' | 'quick_memo'>('quick_memo');
+  const [newNoteTitle, setNewNoteTitle] = useState('');
+  const [newNoteContent, setNewNoteContent] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
 
   useEffect(() => {
     if (status === 'authenticated' && params.id) {
@@ -66,10 +85,74 @@ export default function PatientDetailPage() {
       setPatient(data.patient);
       setEncounters(data.encounters || []);
       setClinicalContext(data.patient.notes || '');
+
+      // Fetch patient notes
+      await fetchPatientNotes(id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPatientNotes = async (id: string) => {
+    try {
+      const response = await fetch(`/api/patients/${id}/notes`);
+      if (response.ok) {
+        const data = await response.json();
+        setPatientNotes(data.notes || []);
+      }
+    } catch (err) {
+      console.warn('Could not fetch patient notes:', err);
+    }
+  };
+
+  const handleAddNote = async () => {
+    if (!patient || !newNoteContent.trim()) return;
+
+    setSavingNote(true);
+    try {
+      const response = await fetch(`/api/patients/${patient.id}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          noteType: newNoteType,
+          title: newNoteTitle.trim() || undefined,
+          content: newNoteContent.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save note');
+      }
+
+      // Reset form and refresh notes
+      setNewNoteTitle('');
+      setNewNoteContent('');
+      setShowAddNoteForm(false);
+      await fetchPatientNotes(patient.id);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to save note');
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!patient || !confirm('Are you sure you want to delete this note?')) return;
+
+    try {
+      const response = await fetch(`/api/patients/${patient.id}/notes/${noteId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete note');
+      }
+
+      await fetchPatientNotes(patient.id);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete note');
     }
   };
 
@@ -278,6 +361,149 @@ export default function PatientDetailPage() {
               <span>Last updated: {formatDateTime(patient.updated_at)}</span>
             )}
           </div>
+        </div>
+
+        {/* Patient Notes Section */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Patient Notes</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Clinical notes and quick memos for this patient
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAddNoteForm(!showAddNoteForm)}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm flex items-center gap-2"
+            >
+              <svg className="h-4 w-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M12 4v16m8-8H4"></path>
+              </svg>
+              Add Note
+            </button>
+          </div>
+
+          {/* Add Note Form */}
+          {showAddNoteForm && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <h3 className="font-medium text-gray-900 mb-3">New Note</h3>
+
+              {/* Note Type Selection */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Note Type</label>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setNewNoteType('quick_memo')}
+                    className={`px-4 py-2 rounded-lg border transition-all text-sm ${
+                      newNoteType === 'quick_memo'
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        : 'border-gray-300 text-gray-600 hover:border-gray-400'
+                    }`}
+                  >
+                    Quick Memo
+                  </button>
+                  <button
+                    onClick={() => setNewNoteType('clinical_note')}
+                    className={`px-4 py-2 rounded-lg border transition-all text-sm ${
+                      newNoteType === 'clinical_note'
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        : 'border-gray-300 text-gray-600 hover:border-gray-400'
+                    }`}
+                  >
+                    Clinical Note
+                  </button>
+                </div>
+              </div>
+
+              {/* Title */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Title <span className="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={newNoteTitle}
+                  onChange={(e) => setNewNoteTitle(e.target.value)}
+                  placeholder="Note title..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              {/* Content */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Content <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={newNoteContent}
+                  onChange={(e) => setNewNoteContent(e.target.value)}
+                  placeholder="Enter note content..."
+                  rows={newNoteType === 'quick_memo' ? 3 : 6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowAddNoteForm(false);
+                    setNewNoteTitle('');
+                    setNewNoteContent('');
+                  }}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddNote}
+                  disabled={savingNote || !newNoteContent.trim()}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {savingNote ? 'Saving...' : 'Save Note'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Notes List */}
+          {patientNotes.length === 0 ? (
+            <p className="text-gray-600 text-center py-8">No notes yet. Click &quot;Add Note&quot; to create one.</p>
+          ) : (
+            <div className="space-y-4">
+              {patientNotes.map((note) => (
+                <div key={note.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        note.note_type === 'clinical_note'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {note.note_type === 'clinical_note' ? 'Clinical Note' : 'Quick Memo'}
+                      </span>
+                      {note.title && (
+                        <span className="font-medium text-gray-900">{note.title}</span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleDeleteNote(note.id)}
+                      className="text-gray-400 hover:text-red-600 transition-colors"
+                      title="Delete note"
+                    >
+                      <svg className="h-4 w-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <p className="text-gray-700 whitespace-pre-wrap text-sm">{note.content}</p>
+                  <div className="mt-2 text-xs text-gray-500">
+                    {formatDateTime(note.created_at)} by {note.created_by}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Encounter History */}

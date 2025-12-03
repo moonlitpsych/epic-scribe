@@ -283,3 +283,146 @@ export async function deleteNote(noteId: string): Promise<void> {
     throw error;
   }
 }
+
+// =============================================================================
+// Patient Notes (Manual Notes - Clinical Notes & Quick Memos)
+// =============================================================================
+
+export type PatientNoteType = 'clinical_note' | 'quick_memo';
+
+export interface PatientNote {
+  id: string;
+  patient_id: string;
+  note_type: PatientNoteType;
+  title: string | null;
+  content: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePatientNoteParams {
+  patientId: string;
+  noteType: PatientNoteType;
+  title?: string;
+  content: string;
+  createdBy: string;
+}
+
+export interface UpdatePatientNoteParams {
+  title?: string;
+  content?: string;
+}
+
+/**
+ * Get all manual notes for a patient
+ */
+export async function getPatientNotes(patientId: string): Promise<PatientNote[]> {
+  const { data, error } = await supabase
+    .from('patient_notes')
+    .select('*')
+    .eq('patient_id', patientId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('[getPatientNotes] Error fetching notes:', error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Get a specific patient note by ID
+ */
+export async function getPatientNoteById(noteId: string): Promise<PatientNote | null> {
+  const { data, error } = await supabase
+    .from('patient_notes')
+    .select('*')
+    .eq('id', noteId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null;
+    }
+    console.error('[getPatientNoteById] Error fetching note:', error);
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Create a new patient note (clinical note or quick memo)
+ */
+export async function createPatientNote(params: CreatePatientNoteParams): Promise<PatientNote> {
+  const { patientId, noteType, title, content, createdBy } = params;
+
+  const { data, error } = await supabase
+    .from('patient_notes')
+    .insert({
+      patient_id: patientId,
+      note_type: noteType,
+      title: title || null,
+      content,
+      created_by: createdBy,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('[createPatientNote] Error creating note:', error);
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Update an existing patient note
+ */
+export async function updatePatientNote(
+  noteId: string,
+  updates: UpdatePatientNoteParams
+): Promise<PatientNote> {
+  const updateData: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (updates.title !== undefined) {
+    updateData.title = updates.title;
+  }
+  if (updates.content !== undefined) {
+    updateData.content = updates.content;
+  }
+
+  const { data, error } = await supabase
+    .from('patient_notes')
+    .update(updateData)
+    .eq('id', noteId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('[updatePatientNote] Error updating note:', error);
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Delete a patient note
+ */
+export async function deletePatientNote(noteId: string): Promise<void> {
+  const { error } = await supabase
+    .from('patient_notes')
+    .delete()
+    .eq('id', noteId);
+
+  if (error) {
+    console.error('[deletePatientNote] Error deleting note:', error);
+    throw error;
+  }
+}

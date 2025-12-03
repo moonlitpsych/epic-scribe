@@ -55,6 +55,12 @@ export default function WorkflowPage() {
               Home
             </Link>
             <Link
+              href="/patients"
+              className="text-sm text-[#5A6B7D] hover:text-[#0A1F3D] transition-colors"
+            >
+              Patients
+            </Link>
+            <Link
               href="/templates"
               className="text-sm text-[#5A6B7D] hover:text-[#0A1F3D] transition-colors"
             >
