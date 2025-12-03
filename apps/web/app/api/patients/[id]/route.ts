@@ -14,10 +14,10 @@ import {
   updatePatient,
   deletePatient,
 } from '@/lib/db';
-import { getNotesByPatientId } from '@/lib/db/notes';
+import { getPatientFinalizedNotes } from '@/lib/db/notes';
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -56,7 +56,7 @@ export async function GET(
     // Get generated notes for this patient
     let notes = [];
     try {
-      notes = await getNotesByPatientId(patientId);
+      notes = await getPatientFinalizedNotes(patientId);
     } catch (error) {
       console.warn('Could not fetch notes:', error);
       // Continue without notes
@@ -127,7 +127,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
