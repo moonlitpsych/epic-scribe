@@ -11,7 +11,7 @@ import { authOptions } from '../../../auth/[...nextauth]/route';
 import { ensureMeetLink } from '@/google-calendar';
 
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {

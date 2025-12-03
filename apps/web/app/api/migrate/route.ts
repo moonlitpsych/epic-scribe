@@ -16,7 +16,7 @@ import { templateService } from '@epic-scribe/note-service/src/templates/templat
 import fs from 'fs/promises';
 import path from 'path';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const results = {
       smartlists: { success: false, count: 0, error: null as string | null },

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GenerateNoteRequest, GenerateNoteResponse, Setting, VisitType, PromptReceipt } from '@epic-scribe/types';
+import { GenerateNoteRequest, GenerateNoteResponse, Setting, PromptReceipt } from '@epic-scribe/types';
 import { templateService } from '@epic-scribe/note-service/src/templates/template-service';
 import { getPromptBuilder } from '@epic-scribe/note-service/src/prompts/prompt-builder';
 import { getGeminiClient } from '@epic-scribe/note-service/src/llm/gemini-client';
@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
 
     // Fetch patient clinical context and historical notes if available
     let patientContext: string | undefined;
-    let actualPatientId: string | undefined = patientId;
     let historicalNotes: string | undefined;
 
     if (encounterId) {
@@ -55,7 +54,6 @@ export async function POST(request: NextRequest) {
       try {
         const encounter = await getEncounterById(encounterId);
         if (encounter && encounter.patient_id) {
-          actualPatientId = encounter.patient_id;
           const patient = await getPatientById(encounter.patient_id);
           if (patient && patient.notes) {
             patientContext = patient.notes;
@@ -122,7 +120,7 @@ export async function POST(request: NextRequest) {
     const promptBuilder = await getPromptBuilder();
     const geminiClient = getGeminiClient({
       apiKey: process.env.GEMINI_API_KEY,
-      model: process.env.GEMINI_MODEL
+      model: process.env.GEMINI_MODEL || 'gemini-2.5-pro'
     });
     const smartListService = await getSmartListService();
 

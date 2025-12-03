@@ -1,9 +1,9 @@
--- Migration 007: Add BHIDC Therapy Templates
--- Therapy-focused note structure matching TheraNest workflow
+-- Migration 007: Add BHIDC Therapy Templates (Revised)
+-- Therapy-focused note structure with correct visit type naming
 -- Run this in Supabase Dashboard > SQL Editor
 
 -- =====================================================
--- BHIDC THERAPY - INTAKE (Initial Therapy Note)
+-- BHIDC THERAPY - FIRST VISIT (Initial Therapy Session)
 -- =====================================================
 INSERT INTO templates (
   template_id,
@@ -17,69 +17,75 @@ INSERT INTO templates (
   active,
   created_by
 ) VALUES (
-  'bhidc_therapy_intake_v1',
-  'BHIDC Therapy - Intake',
+  'bhidc_therapy_first_visit_v1',
+  'BHIDC Therapy - First Visit',
   'BHIDC therapy',
-  'Intake',
+  'First Visit',
   1,
   '[
     {
       "order": 1,
+      "name": "BHIDC Staff Intake Summary",
+      "content": "Summary from BHIDC staff screener intake (if available):\n\n***",
+      "exemplar": "Review the BHIDC staff intake note and extract key information: presenting problems, prior treatment history, risk factors, and initial assessment. Summarize the most clinically relevant information that informs treatment planning."
+    },
+    {
+      "order": 2,
       "name": "Diagnostic Impressions",
       "content": "***"
     },
     {
-      "order": 2,
+      "order": 3,
       "name": "Presenting Problem",
       "content": "Client''s initial explanation of the problem(s), duration and precipitant cause:\n\n***"
     },
     {
-      "order": 3,
+      "order": 4,
       "name": "Pertinent History",
-      "content": "Prior therapy (including family, social, psychological, and medical):\n\n***"
+      "content": "Prior therapy (including family, social, psychological, and medical). Include current medications if relevant to therapy:\n\n***"
     },
     {
-      "order": 4,
+      "order": 5,
       "name": "Observations",
       "content": "Therapist''s observations of client''s presentation and family interactions:\n\n***"
     },
     {
-      "order": 5,
+      "order": 6,
       "name": "Family/Psychosocial Assessment",
       "content": "***"
     },
     {
-      "order": 6,
+      "order": 7,
       "name": "Risk",
       "content": "Evidence of potential or actual risk(s):\n\n***"
     },
     {
-      "order": 7,
+      "order": 8,
       "name": "Contract/Safety Plan",
       "content": "***"
     },
     {
-      "order": 8,
+      "order": 9,
       "name": "Mental Status Examination",
       "content": "Appearance: ***\nOrientation: ***\nBehavior: ***\nSpeech: ***\nAffect: ***\nMood: ***\nThought Process: ***\nThought Content: ***\nInsight: ***\nJudgment: ***"
     },
     {
-      "order": 9,
+      "order": 10,
       "name": "Session Focus",
       "content": "***"
     },
     {
-      "order": 10,
+      "order": 11,
       "name": "Therapeutic Intervention",
-      "content": "Therapy modality and techniques used:\n\n***\n\nDuration: *** minutes"
+      "content": "Therapy modality and techniques used:\n\n***"
     },
     {
-      "order": 11,
+      "order": 12,
       "name": "Planned Intervention",
       "content": "Treatment goals:\n\n***\n\nHomework/between-session tasks:\n\n***\n\nFollow-up: Return in *** for ongoing psychotherapy, or sooner if needed.\n\nRufus Sweeney, MD"
     },
     {
-      "order": 12,
+      "order": 13,
       "name": "Client Progress",
       "content": "Initial assessment - baseline established for future progress monitoring."
     }
@@ -105,7 +111,7 @@ INSERT INTO templates (
   active,
   created_by
 ) VALUES (
-  'bhidc_therapy_fu_v1',
+  'bhidc_therapy_followup_v1',
   'BHIDC Therapy - Follow-up',
   'BHIDC therapy',
   'Follow-up',
@@ -129,7 +135,7 @@ INSERT INTO templates (
     {
       "order": 4,
       "name": "Therapeutic Intervention",
-      "content": "Therapy modality and techniques used:\n\n***\n\nClient engagement and response:\n\n***\n\nDuration: *** minutes"
+      "content": "Therapy modality and techniques used:\n\n***\n\nClient engagement and response:\n\n***"
     },
     {
       "order": 5,
@@ -140,77 +146,6 @@ INSERT INTO templates (
       "order": 6,
       "name": "Planned Intervention",
       "content": "Homework/between-session tasks:\n\n***\n\nFocus for next session:\n\n***\n\nFollow-up: Return in *** for ongoing psychotherapy, or sooner if needed.\n\nRufus Sweeney, MD"
-    }
-  ]'::jsonb,
-  NULL,
-  NULL,
-  true,
-  'migration_007'
-);
-
--- =====================================================
--- BHIDC THERAPY - TRANSFER OF CARE (Optional)
--- =====================================================
--- Note: Only create if you actually use TOC for therapy patients
--- Otherwise, you can skip this template
-
-INSERT INTO templates (
-  template_id,
-  name,
-  setting,
-  visit_type,
-  version,
-  sections,
-  smarttools,
-  staffing_config,
-  active,
-  created_by
-) VALUES (
-  'bhidc_therapy_toc_v1',
-  'BHIDC Therapy - Transfer of Care',
-  'BHIDC therapy',
-  'Transfer of Care',
-  1,
-  '[
-    {
-      "order": 1,
-      "name": "Presenting Problem",
-      "content": "Client''s explanation of current concerns and reason for transfer:\n\n***"
-    },
-    {
-      "order": 2,
-      "name": "Prior Treatment History",
-      "content": "Previous provider(s) and treatment summary:\n\n***\n\nReason for transfer:\n\n***"
-    },
-    {
-      "order": 3,
-      "name": "Current Status",
-      "content": "***"
-    },
-    {
-      "order": 4,
-      "name": "Mental Status Examination",
-      "content": "Appearance: ***\nOrientation: ***\nBehavior: ***\nSpeech: ***\nAffect: ***\nMood: ***\nThought Process: ***\nThought Content: ***\nInsight: ***\nJudgment: ***"
-    },
-    {
-      "order": 5,
-      "name": "Session Focus",
-      "content": "***"
-    },
-    {
-      "order": 6,
-      "name": "Therapeutic Intervention",
-      "content": "Therapy modality and techniques used:\n\n***\n\nDuration: *** minutes"
-    },
-    {
-      "order": 7,
-      "name": "Planned Intervention",
-      "content": "Updated treatment goals:\n\n***\n\nHomework/between-session tasks:\n\n***\n\nFollow-up: Return in *** for ongoing psychotherapy, or sooner if needed.\n\nRufus Sweeney, MD"
-    },
-    {
-      "order": 8,
-      "name": "Client Progress",
-      "content": "Baseline for new treatment relationship established."
     }
   ]'::jsonb,
   NULL,
@@ -231,4 +166,8 @@ SELECT
   active
 FROM templates
 WHERE setting = 'BHIDC therapy'
-ORDER BY visit_type;
+ORDER BY
+  CASE visit_type
+    WHEN 'First Visit' THEN 1
+    WHEN 'Follow-up' THEN 2
+  END;

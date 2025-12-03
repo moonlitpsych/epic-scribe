@@ -9,9 +9,10 @@ interface Patient {
   id: string;
   first_name: string;
   last_name: string;
-  date_of_birth: string;
-  mrn?: string;
-  notes?: string;
+  dob: string;
+  medicaid_id?: string;
+  phone?: string;
+  email?: string;
   encounter_count?: number;
 }
 
@@ -56,6 +57,14 @@ export default function PatientSelector({
     format(new Date(), 'HH:mm')
   );
   const [encounterDuration, setEncounterDuration] = useState('60'); // minutes
+
+  // Safe date formatting helper
+  const formatDOB = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString; // Return original if invalid
+    return format(date, 'MM/dd/yyyy');
+  };
 
   // Load all patients on mount
   useEffect(() => {
@@ -117,9 +126,8 @@ export default function PatientSelector({
         body: JSON.stringify({
           firstName: newPatient.firstName,
           lastName: newPatient.lastName,
-          dateOfBirth: newPatient.dateOfBirth,
-          mrn: newPatient.mrn || undefined,
-          notes: newPatient.notes || undefined,
+          dob: newPatient.dateOfBirth,
+          medicaid_id: newPatient.mrn || undefined,
         }),
       });
 
@@ -229,8 +237,8 @@ export default function PatientSelector({
                           {patient.last_name}, {patient.first_name}
                         </p>
                         <p className="text-sm text-[#5A6B7D]">
-                          DOB: {format(new Date(patient.date_of_birth), 'MM/dd/yyyy')}
-                          {patient.mrn && ` • MRN: ${patient.mrn}`}
+                          DOB: {formatDOB(patient.dob)}
+                          {patient.medicaid_id && ` • Medicaid ID: ${patient.medicaid_id}`}
                         </p>
                       </div>
                       {patient.encounter_count !== undefined && (
@@ -269,8 +277,8 @@ export default function PatientSelector({
                       {selectedPatient.last_name}, {selectedPatient.first_name}
                     </p>
                     <p className="text-sm text-[#5A6B7D]">
-                      DOB: {format(new Date(selectedPatient.date_of_birth), 'MM/dd/yyyy')}
-                      {selectedPatient.mrn && ` • MRN: ${selectedPatient.mrn}`}
+                      DOB: {formatDOB(selectedPatient.dob)}
+                      {selectedPatient.medicaid_id && ` • Medicaid ID: ${selectedPatient.medicaid_id}`}
                     </p>
                   </div>
                 </div>

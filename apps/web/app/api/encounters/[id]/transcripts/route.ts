@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../auth/[...nextauth]/route';
-import { findTranscripts, getFileContent } from '@/google-drive';
+import { findTranscripts } from '@/google-drive';
 import { google } from 'googleapis';
 
 // Helper to get calendar event details
@@ -26,7 +26,7 @@ async function getCalendarEvent(accessToken: string, eventId: string) {
 }
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {

@@ -14,10 +14,10 @@ export interface Database {
           id: string;
           first_name: string;
           last_name: string;
-          date_of_birth: string; // ISO date string
-          mrn: string | null;
-          notes: string | null;
-          active: boolean;
+          dob: string; // ISO date string
+          medicaid_id: string | null;
+          phone: string | null;
+          email: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -25,10 +25,10 @@ export interface Database {
           id?: string;
           first_name: string;
           last_name: string;
-          date_of_birth: string;
-          mrn?: string | null;
-          notes?: string | null;
-          active?: boolean;
+          dob: string;
+          medicaid_id?: string | null;
+          phone?: string | null;
+          email?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -36,10 +36,10 @@ export interface Database {
           id?: string;
           first_name?: string;
           last_name?: string;
-          date_of_birth?: string;
-          mrn?: string | null;
-          notes?: string | null;
-          active?: boolean;
+          dob?: string;
+          medicaid_id?: string | null;
+          phone?: string | null;
+          email?: string | null;
           created_at?: string;
           updated_at?: string;
         };

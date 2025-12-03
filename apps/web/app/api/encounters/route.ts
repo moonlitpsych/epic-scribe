@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { patientId, patient, setting, visitType, startTime, endTime } = body;
+    const { patientId, setting, visitType, startTime, endTime } = body;
 
     // Require patientId for new encounters
     if (!patientId) {

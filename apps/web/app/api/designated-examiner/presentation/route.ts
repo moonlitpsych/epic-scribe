@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = (session.user as any).id || session.user.email;
+    const userId = session.user.id || session.user.email;
     if (!userId) {
       return NextResponse.json(
         { error: 'User ID not found in session' },
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 }
 
 // GET - List user's presentations
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const userId = (session.user as any).id || session.user.email;
+    const userId = session.user.id || session.user.email;
     if (!userId) {
       return NextResponse.json(
         { error: 'User ID not found in session' },

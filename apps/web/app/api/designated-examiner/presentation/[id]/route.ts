@@ -9,7 +9,7 @@ import {
 
 // GET - Fetch single presentation
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -22,7 +22,7 @@ export async function GET(
       );
     }
 
-    const userId = (session.user as any).id || session.user.email;
+    const userId = session.user.id || session.user.email;
     if (!userId) {
       return NextResponse.json(
         { error: 'User ID not found in session' },
@@ -70,7 +70,7 @@ export async function PUT(
       );
     }
 
-    const userId = (session.user as any).id || session.user.email;
+    const userId = session.user.id || session.user.email;
     if (!userId) {
       return NextResponse.json(
         { error: 'User ID not found in session' },
@@ -126,7 +126,7 @@ export async function PUT(
 
 // DELETE - Delete presentation
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -139,7 +139,7 @@ export async function DELETE(
       );
     }
 
-    const userId = (session.user as any).id || session.user.email;
+    const userId = session.user.id || session.user.email;
     if (!userId) {
       return NextResponse.json(
         { error: 'User ID not found in session' },

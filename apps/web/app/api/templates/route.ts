@@ -3,7 +3,6 @@ import {
   getAllTemplates,
   getTemplateBySettingAndVisitType,
   createTemplate,
-  updateTemplate,
   updateTemplateSection,
   migrateTemplatesFromMemory
 } from '@/lib/db/templates';

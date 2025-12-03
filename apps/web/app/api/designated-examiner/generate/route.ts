@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     // Generate with Gemini
     const geminiClient = getGeminiClient({
       apiKey: process.env.GEMINI_API_KEY,
-      model: process.env.GEMINI_MODEL || 'gemini-3-pro-preview',
+      model: process.env.GEMINI_MODEL || 'gemini-2.5-pro',
     });
 
     const startTime = Date.now();
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     // Get user ID from session
     // Note: This assumes session.user.id exists and is a valid UUID
     // If using NextAuth with Supabase, you may need to map the user
-    const userId = (session.user as any).id || session.user.email;
+    const userId = session.user.id || session.user.email;
 
     const { data: report, error: dbError } = await supabase
       .from('designated_examiner_reports')

@@ -10,7 +10,7 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 import { deleteEncounter } from '@/google-calendar';
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {

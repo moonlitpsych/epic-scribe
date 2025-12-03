@@ -13,7 +13,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // GET - Fetch a specific report
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -28,7 +28,7 @@ export async function GET(
     );
 
     // Get user ID from session
-    const userId = (session.user as any).id || session.user.email;
+    const userId = session.user.id || session.user.email;
 
     const { data: report, error } = await supabase
       .from('designated_examiner_reports')
@@ -79,7 +79,7 @@ export async function PUT(
     );
 
     // Get user ID from session
-    const userId = (session.user as any).id || session.user.email;
+    const userId = session.user.id || session.user.email;
 
     const { data: report, error } = await supabase
       .from('designated_examiner_reports')
@@ -114,7 +114,7 @@ export async function PUT(
 
 // DELETE - Delete a report
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -129,7 +129,7 @@ export async function DELETE(
     );
 
     // Get user ID from session
-    const userId = (session.user as any).id || session.user.email;
+    const userId = session.user.id || session.user.email;
 
     const { error } = await supabase
       .from('designated_examiner_reports')

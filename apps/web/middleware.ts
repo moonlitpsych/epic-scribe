@@ -2,7 +2,7 @@ import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 
 export default withAuth(
-  function middleware(req) {
+  function middleware(_req) {
     // Middleware logic runs for authenticated requests
     return NextResponse.next();
   },
@@ -29,5 +29,6 @@ export const config = {
     '/api/templates/:path*',
     '/api/generate/:path*',
     '/api/designated-examiner/:path*',
+    '/api/notes/:path*',
   ],
 };

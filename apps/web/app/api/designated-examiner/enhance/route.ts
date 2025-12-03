@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../auth/[...nextauth]/route';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { SectionEnhanceRequest, DEPresentationData } from '@/types/designated-examiner';
+import type { SectionEnhanceRequest } from '@/types/designated-examiner';
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: SectionEnhanceRequest = await request.json();
-    const { section, transcript, existing_data, context } = body;
+    const { section, transcript, context } = body;
 
     if (!transcript) {
       return NextResponse.json(
@@ -112,7 +112,7 @@ ${transcript}`;
 
     // Call Gemini for enhancement
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL || 'gemini-2.5-pro' });
       const result = await model.generateContent(fullPrompt);
       const enhancedContent = result.response.text();
 

@@ -19,7 +19,7 @@ export async function GET(
       );
     }
 
-    const userId = (session.user as any).id || session.user.email;
+    const userId = session.user.id || session.user.email;
     if (!userId) {
       return NextResponse.json(
         { error: 'User ID not found in session' },

@@ -1,5 +1,6 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import { JWT } from 'next-auth/jwt';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -59,8 +60,12 @@ export const authOptions: NextAuthOptions = {
  * `accessToken` and `accessTokenExpires`. If an error occurs,
  * returns the old token and an error property
  */
-async function refreshAccessToken(token: any) {
+async function refreshAccessToken(token: JWT) {
   try {
+    if (!token.refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
     const url =
       'https://oauth2.googleapis.com/token?' +
       new URLSearchParams({

@@ -61,5 +61,8 @@ test_data/
 # History
 .history/
 
+# One-off SQL scripts (may contain PHI references)
+/*.sql
+
 # pnpm
 pnpm-lock.yaml

@@ -19,6 +19,8 @@ export default function EncountersList({
   const formatDateTime = (isoString: string) => {
     if (!isoString) return '';
     const date = new Date(isoString);
+    // Check if date is valid
+    if (isNaN(date.getTime())) return isoString; // Return original string if invalid
     return date.toLocaleString('en-US', {
       weekday: 'short',
       month: 'short',

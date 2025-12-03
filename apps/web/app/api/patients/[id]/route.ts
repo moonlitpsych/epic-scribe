@@ -13,7 +13,6 @@ import {
   getPatientById,
   updatePatient,
   deletePatient,
-  getPatientWithEncounterCount,
 } from '@/lib/db';
 import { getNotesByPatientId } from '@/lib/db/notes';
 

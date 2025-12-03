@@ -50,21 +50,25 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { firstName, lastName, dateOfBirth, mrn, notes } = body;
+    const { firstName, lastName, dob, dateOfBirth, medicaid_id, mrn, phone, email } = body;
+
+    // Support both old and new field names
+    const dobValue = dob || dateOfBirth;
+    const medicaidIdValue = medicaid_id || mrn;
 
     // Validate required fields
-    if (!firstName || !lastName || !dateOfBirth) {
+    if (!firstName || !lastName || !dobValue) {
       return NextResponse.json(
-        { error: 'firstName, lastName, and dateOfBirth are required' },
+        { error: 'firstName, lastName, and dob are required' },
         { status: 400 }
       );
     }
 
     // Validate date format
-    const dobDate = new Date(dateOfBirth);
+    const dobDate = new Date(dobValue);
     if (isNaN(dobDate.getTime())) {
       return NextResponse.json(
-        { error: 'Invalid date format for dateOfBirth' },
+        { error: 'Invalid date format for dob' },
         { status: 400 }
       );
     }
@@ -72,9 +76,10 @@ export async function POST(request: NextRequest) {
     const patient = await createPatient({
       first_name: firstName,
       last_name: lastName,
-      date_of_birth: dateOfBirth,
-      mrn: mrn || null,
-      notes: notes || null,
+      dob: dobValue,
+      medicaid_id: medicaidIdValue || null,
+      phone: phone || null,
+      email: email || null,
     });
 
     return NextResponse.json({ patient }, { status: 201 });
