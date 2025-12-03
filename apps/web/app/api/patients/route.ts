@@ -76,8 +76,8 @@ export async function POST(request: NextRequest) {
     const patient = await createPatient({
       first_name: firstName,
       last_name: lastName,
-      dob: dobValue,
-      medicaid_id: medicaidIdValue || null,
+      date_of_birth: dobValue,
+      mrn: medicaidIdValue || null,
       phone: phone || null,
       email: email || null,
     });
