@@ -61,9 +61,18 @@
    - See `HANDOFF_VERCEL_404.md` for detailed troubleshooting
    - Status: UNRESOLVED
 
-4. **ESLint/TypeScript Warnings**
-   - `ignoreDuringBuilds: true` in next.config.js is temporary
-   - Run `pnpm lint` to see all issues
+4. **ESLint/TypeScript Build Workarounds** (Should Fix for Production Safety)
+   - `next.config.js` has `ignoreDuringBuilds: true` (ESLint) and `ignoreBuildErrors: true` (TypeScript)
+   - These mask ~40 real errors that could cause runtime issues
+   - **Primary errors**: `react/no-unescaped-entities` in JSX (apostrophes in text)
+   - **To fix**: Run `pnpm lint` and fix all errors, then remove the workarounds
+   - **Files to fix** (mostly JSX text with apostrophes):
+     - `apps/web/app/home/page.tsx`
+     - `apps/web/app/workflow/page.tsx`
+     - `apps/web/src/components/workflow/*.tsx`
+     - Various other components with text content
+   - **Created utility**: `apps/web/src/lib/logger.ts` for gradual console.log migration
+   - **Recommendation**: Fix all `react/no-unescaped-entities` errors (replace `'` with `&apos;` or `{'\''}`), then remove the `ignoreDuringBuilds` and `ignoreBuildErrors` flags
 
 5. **Testing Required**
    - Note saving and historical context feature not tested end-to-end
@@ -426,9 +435,57 @@ For detailed setup and troubleshooting guides, see:
 
 ---
 
-## 🎉 RECENT UPDATES (2025-10-31)
+## 🎉 RECENT UPDATES
 
-### Session: Shared Calendar Integration & Encounter Management in /workflow
+### Session: Tech Debt Cleanup (2025-12-03)
+**Completed:**
+
+1. ✅ **Type Safety Improvements**
+   - Extended NextAuth types in `apps/web/types/next-auth.d.ts` to include `user.id`
+   - Removed `(session.user as any).id` pattern across 10+ API routes
+   - Fixed JWT type import for token refresh function
+   - **Files modified:**
+     - `apps/web/types/next-auth.d.ts`
+     - `apps/web/app/api/designated-examiner/[id]/route.ts`
+     - `apps/web/app/api/designated-examiner/generate/route.ts`
+     - `apps/web/app/api/designated-examiner/presentation/*.ts`
+     - `apps/web/app/api/auth/[...nextauth]/route.ts`
+
+2. ✅ **Middleware Route Protection**
+   - Added `/api/notes/:path*` to middleware matcher
+   - **File:** `apps/web/middleware.ts`
+
+3. ✅ **Migration Organization**
+   - Moved deprecated/duplicate migrations to `supabase/migrations/_deprecated/`
+   - Renamed migrations for sequential numbering consistency
+   - **Moved to _deprecated:**
+     - `002_verify_schema.sql`
+     - `005_add_staffing_config.sql` (incomplete version)
+     - `007_add_bhidc_therapy_templates.sql` (wrong visit types)
+     - `verify_*.sql` files
+
+4. ✅ **Code Quality Fixes**
+   - Fixed unused imports (`getPatientWithEncounterCount`, `updateTemplate`, `VisitType`)
+   - Prefixed unused request parameters with underscore (`_request`)
+   - Removed unused variables
+
+5. ✅ **Critical Bug Fix**
+   - Fixed broken import: `getNotesByPatientId` → `getPatientFinalizedNotes`
+   - This would have caused runtime errors on `GET /api/patients/[id]`
+   - **File:** `apps/web/app/api/patients/[id]/route.ts`
+
+6. ✅ **Infrastructure**
+   - Created logger utility: `apps/web/src/lib/logger.ts`
+   - Updated `.gitignore` to exclude root SQL scripts (PHI protection)
+
+**Remaining Work:**
+- Fix ~40 ESLint errors (mostly `react/no-unescaped-entities`)
+- Remove `ignoreDuringBuilds` and `ignoreBuildErrors` from `next.config.js`
+- Migrate console.log statements to logger utility
+
+---
+
+### Session: Shared Calendar Integration & Encounter Management in /workflow (2025-10-31)
 **Completed:**
 
 1. ✅ **Shared Calendar Approach** (Replaced Service Account)
