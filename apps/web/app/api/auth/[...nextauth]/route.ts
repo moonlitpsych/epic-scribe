@@ -47,6 +47,10 @@ export const authOptions: NextAuthOptions = {
       // Send properties to the client
       session.accessToken = token.accessToken as string;
       session.error = token.error as string | undefined;
+      // Add user ID from JWT sub claim
+      if (session.user && token.sub) {
+        session.user.id = token.sub;
+      }
       return session;
     },
   },

@@ -9,7 +9,7 @@ export default function SignIn() {
   const handleSignIn = async () => {
     setIsLoading(true);
     try {
-      await signIn('google', { callbackUrl: '/workflow' });
+      await signIn('google', { callbackUrl: '/designated-examiner' });
     } catch (error) {
       console.error('Sign in error:', error);
       setIsLoading(false);

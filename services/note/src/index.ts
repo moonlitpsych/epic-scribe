@@ -23,7 +23,22 @@ export { getGeminiClient } from './llm/gemini-client';
 // Validator exports
 export { NoteValidator } from './validators/note-validator';
 
-// Designated Examiner exports
+// Designated Examiner exports (legacy)
 export { designatedExaminerTemplate, DESIGNATED_EXAMINER_SECTIONS } from './templates/designated-examiner-template';
 export { getDEPromptBuilder } from './prompts/designated-examiner-prompt-builder';
 export type { DEPromptParams, CriteriaAssessment } from './prompts/designated-examiner-prompt-builder';
+
+// Designated Examiner Multi-Step Workflow exports
+export { getDEAnalysisPromptBuilder } from './prompts/de-analysis-prompt-builder';
+export type {
+  DEAnalysisInput,
+  DEAnalysisOutput,
+  CriterionResult as DECriterionResult,
+  ClarifyingQuestion as DEClarifyingQuestion,
+} from './prompts/de-analysis-prompt-builder';
+
+export { getDEFinalPromptBuilder } from './prompts/de-final-prompt-builder';
+export type {
+  DEFinalInput,
+  DEFinalOutput,
+} from './prompts/de-final-prompt-builder';
