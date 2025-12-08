@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "corepack enable && pnpm install",
+  "installCommand": "corepack enable && corepack prepare pnpm@10.13.1 --activate && pnpm install",
   "buildCommand": "pnpm --filter=@epic-scribe/web build"
 }
