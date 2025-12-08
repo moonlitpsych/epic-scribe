@@ -24,6 +24,7 @@ export interface PromptBuilderOptions {
   staffingTranscript?: string; // Separate staffing conversation transcript
   collateralTranscript?: string; // Collateral (parent/guardian) transcript for Teenscope
   epicChartData?: string; // Epic DotPhrase data (questionnaires, meds) for strengthening Assessment
+  longitudinalChartData?: string; // Formatted longitudinal chart data (PHQ-9/GAD-7 trends, medication history)
   patientContext?: string;  // Clinical context from patient record
   historicalNotes?: string;  // All previous finalized notes for this patient
   setting: Setting;
@@ -157,7 +158,7 @@ export class PromptBuilder {
    * Build a complete prompt from components
    */
   async build(options: PromptBuilderOptions): Promise<CompiledPrompt> {
-    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, epicChartData, patientContext, historicalNotes, setting, visitType, patientFirstName, patientLastName, patientAge } = options;
+    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, epicChartData, longitudinalChartData, patientContext, historicalNotes, setting, visitType, patientFirstName, patientLastName, patientAge } = options;
 
     // Check if this is a therapy-focused template (BHIDC therapy)
     const isTherapyFocused = template.setting === 'BHIDC therapy' ||
@@ -248,6 +249,7 @@ export class PromptBuilder {
         previousNote,
         collateralTranscript,
         epicChartData, // Epic chart data (questionnaires, medications)
+        longitudinalChartData, // Longitudinal PHQ-9/GAD-7 trends and medication history
         transcript: this.buildTranscriptSection(transcript)
       };
 
@@ -256,7 +258,7 @@ export class PromptBuilder {
         firstName: patientFirstName,
         lastName: patientLastName,
         age: patientAge
-      });
+      }, longitudinalChartData);
     }
 
     // Generate hash
@@ -425,12 +427,13 @@ export class PromptBuilder {
     previousNote?: string;
     collateralTranscript?: string;
     epicChartData?: string;
+    longitudinalChartData?: string;
     transcript: string;
   }, isFollowUp: boolean = false, historicalNotes?: string, isTeenscope: boolean = false, patientDemographics?: {
     firstName?: string;
     lastName?: string;
     age?: number | null;
-  }): string {
+  }, longitudinalChartData?: string): string {
     let prompt = '';
 
     // System prompt
@@ -525,6 +528,27 @@ export class PromptBuilder {
       prompt += `  Example: "Given prior trials of sertraline and fluoxetine without adequate response..."\n`;
       prompt += `- DO NOT auto-fill Social History or Family History sections from this data\n`;
       prompt += `- The transcript is the primary source for the clinical narrative; use chart data as supportive evidence\n\n`;
+    }
+
+    // Longitudinal Chart Data (PHQ-9/GAD-7 trends, medication history over time)
+    if (longitudinalChartData) {
+      prompt += `${longitudinalChartData}\n`;
+      prompt += `INSTRUCTIONS FOR LONGITUDINAL TREND ANALYSIS:\n`;
+      prompt += `Use this historical data to enhance the Assessment/Formulation section with trend analysis:\n\n`;
+      prompt += `1. QUESTIONNAIRE TRENDS - Reference score changes over time:\n`;
+      prompt += `   - If IMPROVING: "PHQ-9 has improved from X to Y over the past Z months, indicating treatment response"\n`;
+      prompt += `   - If STABLE: "PHQ-9 remains stable at X, suggesting persistent symptoms despite treatment"\n`;
+      prompt += `   - If WORSENING: "PHQ-9 has increased from X to Y, indicating symptom exacerbation"\n`;
+      prompt += `   - Compare objective scores with patient-reported subjective improvement from the transcript\n`;
+      prompt += `   - Note any discrepancy: "Despite patient reporting feeling better, PHQ-9 remains elevated at X"\n\n`;
+      prompt += `2. MEDICATION HISTORY - Reference treatment timeline:\n`;
+      prompt += `   - Summarize medication changes and their temporal relationship to symptom trends\n`;
+      prompt += `   - Note response patterns: "Improvement in GAD-7 coincided with buspirone initiation 3 months ago"\n`;
+      prompt += `   - Inform treatment decisions: "Given prior response to X, continuing current regimen is appropriate"\n\n`;
+      prompt += `3. INTEGRATION WITH CURRENT VISIT:\n`;
+      prompt += `   - Correlate longitudinal trends with today's clinical presentation\n`;
+      prompt += `   - Support diagnostic stability or changes with objective data\n`;
+      prompt += `   - Strengthen treatment recommendations with historical context\n\n`;
     }
 
     // Template

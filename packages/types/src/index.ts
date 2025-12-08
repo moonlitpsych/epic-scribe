@@ -158,6 +158,50 @@ export const EPIC_EMR_SETTINGS: Setting[] = [
   'Teenscope South'
 ];
 
+// Patient Chart History Types (for longitudinal tracking)
+export interface PatientQuestionnaireHistory {
+  id: string;
+  patient_id: string;
+  encounter_date: string;
+  encounter_id?: string;
+  generated_note_id?: string;
+  phq9_score?: number;
+  phq9_severity?: string;
+  gad7_score?: number;
+  gad7_severity?: string;
+  created_at: string;
+}
+
+export interface PatientMedicationHistory {
+  id: string;
+  patient_id: string;
+  recorded_date: string;
+  encounter_id?: string;
+  generated_note_id?: string;
+  current_medications?: Medication[];
+  past_medications?: Medication[];
+  created_at: string;
+}
+
+// Longitudinal chart data for AI prompt (summarized trends)
+export interface LongitudinalChartData {
+  questionnaire_trends: {
+    phq9: { date: string; score: number; severity: string }[];
+    gad7: { date: string; score: number; severity: string }[];
+  };
+  medication_changes: {
+    date: string;
+    current: Medication[];
+    past: Medication[];
+  }[];
+  summary: {
+    phq9_trend: 'improving' | 'stable' | 'worsening' | 'insufficient_data';
+    gad7_trend: 'improving' | 'stable' | 'worsening' | 'insufficient_data';
+    last_phq9?: { score: number; severity: string; date: string };
+    last_gad7?: { score: number; severity: string; date: string };
+  };
+}
+
 // Generation Types
 export interface GenerateNoteRequest {
   encounterId?: string;

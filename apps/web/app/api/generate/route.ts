@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GenerateNoteRequest, GenerateNoteResponse, Setting, PromptReceipt, EpicChartData } from '@epic-scribe/types';
+import { GenerateNoteRequest, GenerateNoteResponse, Setting, PromptReceipt, EpicChartData, LongitudinalChartData } from '@epic-scribe/types';
 import { templateService } from '@epic-scribe/note-service/src/templates/template-service';
 import { getPromptBuilder } from '@epic-scribe/note-service/src/prompts/prompt-builder';
 import { getGeminiClient } from '@epic-scribe/note-service/src/llm/gemini-client';
 import { getSmartListService } from '@epic-scribe/note-service/src/smartlists/smartlist-service';
 import { epicChartExtractor } from '@epic-scribe/note-service/src/extractors/epic-chart-extractor';
+import { getLongitudinalChartData, formatLongitudinalDataForPrompt } from '@/lib/db/chart-history';
 import crypto from 'crypto';
 
 /**
@@ -45,9 +46,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch patient clinical context, historical notes, and demographics if available
+    // Fetch patient clinical context, historical notes, longitudinal chart data, and demographics if available
     let patientContext: string | undefined;
     let historicalNotes: string | undefined;
+    let longitudinalChartData: LongitudinalChartData | null = null;
+    let longitudinalChartDataPrompt: string | undefined;
 
     // Helper function to calculate age from DOB
     const calculateAge = (dob: string | null | undefined): number | null => {
@@ -92,6 +95,18 @@ export async function POST(request: NextRequest) {
             historicalNotes = formatHistoricalNotes(notes);
             console.log(`[Generate] Loaded ${notes.length} historical notes for patient ${encounter.patient_id}`);
           }
+
+          // Fetch longitudinal chart data (PHQ-9, GAD-7 trends, medication history)
+          longitudinalChartData = await getLongitudinalChartData(encounter.patient_id);
+          if (longitudinalChartData) {
+            longitudinalChartDataPrompt = formatLongitudinalDataForPrompt(longitudinalChartData);
+            console.log(`[Generate] Loaded longitudinal chart data for patient ${encounter.patient_id}:`, {
+              phq9Entries: longitudinalChartData.questionnaire_trends.phq9.length,
+              gad7Entries: longitudinalChartData.questionnaire_trends.gad7.length,
+              phq9Trend: longitudinalChartData.summary.phq9_trend,
+              gad7Trend: longitudinalChartData.summary.gad7_trend,
+            });
+          }
         }
       } catch (error) {
         console.warn(`[Generate] Could not fetch encounter ${encounterId}:`, error);
@@ -122,6 +137,18 @@ export async function POST(request: NextRequest) {
         if (notes && notes.length > 0) {
           historicalNotes = formatHistoricalNotes(notes);
           console.log(`[Generate] Loaded ${notes.length} historical notes for patient ${patientId}`);
+        }
+
+        // Fetch longitudinal chart data (PHQ-9, GAD-7 trends, medication history)
+        longitudinalChartData = await getLongitudinalChartData(patientId);
+        if (longitudinalChartData) {
+          longitudinalChartDataPrompt = formatLongitudinalDataForPrompt(longitudinalChartData);
+          console.log(`[Generate] Loaded longitudinal chart data for patient ${patientId}:`, {
+            phq9Entries: longitudinalChartData.questionnaire_trends.phq9.length,
+            gad7Entries: longitudinalChartData.questionnaire_trends.gad7.length,
+            phq9Trend: longitudinalChartData.summary.phq9_trend,
+            gad7Trend: longitudinalChartData.summary.gad7_trend,
+          });
         }
       } catch (error) {
         console.warn(`[Generate] Could not fetch patient ${patientId}:`, error);
@@ -192,6 +219,7 @@ export async function POST(request: NextRequest) {
       staffingTranscript, // Include staffing transcript if provided
       collateralTranscript, // Include collateral transcript for Teenscope
       epicChartData: epicChartData?.trim() || undefined, // Include raw Epic chart data for AI to use
+      longitudinalChartData: longitudinalChartDataPrompt, // Include PHQ-9/GAD-7 trends and medication history
       patientContext, // Include patient clinical context if available
       historicalNotes, // Include all previous finalized notes for continuity
       setting: setting as Setting,

@@ -13,6 +13,7 @@ import {
   getPatientFinalizedNotes,
   SaveNoteParams,
 } from '@/lib/db/notes';
+import { saveChartDataToHistory } from '@/lib/db/chart-history';
 
 export async function POST(request: NextRequest) {
   try {
@@ -127,6 +128,22 @@ export async function POST(request: NextRequest) {
     const savedNote = await saveGeneratedNote(params);
 
     console.log('[POST /api/notes] Note saved successfully with ID:', savedNote.id);
+
+    // Also save chart data to patient longitudinal history if we have a patient and chart data
+    if (patientId && epicChartData) {
+      try {
+        await saveChartDataToHistory({
+          patientId,
+          encounterId: savedNote.encounter_id,
+          generatedNoteId: savedNote.id,
+          epicChartData,
+        });
+        console.log('[POST /api/notes] Chart data saved to patient history');
+      } catch (chartError) {
+        // Don't fail the whole request if chart history fails
+        console.error('[POST /api/notes] Failed to save chart history (non-fatal):', chartError);
+      }
+    }
 
     return NextResponse.json({ note: savedNote }, { status: 201 });
   } catch (error) {
