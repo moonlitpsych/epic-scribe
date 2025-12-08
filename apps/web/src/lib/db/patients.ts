@@ -78,12 +78,43 @@ export async function searchPatients(query: string) {
 /**
  * Create a new patient
  */
-export async function createPatient(patient: PatientInsert) {
+export async function createPatient(patient: {
+  first_name: string;
+  last_name: string;
+  date_of_birth?: string | null;
+  age?: number | null;
+  mrn?: string | null;
+  phone?: string | null;
+  email?: string | null;
+}) {
   const supabase = getSupabaseClient(true);
+
+  // Map to database column names
+  const insertData: any = {
+    first_name: patient.first_name,
+    last_name: patient.last_name,
+  };
+
+  // Only add optional fields if they have values
+  if (patient.date_of_birth) {
+    insertData.dob = patient.date_of_birth;
+  }
+  if (patient.age !== undefined && patient.age !== null) {
+    insertData.age = patient.age;
+  }
+  if (patient.mrn) {
+    insertData.medicaid_id = patient.mrn;
+  }
+  if (patient.phone) {
+    insertData.phone = patient.phone;
+  }
+  if (patient.email) {
+    insertData.email = patient.email;
+  }
 
   const { data, error } = await supabase
     .from('patients')
-    .insert(patient)
+    .insert(insertData)
     .select()
     .single();
 

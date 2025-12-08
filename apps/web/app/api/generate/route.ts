@@ -33,6 +33,8 @@ export async function POST(request: NextRequest) {
   try {
     const body: GenerateNoteRequest = await request.json();
     const { encounterId, patientId, setting, visitType, transcript, priorNote, staffingTranscript, collateralTranscript } = body;
+    // Patient demographics can be passed directly or fetched from database
+    let { patientFirstName, patientLastName, patientAge } = body as any;
 
     // Validation
     if (!setting || !visitType || !transcript) {
@@ -42,9 +44,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch patient clinical context and historical notes if available
+    // Fetch patient clinical context, historical notes, and demographics if available
     let patientContext: string | undefined;
     let historicalNotes: string | undefined;
+
+    // Helper function to calculate age from DOB
+    const calculateAge = (dob: string | null | undefined): number | null => {
+      if (!dob) return null;
+      const birthDate = new Date(dob);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age;
+    };
 
     if (encounterId) {
       // Fetch encounter and then fetch patient separately
@@ -55,9 +70,19 @@ export async function POST(request: NextRequest) {
         const encounter = await getEncounterById(encounterId);
         if (encounter && encounter.patient_id) {
           const patient = await getPatientById(encounter.patient_id);
-          if (patient && patient.notes) {
-            patientContext = patient.notes;
-            console.log(`[Generate] Loaded patient context from encounter ${encounterId}: ${patientContext.length} chars`);
+          if (patient) {
+            // Get patient demographics if not provided in request
+            if (!patientFirstName) patientFirstName = patient.first_name;
+            if (!patientLastName) patientLastName = patient.last_name;
+            if (patientAge === undefined) {
+              // Try to get age from database or calculate from DOB
+              patientAge = (patient as any).age || calculateAge((patient as any).dob);
+            }
+
+            if (patient.notes) {
+              patientContext = patient.notes;
+              console.log(`[Generate] Loaded patient context from encounter ${encounterId}: ${patientContext.length} chars`);
+            }
           }
 
           // Fetch historical notes for this patient
@@ -76,9 +101,19 @@ export async function POST(request: NextRequest) {
       const { getPatientFinalizedNotes } = await import('@/lib/db/notes');
       try {
         const patient = await getPatientById(patientId);
-        if (patient && patient.notes) {
-          patientContext = patient.notes;
-          console.log(`[Generate] Loaded patient context from patient ${patientId}: ${patientContext.length} chars`);
+        if (patient) {
+          // Get patient demographics if not provided in request
+          if (!patientFirstName) patientFirstName = patient.first_name;
+          if (!patientLastName) patientLastName = patient.last_name;
+          if (patientAge === undefined) {
+            // Try to get age from database or calculate from DOB
+            patientAge = (patient as any).age || calculateAge((patient as any).dob);
+          }
+
+          if (patient.notes) {
+            patientContext = patient.notes;
+            console.log(`[Generate] Loaded patient context from patient ${patientId}: ${patientContext.length} chars`);
+          }
         }
 
         // Fetch historical notes for this patient
@@ -91,6 +126,8 @@ export async function POST(request: NextRequest) {
         console.warn(`[Generate] Could not fetch patient ${patientId}:`, error);
       }
     }
+
+    console.log(`[Generate] Patient demographics: ${patientFirstName} ${patientLastName}, age: ${patientAge ?? 'not provided'}`);
 
     // Load template from database (with fallback to in-memory)
     let template;
@@ -133,7 +170,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build the prompt
+    // Build the prompt with patient demographics
     const compiledPrompt = await promptBuilder.build({
       template,
       transcript,
@@ -143,7 +180,11 @@ export async function POST(request: NextRequest) {
       patientContext, // Include patient clinical context if available
       historicalNotes, // Include all previous finalized notes for continuity
       setting: setting as Setting,
-      visitType
+      visitType,
+      // Patient demographics - used directly in note instead of dotphrases
+      patientFirstName,
+      patientLastName,
+      patientAge
     });
 
     console.log(`[Generate] Compiled prompt: ${compiledPrompt.hash}, ${compiledPrompt.metadata.wordCount} words`);

@@ -14,7 +14,8 @@ export interface Database {
           id: string;
           first_name: string;
           last_name: string;
-          dob: string; // ISO date string
+          dob: string | null; // ISO date string, optional
+          age: number | null; // Optional age if DOB not known
           medicaid_id: string | null;
           phone: string | null;
           email: string | null;
@@ -25,7 +26,8 @@ export interface Database {
           id?: string;
           first_name: string;
           last_name: string;
-          dob: string;
+          dob?: string | null;
+          age?: number | null;
           medicaid_id?: string | null;
           phone?: string | null;
           email?: string | null;
@@ -36,7 +38,8 @@ export interface Database {
           id?: string;
           first_name?: string;
           last_name?: string;
-          dob?: string;
+          dob?: string | null;
+          age?: number | null;
           medicaid_id?: string | null;
           phone?: string | null;
           email?: string | null;

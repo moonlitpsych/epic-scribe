@@ -27,6 +27,10 @@ export interface PromptBuilderOptions {
   historicalNotes?: string;  // All previous finalized notes for this patient
   setting: Setting;
   visitType: VisitType | string;
+  // Patient demographics - used directly in note instead of dotphrases
+  patientFirstName?: string;
+  patientLastName?: string;
+  patientAge?: number | null;  // If provided, use directly; if null/undefined, use "***-year-old"
 }
 
 export interface CompiledPrompt {
@@ -79,12 +83,19 @@ export class PromptBuilder {
       task: `Draft an Epic-ready psychiatry note using the TEMPLATE and TRANSCRIPT provided. Follow the SMARTTOOLS INSTRUCTIONS exactly. Maintain the clinical tone and structure shown in the template exemplars.`,
 
       smarttools_rules: `CRITICAL SMARTTOOLS INSTRUCTIONS:
-1. SMARTLINKS: Convert ALL @identifier@ to .identifier in the final note output
-   - Example: @FNAME@ becomes .FNAME
-   - Example: @lastvitals@ becomes .lastvitals
-   - Example: @age@ becomes .age
+1. PATIENT DEMOGRAPHICS: Use the actual patient name and age provided - NOT dotphrases
+   - Use the provided PATIENT_FIRST_NAME and PATIENT_LAST_NAME directly in the note
+   - Use the provided PATIENT_AGE directly (e.g., "47-year-old")
+   - If age is not provided (shown as ***), output "***-year-old"
+   - NEVER use .FNAME, .LNAME, or .age dotphrases for patient demographics
 
-2. SMARTLISTS: Replace {Display:EpicID} with ONLY the selected value text
+2. SMARTLINKS: Convert OTHER @identifier@ to .identifier in the final note output
+   - Example: @lastvitals@ becomes .lastvitals
+   - Example: @provider@ becomes .provider
+   - Example: @MRN@ becomes .MRN
+   - NOTE: @FNAME@, @LNAME@, and @age@ should be replaced with actual values, not dotphrases
+
+3. SMARTLISTS: Replace {Display:EpicID} with ONLY the selected value text
    - Where you see {Sleep Quality:304120106} in the template, output just the value like "Poor quality"
    - Where you see {Mood:304120108} in the template, output just the value like "Anxious"
    - Select ONLY from the provided option list for each SmartList
@@ -95,25 +106,25 @@ export class PromptBuilder {
    - If unsure, use the DEFAULT option or most contextually appropriate value
    - NEVER create values not in the allowed options list
 
-3. WILDCARDS: Replace *** with transcript-derived prose
+4. WILDCARDS: Replace *** with transcript-derived prose
    - Fill with relevant information from the transcript
    - If information is not available, keep *** unchanged
    - Write in clinical prose style matching the exemplars
 
-4. FORMAT: Use paragraphs only - NO bullets, NO numbered lists
+5. FORMAT: Use paragraphs only - NO bullets, NO numbered lists
    - Keep section headers exactly as they appear in the template
    - Maintain the order of sections
    - Do not add or remove sections
 
-5. CONTENT: Do not invent data not present in inputs
+6. CONTENT: Do not invent data not present in inputs
    - Use only information from transcript, template, and previous note (if provided)
    - Do not fabricate vitals, labs, medications, or diagnoses`,
 
       smartlink_examples: {
-        'HMHI Downtown RCC': ['@FNAME@→.FNAME', '@LNAME@→.LNAME', '@lastvitals@→.lastvitals', '@age@→.age'],
-        'Redwood Clinic MHI': ['@FNAME@→.FNAME', '@LNAME@→.LNAME', '@lastvitals@→.lastvitals', '@allergies@→.allergies'],
-        'Davis Behavioral Health': ['@FNAME@→.FNAME', '@LNAME@→.LNAME', '@MRN@→.MRN', '@DATE@→.DATE'],
-        'Moonlit Psychiatry': ['@FNAME@→.FNAME', '@LNAME@→.LNAME', '@age@→.age', '@provider@→.provider']
+        'HMHI Downtown RCC': ['@lastvitals@→.lastvitals', '@provider@→.provider'],
+        'Redwood Clinic MHI': ['@lastvitals@→.lastvitals', '@allergies@→.allergies'],
+        'Davis Behavioral Health': ['@MRN@→.MRN', '@DATE@→.DATE'],
+        'Moonlit Psychiatry': ['@provider@→.provider', '@lastvitals@→.lastvitals']
       },
 
       mappings: {
@@ -145,7 +156,7 @@ export class PromptBuilder {
    * Build a complete prompt from components
    */
   async build(options: PromptBuilderOptions): Promise<CompiledPrompt> {
-    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, patientContext, historicalNotes, setting, visitType } = options;
+    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, patientContext, historicalNotes, setting, visitType, patientFirstName, patientLastName, patientAge } = options;
 
     // Check if this is a therapy-focused template (BHIDC therapy)
     const isTherapyFocused = template.setting === 'BHIDC therapy' ||
@@ -238,8 +249,12 @@ export class PromptBuilder {
         transcript: this.buildTranscriptSection(transcript)
       };
 
-      // Compile final prompt
-      prompt = this.compilePrompt(sections, isFollowUp, historicalNotes, isTeenscope);
+      // Compile final prompt with patient demographics
+      prompt = this.compilePrompt(sections, isFollowUp, historicalNotes, isTeenscope, {
+        firstName: patientFirstName,
+        lastName: patientLastName,
+        age: patientAge
+      });
     }
 
     // Generate hash
@@ -408,7 +423,11 @@ export class PromptBuilder {
     previousNote?: string;
     collateralTranscript?: string;
     transcript: string;
-  }, isFollowUp: boolean = false, historicalNotes?: string, isTeenscope: boolean = false): string {
+  }, isFollowUp: boolean = false, historicalNotes?: string, isTeenscope: boolean = false, patientDemographics?: {
+    firstName?: string;
+    lastName?: string;
+    age?: number | null;
+  }): string {
     let prompt = '';
 
     // System prompt
@@ -416,6 +435,21 @@ export class PromptBuilder {
 
     // Task
     prompt += `TASK:\n${sections.task}\n\n`;
+
+    // Patient Demographics Section - ALWAYS add this before other sections
+    if (patientDemographics?.firstName || patientDemographics?.lastName) {
+      prompt += `PATIENT DEMOGRAPHICS (use these exact values in the note):\n`;
+      prompt += `PATIENT_FIRST_NAME: ${patientDemographics.firstName || '***'}\n`;
+      prompt += `PATIENT_LAST_NAME: ${patientDemographics.lastName || '***'}\n`;
+      if (patientDemographics.age !== undefined && patientDemographics.age !== null) {
+        prompt += `PATIENT_AGE: ${patientDemographics.age}\n`;
+        prompt += `Use "${patientDemographics.age}-year-old" in the note (NOT .age dotphrase)\n`;
+      } else {
+        prompt += `PATIENT_AGE: *** (not provided)\n`;
+        prompt += `Use "***-year-old" in the note where age is needed\n`;
+      }
+      prompt += `\nIMPORTANT: Use "${patientDemographics.firstName || '***'} ${patientDemographics.lastName || '***'}" as the patient's name throughout the note. DO NOT use .FNAME or .LNAME dotphrases.\n\n`;
+    }
 
     // Follow-up specific instructions
     if (isFollowUp && sections.extractedFromPrior) {
@@ -428,7 +462,10 @@ export class PromptBuilder {
       prompt += `\n\n`;
 
       prompt += `CRITICAL FOLLOW-UP RULES:\n`;
-      prompt += `1. Patient Name: Use the extracted name directly (${sections.extractedFromPrior.patientFirstName} ${sections.extractedFromPrior.patientLastName}) - DO NOT use @FNAME@ or @LNAME@ dotphrases\n`;
+      // Use provided demographics if available, otherwise fall back to extracted
+      const firstName = patientDemographics?.firstName || sections.extractedFromPrior.patientFirstName;
+      const lastName = patientDemographics?.lastName || sections.extractedFromPrior.patientLastName;
+      prompt += `1. Patient Name: Use the name directly (${firstName} ${lastName}) - DO NOT use @FNAME@ or @LNAME@ dotphrases\n`;
       if (sections.extractedFromPrior.providerName) {
         prompt += `2. Provider: Use the extracted provider name directly (${sections.extractedFromPrior.providerName}) - DO NOT use .provider dotphrase\n`;
       } else {

@@ -13,7 +13,8 @@ interface Patient {
   id: string;
   first_name: string;
   last_name: string;
-  date_of_birth: string;
+  date_of_birth?: string | null;
+  age?: number | null;
   mrn?: string;
   notes?: string;
 }
@@ -71,9 +72,12 @@ export default function GenerateInputStep({
 
   // Can proceed to translation or generation
   const canTranslate = isSpanishTranscript && spanishTranscript.trim().length > 0 && !hasTranslated;
+  // Patient with first and last name is now required for note generation
+  const hasValidPatient = selectedPatient && selectedPatient.first_name && selectedPatient.last_name;
   const canGenerate = transcript.trim().length > 0 &&
     (!requiresPreviousNote || previousNote.trim().length > 0) &&
-    (!isSpanishTranscript || hasTranslated);
+    (!isSpanishTranscript || hasTranslated) &&
+    hasValidPatient;
 
   // Fetch encounters when patient is selected
   useEffect(() => {
@@ -205,14 +209,14 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
 
   return (
     <div className="space-y-6">
-      {/* Template Summary Card */}
+      {/* Template Summary Card - Compact Header */}
       <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-4">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-[#5A6B7D]">Using template:</p>
             <p className="text-lg font-semibold text-[#0A1F3D]">{template.name}</p>
             <p className="text-sm text-[#5A6B7D]">
-              {setting} • {visitType} • {template.sections.length} sections
+              {setting} • {visitType} • {template.sections?.length || 0} sections
             </p>
           </div>
           <button
@@ -225,25 +229,33 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
         </div>
       </div>
 
-      {/* Patient Selection */}
-      <PatientSelector
-        selectedPatient={selectedPatient}
-        onPatientSelect={setSelectedPatient}
-        onCreateEncounter={handleCreateEncounter}
-        onEncounterCreated={handleEncounterCreated}
-        setting={setting}
-        visitType={visitType}
-      />
-
-      {/* Encounters List (shown when patient is selected) */}
-      {selectedPatient && (
-        <EncountersList
-          encounters={encounters}
-          selectedEncounterId={selectedEncounterId}
-          onSelectEncounter={handleSelectEncounter}
-          loading={loadingEncounters}
+      {/* Patient Selection - FIRST and Prominent */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-sm border-2 border-blue-200 p-6">
+        <h2 className="text-xl font-serif text-[#0A1F3D] mb-3">Step 1: Select or Create Patient</h2>
+        <p className="text-sm text-[#5A6B7D] mb-4">
+          Selecting a patient enables note saving and maintains continuity across visits.
+        </p>
+        <PatientSelector
+          selectedPatient={selectedPatient}
+          onPatientSelect={setSelectedPatient}
+          onCreateEncounter={handleCreateEncounter}
+          onEncounterCreated={handleEncounterCreated}
+          setting={setting}
+          visitType={visitType}
         />
-      )}
+
+        {/* Encounters List (shown when patient is selected) */}
+        {selectedPatient && (
+          <div className="mt-4">
+            <EncountersList
+              encounters={encounters}
+              selectedEncounterId={selectedEncounterId}
+              onSelectEncounter={handleSelectEncounter}
+              loading={loadingEncounters}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Manual Note Panel (collapsible - shown when patient is selected) */}
       {selectedPatient && (
@@ -256,21 +268,21 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
         />
       )}
 
-      {/* Language Toggle Card */}
+      {/* Document Input Section */}
       <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-serif text-[#0A1F3D]">Transcript Language</h2>
+          <h2 className="text-xl font-serif text-[#0A1F3D]">Step 2: Provide Documentation</h2>
           <button
             onClick={handleLanguageToggle}
             className={`
-              flex items-center gap-2 px-4 py-2 rounded-lg transition-all
+              flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition-all
               ${isSpanishTranscript
                 ? 'bg-[#E89C8A] text-white hover:bg-[#0A1F3D]'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
             `}
           >
-            <Languages size={20} />
-            {isSpanishTranscript ? 'Spanish Transcript' : 'English Transcript'}
+            <Languages size={16} />
+            {isSpanishTranscript ? 'Spanish' : 'English'}
           </button>
         </div>
 
@@ -295,13 +307,6 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
             </div>
           </div>
         )}
-      </div>
-
-      {/* Input Card */}
-      <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-6">
-        <h2 className="text-2xl font-serif text-[#0A1F3D] mb-4">
-          {isSpanishTranscript && !hasTranslated ? 'Spanish Transcript Input' : 'Clinical Data Input'}
-        </h2>
 
         {/* Spanish Transcript Input (when Spanish mode is active and not yet translated) */}
         {isSpanishTranscript && !hasTranslated && (
@@ -414,9 +419,13 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
           <div className="mt-4 p-3 bg-[#FFF4E6] border border-[#FFA500]/30 rounded-lg flex items-start gap-2">
             <AlertCircle size={16} className="text-[#FFA500] mt-0.5 flex-shrink-0" />
             <p className="text-sm text-[#8B4513]">
-              Please provide {!transcript.trim() && 'a transcript'}
-              {!transcript.trim() && requiresPreviousNote && !previousNote.trim() && ' and '}
-              {requiresPreviousNote && !previousNote.trim() && 'a previous note'} to generate the clinical note.
+              Please provide{' '}
+              {!hasValidPatient && 'a patient (with first and last name)'}
+              {!hasValidPatient && !transcript.trim() && ', '}
+              {!transcript.trim() && 'a transcript'}
+              {((!hasValidPatient || !transcript.trim()) && requiresPreviousNote && !previousNote.trim()) && ', and '}
+              {requiresPreviousNote && !previousNote.trim() && 'a previous note'}{' '}
+              to generate the clinical note.
             </p>
           </div>
         )}

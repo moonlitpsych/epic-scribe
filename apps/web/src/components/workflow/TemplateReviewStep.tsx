@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Template, Setting, SETTINGS } from '@epic-scribe/types';
-import { ChevronRight, ExternalLink } from 'lucide-react';
+import { ChevronRight, ChevronDown, ExternalLink } from 'lucide-react';
 import SmartListExpander from './SmartListExpander';
 import { SmartToolsParser } from '@epic-scribe/note-service/src/smarttools';
 
@@ -34,6 +34,7 @@ export default function TemplateReviewStep({
   const [visitType, setVisitType] = useState<string | undefined>(initialVisitType);
   const [template, setTemplate] = useState<Template | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showTemplatePreview, setShowTemplatePreview] = useState(false);
 
   // Load template when setting/visitType change
   useEffect(() => {
@@ -124,7 +125,7 @@ export default function TemplateReviewStep({
               <span className="font-semibold">Template:</span> {template.name}
             </p>
             <p className="text-sm text-[#5A6B7D] mt-1">
-              {template.sections.length} sections • Version {template.version}
+              {template.sections?.length || 0} sections • Version {template.version}
             </p>
           </div>
         )}
@@ -138,65 +139,87 @@ export default function TemplateReviewStep({
       )}
 
       {template && !loading && (
-        <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-serif text-[#0A1F3D]">Template Preview</h2>
+        <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 overflow-hidden">
+          {/* Collapsible Header */}
+          <button
+            onClick={() => setShowTemplatePreview(!showTemplatePreview)}
+            className="w-full p-6 flex items-center justify-between hover:bg-[#F5F1ED]/50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              {showTemplatePreview ? (
+                <ChevronDown size={20} className="text-[#5A6B7D]" />
+              ) : (
+                <ChevronRight size={20} className="text-[#5A6B7D]" />
+              )}
+              <div className="text-left">
+                <h2 className="text-xl font-serif text-[#0A1F3D]">Template Preview</h2>
+                <p className="text-sm text-[#5A6B7D]">
+                  {showTemplatePreview ? 'Click to collapse' : 'Click to review template structure and SmartLists'}
+                </p>
+              </div>
+            </div>
             <a
               href="/templates"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
               className="flex items-center gap-2 text-sm text-[#E89C8A] hover:text-[#0A1F3D] transition-colors"
             >
               <ExternalLink size={16} />
-              Need to edit template?
+              Edit template
             </a>
-          </div>
+          </button>
 
-          <p className="text-sm text-[#5A6B7D] mb-6">
-            Review the template structure and SmartList options below. This template will be used to generate your note.
-          </p>
+          {/* Collapsible Content */}
+          {showTemplatePreview && (
+            <div className="px-6 pb-6 border-t border-[#C5A882]/20">
+              <p className="text-sm text-[#5A6B7D] my-4">
+                Review the template structure and SmartList options below. This template will be used to generate your note.
+              </p>
 
-          <div className="space-y-4">
-            {template.sections
-              .sort((a, b) => a.order - b.order)
-              .map((section) => {
-                const parsed = parser.parse(section.content);
-                const hasSmartLists = parsed.smartLists && parsed.smartLists.length > 0;
+              <div className="space-y-4">
+                {(template.sections || [])
+                  .sort((a, b) => a.order - b.order)
+                  .map((section) => {
+                    const parsed = parser.parse(section.content);
+                    const hasSmartLists = parsed.smartLists && parsed.smartLists.length > 0;
 
-                return (
-                  <div
-                    key={section.order}
-                    className="border border-[#C5A882]/20 rounded-lg p-4 bg-[#F5F1ED]"
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xs font-semibold text-[#E89C8A] bg-white px-2 py-1 rounded">
-                        Section {section.order}
-                      </span>
-                      <h3 className="text-lg font-semibold text-[#0A1F3D]">
-                        {section.name}
-                      </h3>
-                    </div>
+                    return (
+                      <div
+                        key={section.order}
+                        className="border border-[#C5A882]/20 rounded-lg p-4 bg-[#F5F1ED]"
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-xs font-semibold text-[#E89C8A] bg-white px-2 py-1 rounded">
+                            Section {section.order}
+                          </span>
+                          <h3 className="text-lg font-semibold text-[#0A1F3D]">
+                            {section.name}
+                          </h3>
+                        </div>
 
-                    <pre className="text-sm font-mono bg-white p-3 rounded border border-[#C5A882]/20 whitespace-pre-wrap overflow-x-auto mb-3">
-                      {section.content}
-                    </pre>
+                        <pre className="text-sm font-mono bg-white p-3 rounded border border-[#C5A882]/20 whitespace-pre-wrap overflow-x-auto mb-3">
+                          {section.content}
+                        </pre>
 
-                    {hasSmartLists && (
-                      <div className="mt-3 space-y-2">
-                        <p className="text-sm font-medium text-[#0A1F3D]">SmartLists in this section:</p>
-                        {parsed.smartLists.map((sl, idx) => (
-                          <SmartListExpander
-                            key={`${sl.epicId}-${idx}`}
-                            epicId={sl.epicId}
-                            displayText={sl.text}
-                          />
-                        ))}
+                        {hasSmartLists && (
+                          <div className="mt-3 space-y-2">
+                            <p className="text-sm font-medium text-[#0A1F3D]">SmartLists in this section:</p>
+                            {parsed.smartLists.map((sl, idx) => (
+                              <SmartListExpander
+                                key={`${sl.epicId}-${idx}`}
+                                epicId={sl.epicId}
+                                displayText={sl.text}
+                              />
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-          </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

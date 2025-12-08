@@ -289,7 +289,7 @@ export default function NoteResultsStep({
             </div>
           )}
 
-          {validationResult.errors && validationResult.errors.length > 0 && (
+          {Array.isArray(validationResult.errors) && validationResult.errors.length > 0 && (
             <div className="bg-[#FEF2F2] border border-[#EF4444]/30 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <AlertCircle size={20} className="text-[#DC2626] flex-shrink-0 mt-0.5" />
@@ -305,7 +305,7 @@ export default function NoteResultsStep({
             </div>
           )}
 
-          {validationResult.warnings && validationResult.warnings.length > 0 && (
+          {Array.isArray(validationResult.warnings) && validationResult.warnings.length > 0 && (
             <div className="bg-[#FFF4E6] border border-[#FFA500]/30 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <AlertTriangle size={20} className="text-[#FFA500] flex-shrink-0 mt-0.5" />
@@ -341,7 +341,7 @@ export default function NoteResultsStep({
           </h3>
 
           <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2">
-            {template.sections
+            {(template.sections || [])
               .sort((a, b) => a.order - b.order)
               .map((section) => (
                 <div

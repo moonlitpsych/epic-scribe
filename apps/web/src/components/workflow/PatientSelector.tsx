@@ -45,6 +45,7 @@ export default function PatientSelector({
     firstName: '',
     lastName: '',
     dateOfBirth: '',
+    age: '',
     mrn: '',
     notes: '',
   });
@@ -59,11 +60,26 @@ export default function PatientSelector({
   const [encounterDuration, setEncounterDuration] = useState('60'); // minutes
 
   // Safe date formatting helper
-  const formatDOB = (dateString: string) => {
-    if (!dateString) return 'N/A';
+  const formatDOB = (dateString: string | null | undefined) => {
+    if (!dateString) return null;
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString; // Return original if invalid
     return format(date, 'MM/dd/yyyy');
+  };
+
+  // Format patient age/DOB display
+  const formatPatientAge = (patient: Patient) => {
+    const dobFormatted = formatDOB(patient.dob);
+    const age = (patient as any).age;
+
+    if (dobFormatted && age) {
+      return `DOB: ${dobFormatted} (Age: ${age})`;
+    } else if (dobFormatted) {
+      return `DOB: ${dobFormatted}`;
+    } else if (age) {
+      return `Age: ${age}`;
+    }
+    return null;
   };
 
   // Load all patients on mount
@@ -114,8 +130,9 @@ export default function PatientSelector({
 
   // Create new patient
   const handleCreatePatient = async () => {
-    if (!newPatient.firstName || !newPatient.lastName || !newPatient.dateOfBirth) {
-      alert('Please fill in all required fields');
+    // Only first and last name are required
+    if (!newPatient.firstName || !newPatient.lastName) {
+      alert('Please fill in First Name and Last Name');
       return;
     }
 
@@ -126,7 +143,8 @@ export default function PatientSelector({
         body: JSON.stringify({
           firstName: newPatient.firstName,
           lastName: newPatient.lastName,
-          dob: newPatient.dateOfBirth,
+          dob: newPatient.dateOfBirth || undefined,
+          age: newPatient.age || undefined,
           medicaid_id: newPatient.mrn || undefined,
         }),
       });
@@ -139,6 +157,7 @@ export default function PatientSelector({
           firstName: '',
           lastName: '',
           dateOfBirth: '',
+          age: '',
           mrn: '',
           notes: '',
         });
@@ -237,7 +256,7 @@ export default function PatientSelector({
                           {patient.last_name}, {patient.first_name}
                         </p>
                         <p className="text-sm text-[#5A6B7D]">
-                          DOB: {formatDOB(patient.dob)}
+                          {formatPatientAge(patient) || 'No DOB/Age'}
                           {patient.medicaid_id && ` • Medicaid ID: ${patient.medicaid_id}`}
                         </p>
                       </div>
@@ -277,7 +296,7 @@ export default function PatientSelector({
                       {selectedPatient.last_name}, {selectedPatient.first_name}
                     </p>
                     <p className="text-sm text-[#5A6B7D]">
-                      DOB: {formatDOB(selectedPatient.dob)}
+                      {formatPatientAge(selectedPatient) || 'No DOB/Age'}
                       {selectedPatient.medicaid_id && ` • Medicaid ID: ${selectedPatient.medicaid_id}`}
                     </p>
                   </div>
@@ -354,21 +373,38 @@ export default function PatientSelector({
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
-                  Date of Birth <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  value={newPatient.dateOfBirth}
-                  onChange={(e) => setNewPatient({ ...newPatient, dateOfBirth: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A]"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
+                    Date of Birth <span className="text-xs text-[#5A6B7D]">(Optional)</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={newPatient.dateOfBirth}
+                    onChange={(e) => setNewPatient({ ...newPatient, dateOfBirth: e.target.value })}
+                    className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
+                    Age <span className="text-xs text-[#5A6B7D]">(Optional)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="150"
+                    value={newPatient.age}
+                    onChange={(e) => setNewPatient({ ...newPatient, age: e.target.value })}
+                    placeholder="e.g., 35"
+                    className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A]"
+                  />
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
-                  MRN (Optional)
+                  MRN <span className="text-xs text-[#5A6B7D]">(Optional)</span>
                 </label>
                 <input
                   type="text"

@@ -50,25 +50,36 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { firstName, lastName, dob, dateOfBirth, medicaid_id, mrn, phone, email } = body;
+    const { firstName, lastName, dob, dateOfBirth, age, medicaid_id, mrn, phone, email } = body;
 
     // Support both old and new field names
-    const dobValue = dob || dateOfBirth;
+    const dobValue = dob || dateOfBirth || null;
     const medicaidIdValue = medicaid_id || mrn;
+    const ageValue = age ? parseInt(age, 10) : null;
 
-    // Validate required fields
-    if (!firstName || !lastName || !dobValue) {
+    // Validate required fields - only first name and last name are required
+    if (!firstName || !lastName) {
       return NextResponse.json(
-        { error: 'firstName, lastName, and dob are required' },
+        { error: 'firstName and lastName are required' },
         { status: 400 }
       );
     }
 
-    // Validate date format
-    const dobDate = new Date(dobValue);
-    if (isNaN(dobDate.getTime())) {
+    // Validate date format if DOB is provided
+    if (dobValue) {
+      const dobDate = new Date(dobValue);
+      if (isNaN(dobDate.getTime())) {
+        return NextResponse.json(
+          { error: 'Invalid date format for dob' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate age if provided
+    if (ageValue !== null && (ageValue < 0 || ageValue > 150)) {
       return NextResponse.json(
-        { error: 'Invalid date format for dob' },
+        { error: 'Invalid age value' },
         { status: 400 }
       );
     }
@@ -77,6 +88,7 @@ export async function POST(request: NextRequest) {
       first_name: firstName,
       last_name: lastName,
       date_of_birth: dobValue,
+      age: ageValue,
       mrn: medicaidIdValue || null,
       phone: phone || null,
       email: email || null,

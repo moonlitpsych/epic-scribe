@@ -9,6 +9,7 @@ import { NoteValidator, ValidationResult } from '../validators/note-validator';
 
 export interface GeminiConfig {
   apiKey?: string;
+  backupApiKey?: string;  // Fallback API key when primary quota is exhausted
   model?: string;
   temperature?: number;
   maxOutputTokens?: number;
@@ -33,14 +34,18 @@ export interface GenerationResult {
 
 export class GeminiClient {
   private client: GoogleGenerativeAI | null = null;
+  private backupClient: GoogleGenerativeAI | null = null;
   private model: any = null;
+  private backupModel: any = null;
   private config: GeminiConfig;
   private mockMode: boolean;
+  private usingBackupKey: boolean = false;
 
   constructor(config: GeminiConfig = {}) {
     this.config = {
       apiKey: config.apiKey || process.env.GEMINI_API_KEY || '',
-      model: config.model || process.env.GEMINI_MODEL || 'gemini-3-pro-preview',
+      backupApiKey: config.backupApiKey || process.env.GEMINI_BACKUP_API_KEY || '',
+      model: config.model || process.env.GEMINI_MODEL || 'gemini-2.5-pro',
       temperature: config.temperature ?? 0.4, // Balanced default for psychiatric notes
       maxOutputTokens: config.maxOutputTokens ?? 8192,
       topP: config.topP ?? 0.95,
@@ -55,6 +60,11 @@ export class GeminiClient {
 
     if (!this.mockMode && this.config.apiKey) {
       this.initializeClient();
+    }
+
+    // Initialize backup client if backup key is available
+    if (this.config.backupApiKey) {
+      this.initializeBackupClient();
     }
   }
 
@@ -77,6 +87,28 @@ export class GeminiClient {
     } catch (error) {
       console.error('Failed to initialize Gemini client:', error);
       this.mockMode = true;
+    }
+  }
+
+  /**
+   * Initialize the backup Gemini client for failover
+   */
+  private initializeBackupClient() {
+    try {
+      this.backupClient = new GoogleGenerativeAI(this.config.backupApiKey!);
+      this.backupModel = this.backupClient.getGenerativeModel({
+        model: this.config.model!,
+        generationConfig: {
+          temperature: this.config.temperature,
+          topP: this.config.topP,
+          topK: this.config.topK,
+          maxOutputTokens: this.config.maxOutputTokens,
+        }
+      });
+      console.log(`Backup Gemini client initialized with model: ${this.config.model}`);
+    } catch (error) {
+      console.error('Failed to initialize backup Gemini client:', error);
+      // Backup is optional, don't fail if it doesn't work
     }
   }
 
@@ -130,29 +162,39 @@ export class GeminiClient {
   }
 
   /**
-   * Generate with retry logic
+   * Generate with retry logic and automatic failover to backup API key
    */
   private async generateWithRetry(prompt: string): Promise<any> {
     let lastError: any;
+    const traceId = this.generateTraceId();
+
+    // Determine which model to use (primary or backup if we've already switched)
+    const activeModel = this.usingBackupKey ? this.backupModel : this.model;
+    const keyType = this.usingBackupKey ? 'backup' : 'primary';
 
     for (let attempt = 0; attempt < this.config.retryAttempts!; attempt++) {
-      // Add trace ID for monitoring (declare outside try block)
-      const traceId = this.generateTraceId();
-
       try {
-        console.log(`[${traceId}] Attempt ${attempt + 1}/${this.config.retryAttempts}`);
+        console.log(`[${traceId}] Attempt ${attempt + 1}/${this.config.retryAttempts} using ${keyType} API key`);
 
         // Redact PHI from logs
         const redactedPrompt = this.redactPHI(prompt);
         console.log(`[${traceId}] Sending prompt (${redactedPrompt.length} chars)`);
 
-        const result = await this.model.generateContent(prompt);
+        const result = await activeModel.generateContent(prompt);
 
-        console.log(`[${traceId}] Generation successful`);
+        console.log(`[${traceId}] Generation successful using ${keyType} API key`);
         return result;
       } catch (error: any) {
         lastError = error;
         console.error(`[${traceId}] Attempt ${attempt + 1} failed:`, error.message);
+
+        // Check if this is a quota exhaustion error (429) and we have a backup key
+        if (this.isQuotaExhaustedError(error) && this.backupModel && !this.usingBackupKey) {
+          console.log(`[${traceId}] Primary API key quota exhausted, switching to backup key...`);
+          this.usingBackupKey = true;
+          // Retry immediately with backup key (reset attempt counter)
+          return this.generateWithRetry(prompt);
+        }
 
         // Check if error is retryable
         if (!this.isRetryableError(error)) {
@@ -169,6 +211,20 @@ export class GeminiClient {
     }
 
     throw lastError;
+  }
+
+  /**
+   * Check if error is specifically a quota exhaustion error (429)
+   */
+  private isQuotaExhaustedError(error: any): boolean {
+    const errorCode = error.status || error.code;
+    if (errorCode === 429) {
+      return true;
+    }
+    const message = error.message?.toLowerCase() || '';
+    return message.includes('quota') ||
+           message.includes('resource has been exhausted') ||
+           message.includes('rate limit');
   }
 
   /**
@@ -367,12 +423,26 @@ Rufus Sweeney, MD`;
     mode: 'live' | 'mock';
     model: string;
     configured: boolean;
+    usingBackupKey: boolean;
+    hasBackupKey: boolean;
   } {
     return {
       mode: this.mockMode ? 'mock' : 'live',
       model: this.config.model!,
-      configured: !!this.client || this.mockMode
+      configured: !!this.client || this.mockMode,
+      usingBackupKey: this.usingBackupKey,
+      hasBackupKey: !!this.backupModel
     };
+  }
+
+  /**
+   * Reset to primary key (useful if quota resets)
+   */
+  resetToPrimaryKey(): void {
+    if (this.client && this.model) {
+      this.usingBackupKey = false;
+      console.log('Reset to primary API key');
+    }
   }
 }
 
