@@ -3,6 +3,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { EpicChartData } from '@epic-scribe/types';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,6 +23,7 @@ export interface GeneratedNote {
   finalized_at?: string;
   finalized_by?: string;
   edited: boolean;
+  epic_chart_data?: EpicChartData | null; // Extracted questionnaire scores and medications
 }
 
 export interface SaveNoteParams {
@@ -34,6 +36,7 @@ export interface SaveNoteParams {
   finalNoteContent: string;
   isFinal: boolean;
   finalizedBy?: string;
+  epicChartData?: EpicChartData | null; // Extracted questionnaire scores and medications from Epic
 }
 
 /**
@@ -50,6 +53,7 @@ export async function saveGeneratedNote(params: SaveNoteParams): Promise<Generat
     finalNoteContent,
     isFinal,
     finalizedBy,
+    epicChartData,
   } = params;
 
   console.log('[saveGeneratedNote] Starting with:', {
@@ -102,6 +106,7 @@ export async function saveGeneratedNote(params: SaveNoteParams): Promise<Generat
     finalized_at: isFinal ? new Date().toISOString() : null,
     finalized_by: isFinal ? (finalizedBy || null) : null,
     edited: generatedContent !== finalNoteContent,
+    epic_chart_data: epicChartData || null, // Extracted questionnaire scores and medications
   };
 
   console.log('[saveGeneratedNote] Inserting note with encounter_id:', encounterId);

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GenerateNoteRequest, GenerateNoteResponse, Setting, PromptReceipt } from '@epic-scribe/types';
+import { GenerateNoteRequest, GenerateNoteResponse, Setting, PromptReceipt, EpicChartData } from '@epic-scribe/types';
 import { templateService } from '@epic-scribe/note-service/src/templates/template-service';
 import { getPromptBuilder } from '@epic-scribe/note-service/src/prompts/prompt-builder';
 import { getGeminiClient } from '@epic-scribe/note-service/src/llm/gemini-client';
 import { getSmartListService } from '@epic-scribe/note-service/src/smartlists/smartlist-service';
+import { epicChartExtractor } from '@epic-scribe/note-service/src/extractors/epic-chart-extractor';
 import crypto from 'crypto';
 
 /**
@@ -32,7 +33,7 @@ function formatHistoricalNotes(notes: any[]): string {
 export async function POST(request: NextRequest) {
   try {
     const body: GenerateNoteRequest = await request.json();
-    const { encounterId, patientId, setting, visitType, transcript, priorNote, staffingTranscript, collateralTranscript } = body;
+    const { encounterId, patientId, setting, visitType, transcript, priorNote, staffingTranscript, collateralTranscript, epicChartData } = body;
     // Patient demographics can be passed directly or fetched from database
     let { patientFirstName, patientLastName, patientAge } = body as any;
 
@@ -129,6 +130,19 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Generate] Patient demographics: ${patientFirstName} ${patientLastName}, age: ${patientAge ?? 'not provided'}`);
 
+    // Process Epic chart data if provided
+    let extractedEpicData: EpicChartData | null = null;
+    if (epicChartData?.trim()) {
+      console.log(`[Generate] Processing Epic chart data: ${epicChartData.length} chars`);
+      extractedEpicData = epicChartExtractor.extract(epicChartData);
+      console.log(`[Generate] Extracted Epic data:`, {
+        phq9: extractedEpicData.questionnaires?.phq9?.score,
+        gad7: extractedEpicData.questionnaires?.gad7?.score,
+        currentMeds: extractedEpicData.medications?.current?.length || 0,
+        pastMeds: extractedEpicData.medications?.past?.length || 0,
+      });
+    }
+
     // Load template from database (with fallback to in-memory)
     let template;
     try {
@@ -177,6 +191,7 @@ export async function POST(request: NextRequest) {
       previousNote: priorNote,
       staffingTranscript, // Include staffing transcript if provided
       collateralTranscript, // Include collateral transcript for Teenscope
+      epicChartData: epicChartData?.trim() || undefined, // Include raw Epic chart data for AI to use
       patientContext, // Include patient clinical context if available
       historicalNotes, // Include all previous finalized notes for continuity
       setting: setting as Setting,
@@ -224,8 +239,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create receipt with comprehensive validation
-    const receipt: PromptReceipt & { validationResult?: any } = {
+    // Create receipt with comprehensive validation and Epic chart data
+    const receipt: PromptReceipt & { validationResult?: any; epicChartData?: EpicChartData } = {
       id: crypto.randomBytes(16).toString('hex'),
       timestamp: new Date(),
       promptVersion: 1, // From manifest
@@ -233,7 +248,8 @@ export async function POST(request: NextRequest) {
       templateId: template.templateId,
       permutationKey: `${setting}__${visitType}`,
       promptHash: compiledPrompt.hash,
-      validationResult: comprehensiveValidation // Include comprehensive validation
+      validationResult: comprehensiveValidation, // Include comprehensive validation
+      epicChartData: extractedEpicData || undefined, // Include extracted Epic data for saving
     };
 
     const response: GenerateNoteResponse = {

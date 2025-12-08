@@ -23,6 +23,7 @@ export interface PromptBuilderOptions {
   previousNote?: string;
   staffingTranscript?: string; // Separate staffing conversation transcript
   collateralTranscript?: string; // Collateral (parent/guardian) transcript for Teenscope
+  epicChartData?: string; // Epic DotPhrase data (questionnaires, meds) for strengthening Assessment
   patientContext?: string;  // Clinical context from patient record
   historicalNotes?: string;  // All previous finalized notes for this patient
   setting: Setting;
@@ -156,7 +157,7 @@ export class PromptBuilder {
    * Build a complete prompt from components
    */
   async build(options: PromptBuilderOptions): Promise<CompiledPrompt> {
-    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, patientContext, historicalNotes, setting, visitType, patientFirstName, patientLastName, patientAge } = options;
+    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, epicChartData, patientContext, historicalNotes, setting, visitType, patientFirstName, patientLastName, patientAge } = options;
 
     // Check if this is a therapy-focused template (BHIDC therapy)
     const isTherapyFocused = template.setting === 'BHIDC therapy' ||
@@ -246,6 +247,7 @@ export class PromptBuilder {
         template: templateSection,
         previousNote,
         collateralTranscript,
+        epicChartData, // Epic chart data (questionnaires, medications)
         transcript: this.buildTranscriptSection(transcript)
       };
 
@@ -422,6 +424,7 @@ export class PromptBuilder {
     template: string;
     previousNote?: string;
     collateralTranscript?: string;
+    epicChartData?: string;
     transcript: string;
   }, isFollowUp: boolean = false, historicalNotes?: string, isTeenscope: boolean = false, patientDemographics?: {
     firstName?: string;
@@ -510,6 +513,20 @@ export class PromptBuilder {
       prompt += `- For follow-up visits: The most recent note is particularly important for understanding the current treatment plan\n\n`;
     }
 
+    // Epic Chart Data (questionnaires, medications from Epic)
+    if (sections.epicChartData) {
+      prompt += `EPIC CHART DATA (from Epic EMR DotPhrase):\n`;
+      prompt += `${sections.epicChartData}\n\n`;
+      prompt += `INSTRUCTIONS FOR EPIC CHART DATA:\n`;
+      prompt += `- Use this data to STRENGTHEN the Assessment/Formulation section\n`;
+      prompt += `- Reference PHQ-9 and GAD-7 scores to support diagnostic impressions\n`;
+      prompt += `  Example: "PHQ-9 of 18 indicates moderately severe depression, consistent with patient's reported symptoms"\n`;
+      prompt += `- Incorporate medication history for treatment planning and reasoning\n`;
+      prompt += `  Example: "Given prior trials of sertraline and fluoxetine without adequate response..."\n`;
+      prompt += `- DO NOT auto-fill Social History or Family History sections from this data\n`;
+      prompt += `- The transcript is the primary source for the clinical narrative; use chart data as supportive evidence\n\n`;
+    }
+
     // Template
     prompt += `${sections.template}\n\n`;
 
@@ -537,6 +554,41 @@ export class PromptBuilder {
         prompt += `"I attempted to reach [relationship], patient's [parent/guardian], to obtain collateral information, but they were unavailable. Will attempt to reach later this week."\n\n`;
       }
     }
+
+    // Section-specific formatting instructions
+    prompt += `SECTION-SPECIFIC FORMATTING INSTRUCTIONS:\n\n`;
+
+    // Current Medications carveout
+    prompt += `CURRENT MEDICATIONS:\n`;
+    prompt += `After the SmartLink-generated medication list (.medlist or similar), include a carveout section for patient-reported medications:\n`;
+    prompt += `  "Patient-reported medications (not reported in chart):"\n`;
+    prompt += `    [List any psychiatric medications the patient mentions taking that are not in the EMR medication list]\n`;
+    prompt += `  If no additional patient-reported medications, omit this carveout entirely.\n\n`;
+
+    // Psychiatric Review of Systems format
+    prompt += `PSYCHIATRIC REVIEW OF SYSTEMS:\n`;
+    prompt += `Format each system as a simple comma-separated list of PRESENT symptoms only.\n`;
+    prompt += `DO NOT use "yes/no" format or severity qualifiers inline.\n`;
+    prompt += `If a symptom is denied or not reported, OMIT it entirely from the list.\n`;
+    prompt += `Example format:\n`;
+    prompt += `  "Depression: depressed mood, decreased sleep, decreased concentration, thoughts of death"\n`;
+    prompt += `  "Anxiety: excessive worry, restlessness, muscle tension"\n`;
+    prompt += `If patient denies all symptoms in a system, write: "[System]: Denies symptoms"\n\n`;
+
+    // Risk Assessment section
+    prompt += `RISK ASSESSMENT (place this section immediately before FORMULATION):\n`;
+    prompt += `Include a Risk Assessment section with this exact format:\n`;
+    prompt += `  "RISK ASSESSMENT\n`;
+    prompt += `  Risk factors: [list risk factors from transcript, e.g., history of suicide attempts, access to means, substance use, recent losses]\n`;
+    prompt += `  Protective factors: [list protective factors, e.g., social support, engagement in treatment, future orientation, reasons for living]\n`;
+    prompt += `  In light of these risk factors and protective factors, patient's overall suicide risk is considered [low/medium/high]. Their risk factors will be addressed through continued outpatient psychiatric management and care coordination, as needed. They are appropriate for outpatient care."\n\n`;
+
+    // Plan - Counseling section
+    prompt += `PLAN - COUNSELING SECTION:\n`;
+    prompt += `The Counseling section of the Plan must include this exact language:\n`;
+    prompt += `  "Counseling: We discussed the benefits and risks of the treatment(s) listed above and the patient verbalized understanding of and agreement with this plan. ***"\n`;
+    prompt += `Fill in *** with any specific counseling topics discussed (e.g., medication side effects, sleep hygiene, safety planning).\n`;
+    prompt += `DO NOT place this language elsewhere in the note - it belongs ONLY in the Plan Counseling section.\n\n`;
 
     // Final instruction
     prompt += `OUTPUT INSTRUCTIONS:\n`;

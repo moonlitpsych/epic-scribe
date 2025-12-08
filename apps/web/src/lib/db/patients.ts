@@ -97,13 +97,13 @@ export async function createPatient(patient: {
 
   // Only add optional fields if they have values
   if (patient.date_of_birth) {
-    insertData.dob = patient.date_of_birth;
+    insertData.date_of_birth = patient.date_of_birth;
   }
   if (patient.age !== undefined && patient.age !== null) {
     insertData.age = patient.age;
   }
   if (patient.mrn) {
-    insertData.medicaid_id = patient.mrn;
+    insertData.mrn = patient.mrn;
   }
   if (patient.phone) {
     insertData.phone = patient.phone;

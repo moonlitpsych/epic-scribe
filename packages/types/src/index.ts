@@ -124,6 +124,40 @@ export type EncounterStatus =
   | 'note_generated'
   | 'completed';
 
+// Epic Chart Data Types (for Epic EMR settings)
+export interface QuestionnaireScore {
+  score: number;
+  date?: string;
+  severity?: string;
+}
+
+export interface Medication {
+  name: string;
+  dose?: string;
+  frequency?: string;
+  reason_stopped?: string;
+}
+
+export interface EpicChartData {
+  questionnaires?: {
+    phq9?: QuestionnaireScore;
+    gad7?: QuestionnaireScore;
+  };
+  medications?: {
+    current?: Medication[];
+    past?: Medication[];
+  };
+  raw_text_excerpt?: string; // First 500 chars for debugging
+}
+
+// Epic EMR settings that support chart data input
+export const EPIC_EMR_SETTINGS: Setting[] = [
+  'HMHI Downtown RCC',
+  'Redwood Clinic MHI',
+  'Davis Behavioral Health',
+  'Teenscope South'
+];
+
 // Generation Types
 export interface GenerateNoteRequest {
   encounterId?: string;
@@ -134,6 +168,7 @@ export interface GenerateNoteRequest {
   priorNote?: string;
   staffingTranscript?: string; // Optional separate staffing conversation transcript
   collateralTranscript?: string; // Optional collateral (parent/guardian) conversation transcript for Teenscope
+  epicChartData?: string; // Optional pasted Epic DotPhrase data (full text - extraction happens server-side)
 }
 
 export interface GenerateNoteResponse {

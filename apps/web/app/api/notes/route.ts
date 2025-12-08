@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
       generatedContent,
       finalNoteContent,
       isFinal,
+      epicChartData,
     } = body;
 
     // Validation
@@ -107,6 +108,7 @@ export async function POST(request: NextRequest) {
       finalNoteContent,
       isFinal: isFinal || false,
       finalizedBy: session.user?.email || 'unknown',
+      epicChartData: epicChartData || null, // Extracted questionnaire scores and medications
     };
 
     console.log('[POST /api/notes] Attempting to save with params:', {
@@ -119,6 +121,7 @@ export async function POST(request: NextRequest) {
       finalContentLength: params.finalNoteContent?.length,
       isFinal: params.isFinal,
       finalizedBy: params.finalizedBy,
+      hasEpicChartData: !!params.epicChartData,
     });
 
     const savedNote = await saveGeneratedNote(params);

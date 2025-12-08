@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Template, Setting } from '@epic-scribe/types';
+import { Template, Setting, EpicChartData } from '@epic-scribe/types';
 import { PromptReceipt } from '@/types/prompt';
 import TemplateReviewStep from './TemplateReviewStep';
 import GenerateInputStep from './GenerateInputStep';
@@ -48,6 +48,9 @@ export default function WorkflowWizard() {
   const [receipt, setReceipt] = useState<PromptReceipt | null>(null);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
 
+  // Epic chart data (extracted from user input)
+  const [extractedEpicData, setExtractedEpicData] = useState<EpicChartData | null>(null);
+
   // UI state
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -64,7 +67,7 @@ export default function WorkflowWizard() {
     }
   };
 
-  const handleGenerate = async (trans: string, prevNote: string, patient: Patient | null, encId: string | null, collateralTrans?: string) => {
+  const handleGenerate = async (trans: string, prevNote: string, patient: Patient | null, encId: string | null, epicChartDataRaw?: string) => {
     setTranscript(trans);
     setPreviousNote(prevNote);
     setSelectedPatient(patient);
@@ -80,7 +83,7 @@ export default function WorkflowWizard() {
           visitType,
           transcript: trans,
           priorNote: prevNote || undefined,
-          collateralTranscript: collateralTrans || undefined,
+          epicChartData: epicChartDataRaw || undefined,
           patientId: patient?.id,
           encounterId: encId,
         }),
@@ -95,6 +98,10 @@ export default function WorkflowWizard() {
       setEditedNote(data.note); // Initialize editable version
       setReceipt(data.receipt);
       setValidationResult(data.receipt?.validationResult || null);
+      // Store extracted Epic chart data for saving
+      if (data.receipt?.epicChartData) {
+        setExtractedEpicData(data.receipt.epicChartData);
+      }
       setCurrentStep('results');
     } catch (error) {
       console.error('Error generating note:', error);
@@ -145,6 +152,7 @@ export default function WorkflowWizard() {
         hasFinalContent: !!editedNote,
         patientId: selectedPatient.id,
         encounterId: encounterId || 'none',
+        hasEpicChartData: !!extractedEpicData,
       });
 
       const response = await fetch('/api/notes', {
@@ -159,6 +167,7 @@ export default function WorkflowWizard() {
           generatedContent: generatedNote,
           finalNoteContent: editedNote,
           isFinal: true, // Mark as finalized when user clicks Save
+          epicChartData: extractedEpicData || undefined, // Include extracted Epic data
         }),
       });
 
