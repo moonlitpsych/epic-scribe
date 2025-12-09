@@ -9,8 +9,9 @@ interface Patient {
   id: string;
   first_name: string;
   last_name: string;
-  dob: string;
-  medicaid_id?: string;
+  date_of_birth?: string | null;
+  age?: number | null;
+  mrn?: string;
   phone?: string;
   email?: string;
   encounter_count?: number;
@@ -69,15 +70,27 @@ export default function PatientSelector({
 
   // Format patient age/DOB display
   const formatPatientAge = (patient: Patient) => {
-    const dobFormatted = formatDOB(patient.dob);
-    const age = (patient as any).age;
+    const dobFormatted = formatDOB(patient.date_of_birth);
+    const age = patient.age;
 
-    if (dobFormatted && age) {
-      return `DOB: ${dobFormatted} (Age: ${age})`;
+    // Calculate age from DOB if not stored
+    let displayAge = age;
+    if (!displayAge && patient.date_of_birth) {
+      const birthDate = new Date(patient.date_of_birth);
+      const today = new Date();
+      displayAge = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        displayAge--;
+      }
+    }
+
+    if (dobFormatted && displayAge) {
+      return `DOB: ${dobFormatted} (Age: ${displayAge})`;
     } else if (dobFormatted) {
       return `DOB: ${dobFormatted}`;
-    } else if (age) {
-      return `Age: ${age}`;
+    } else if (displayAge) {
+      return `Age: ${displayAge}`;
     }
     return null;
   };
