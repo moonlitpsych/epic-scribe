@@ -2,8 +2,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Template, Setting, EPIC_EMR_SETTINGS } from '@epic-scribe/types';
-import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle, FileText } from 'lucide-react';
+import { Template, Setting } from '@epic-scribe/types';
+import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle } from 'lucide-react';
 import PatientSelector from './PatientSelector';
 import EncountersList from './EncountersList';
 import ManualNotePanel from './ManualNotePanel';
@@ -63,11 +63,7 @@ export default function GenerateInputStep({
   const [loadingEncounters, setLoadingEncounters] = useState(false);
   const [selectedEncounterId, setSelectedEncounterId] = useState<string | null>(null);
 
-  // Epic chart data state (for Epic EMR settings)
-  const [epicChartData, setEpicChartData] = useState('');
-
-  // Check if this is an Epic EMR setting (shows chart data input)
-  const isEpicSetting = EPIC_EMR_SETTINGS.includes(setting);
+  // Epic chart data input removed - data comes through transcript/copied note
 
   // Check if previous note is required
   const requiresPreviousNote = visitType === 'Transfer of Care' || visitType === 'Follow-up';
@@ -209,7 +205,7 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
 
   const handleGenerate = () => {
     if (canGenerate) {
-      onGenerate(transcript, previousNote, selectedPatient, encounterId, epicChartData || undefined);
+      onGenerate(transcript, previousNote, selectedPatient, encounterId, undefined);
     }
   };
 
@@ -400,39 +396,12 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
           </div>
         )}
 
-        {/* Epic Chart Data Input (Epic EMR settings only, NOT for follow-ups since copied-forward note already has chart data) */}
-        {isEpicSetting && !requiresPreviousNote && (!isSpanishTranscript || hasTranslated) && (
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-[#0A1F3D] mb-2">
-              <FileText size={16} className="inline mr-1 -mt-0.5" />
-              Epic Chart Data
-              <span className="text-xs text-[#5A6B7D] ml-2 font-normal">(Optional)</span>
-            </label>
-            <p className="text-xs text-[#5A6B7D] mb-2">
-              Paste Epic DotPhrase output (.questionnaires, .meds). AI uses scores and medications to strengthen the Assessment - will NOT auto-fill history sections.
-            </p>
-            <textarea
-              value={epicChartData}
-              onChange={(e) => setEpicChartData(e.target.value)}
-              placeholder={`PHQ-9: 18/27 (moderately severe)
-GAD-7: 15/21 (moderate)
-
-Current Medications:
-1. Sertraline 100mg daily
-2. Trazodone 50mg qhs prn
-
-Past Psychiatric Medications:
-- Fluoxetine 40mg (ineffective)
-- Bupropion XL 300mg (insomnia)`}
-              rows={10}
-              className="w-full px-4 py-3 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm"
-              disabled={isGenerating}
-            />
-            <p className="text-xs text-[#5A6B7D] mt-1">
-              {epicChartData.length} characters {epicChartData.length > 0 && '- Only questionnaire scores & medications will be saved to database'}
-            </p>
-          </div>
-        )}
+        {/* Epic Chart Data Input - REMOVED
+            Chart data now comes through:
+            - Intake: Activated DotPhrase in transcript
+            - Follow-up/TOC: Copied-forward last note with SmartLinks
+            No separate input box needed.
+        */}
 
         {/* Action Buttons (shown when ready to generate) */}
         {(!isSpanishTranscript || hasTranslated) && (

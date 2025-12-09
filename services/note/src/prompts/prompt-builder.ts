@@ -110,8 +110,16 @@ export class PromptBuilder {
 
 4. WILDCARDS: Replace *** with transcript-derived prose
    - Fill with relevant information from the transcript
-   - If information is not available, keep *** unchanged
+   - If information is not available in transcript, infer reasonable defaults or omit *** entirely
    - Write in clinical prose style matching the exemplars
+   - IMPORTANT: Do NOT add trailing "***" to history items. Examples:
+     - WRONG: "Alcohol: None ***"
+     - CORRECT: "Alcohol: None"
+     - WRONG: "Cannabis: Denies ***"
+     - CORRECT: "Cannabis: Denies"
+   - For history sections (Substance Use, Social History, Family History), if not discussed:
+     - Use "None", "Denies", "Not discussed", or "Per intake paperwork" as appropriate
+     - Do NOT append "***" after these values
 
 5. FORMAT: Use paragraphs only - NO bullets, NO numbered lists
    - Keep section headers exactly as they appear in the template
