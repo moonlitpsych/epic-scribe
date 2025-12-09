@@ -170,7 +170,12 @@ CRITICAL: Only include diagnoses that are supported by the clinical evidence fro
     instructions: `Generate EXACTLY 4 paragraphs in this EXACT structure. DO NOT deviate from this format.
 
 PARAGRAPH 1 - Patient One-Liner (ONE SENTENCE ONLY):
-Format: "[patient name] is a [age] year old [sex/gender] with history of [psychiatric history] who presents for [reasons for presentation]."
+Format: "[PATIENT_FIRST_NAME PATIENT_LAST_NAME] is a [PATIENT_AGE] year old [sex/gender] with history of [psychiatric history] who presents for [reasons for presentation]."
+
+⚠️ CRITICAL: Use the ACTUAL patient name and age from the PATIENT DEMOGRAPHICS section above.
+- Use the exact PATIENT_FIRST_NAME and PATIENT_LAST_NAME values - DO NOT use .FNAME or .LNAME dotphrases
+- Use the exact PATIENT_AGE value - DO NOT use .age dotphrase
+- If age is not provided, use "***-year-old"
 
 Example: "Jeremy Montoya is a 35 year old male with history of Major Depressive Disorder and Generalized Anxiety Disorder who presents for psychiatric follow-up following recent medication adjustment."
 
@@ -218,7 +223,12 @@ FORMATTING REQUIREMENTS:
     instructions: `Generate a concise 2-paragraph assessment for this follow-up/transfer of care visit.
 
 PARAGRAPH 1 - Patient One-Liner (ONE SENTENCE ONLY):
-Format: "[patient name] is a [age] year old [sex/gender] with history of [psychiatric diagnoses] who presents for [follow-up for medication management/transfer of care/etc.]."
+Format: "[PATIENT_FIRST_NAME PATIENT_LAST_NAME] is a [PATIENT_AGE] year old [sex/gender] with history of [psychiatric diagnoses] who presents for [follow-up for medication management/transfer of care/etc.]."
+
+⚠️ CRITICAL: Use the ACTUAL patient name and age from the PATIENT DEMOGRAPHICS section above.
+- Use the exact PATIENT_FIRST_NAME and PATIENT_LAST_NAME values - DO NOT use .FNAME or .LNAME dotphrases
+- Use the exact PATIENT_AGE value - DO NOT use .age dotphrase
+- If age is not provided, use "***-year-old"
 
 Example: "Sarah Johnson is a 42 year old female with history of Bipolar I Disorder and Generalized Anxiety Disorder who presents for follow-up for medication management."
 
@@ -483,7 +493,12 @@ export function buildPsychiatricPrompt(
   smartListDefinitions: string,
   staffingTranscript?: string,
   visitType?: string,
-  previousNote?: string
+  previousNote?: string,
+  patientDemographics?: {
+    firstName?: string;
+    lastName?: string;
+    age?: number | null;
+  }
 ): string {
   // Check for staffing configuration
   const staffingConfig = template.staffing_config;
@@ -498,12 +513,36 @@ export function buildPsychiatricPrompt(
 TASK: Generate a psychiatric note using the provided template, following section-specific instructions precisely.
 
 CRITICAL RULES:
-1. SmartLinks: Convert ALL @identifier@ to .identifier (e.g., @FNAME@ → .FNAME)
-2. SmartLists: Output ONLY the selected value text, not the {Display:ID} wrapper
-3. Wildcards: Replace *** with relevant transcript content, or leave *** if not discussed
-4. Format: Use paragraphs only - NO bullets, NO numbered lists except where specified in Plan
-5. Accuracy: Do not invent information not in the transcript
+1. PATIENT DEMOGRAPHICS: Use the actual patient name and age provided in the PATIENT DEMOGRAPHICS section
+   - Use PATIENT_FIRST_NAME and PATIENT_LAST_NAME directly in the note (NOT .FNAME or .LNAME dotphrases)
+   - Use PATIENT_AGE directly (e.g., "47-year-old") (NOT .age dotphrase)
+   - If age is not provided, use "***-year-old"
+2. SmartLinks: Convert OTHER @identifier@ to .identifier (e.g., @lastvitals@ → .lastvitals)
+   - EXCEPTION: @FNAME@, @LNAME@, and @age@ should be replaced with actual values from PATIENT DEMOGRAPHICS, NOT dotphrases
+3. SmartLists: Output ONLY the selected value text, not the {Display:ID} wrapper
+4. Wildcards: Replace *** with relevant transcript content, or leave *** if not discussed
+5. Format: Use paragraphs only - NO bullets, NO numbered lists except where specified in Plan
+6. Accuracy: Do not invent information not in the transcript
 `;
+
+  // Add Patient Demographics section if provided
+  if (patientDemographics?.firstName || patientDemographics?.lastName) {
+    const firstName = patientDemographics.firstName || '***';
+    const lastName = patientDemographics.lastName || '***';
+    const ageStr = (patientDemographics.age !== undefined && patientDemographics.age !== null)
+      ? String(patientDemographics.age)
+      : '***';
+
+    prompt += `
+PATIENT DEMOGRAPHICS (use these exact values in the note):
+PATIENT_FIRST_NAME: ${firstName}
+PATIENT_LAST_NAME: ${lastName}
+PATIENT_AGE: ${ageStr}
+
+⚠️ IMPORTANT: Use "${firstName} ${lastName}" as the patient's name in the Formulation/Assessment section.
+Use "${ageStr}-year-old" for the patient's age. DO NOT use .FNAME, .LNAME, or .age dotphrases.
+`;
+  }
 
   // Add inline staffing instructions if configured
   if (hasInlineStaffing) {

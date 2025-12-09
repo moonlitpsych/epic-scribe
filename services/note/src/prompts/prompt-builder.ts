@@ -211,7 +211,11 @@ export class PromptBuilder {
     } else if (isPsychiatricFocused) {
       // Use the psychiatric-focused prompt builder
       console.log('[PromptBuilder] Using psychiatric-focused prompt builder');
-      prompt = buildPsychiatricPrompt(template, transcript, smartListDefinitions, staffingTranscript, visitType, previousNote);
+      prompt = buildPsychiatricPrompt(template, transcript, smartListDefinitions, staffingTranscript, visitType, previousNote, {
+        firstName: patientFirstName,
+        lastName: patientLastName,
+        age: patientAge
+      });
 
       sections = {
         system: 'Psychiatric note generator for Dr. Rufus Sweeney',
@@ -621,6 +625,22 @@ export class PromptBuilder {
     prompt += `  "Counseling: We discussed the benefits and risks of the treatment(s) listed above and the patient verbalized understanding of and agreement with this plan. ***"\n`;
     prompt += `Fill in *** with any specific counseling topics discussed (e.g., medication side effects, sleep hygiene, safety planning).\n`;
     prompt += `DO NOT place this language elsewhere in the note - it belongs ONLY in the Plan Counseling section.\n\n`;
+
+    // Assessment section - use actual patient data
+    prompt += `ASSESSMENT/FORMULATION SECTION:\n`;
+    prompt += `When writing the Assessment or Formulation section, use the actual patient name and age provided above.\n`;
+    if (patientDemographics?.firstName || patientDemographics?.lastName) {
+      const firstName = patientDemographics.firstName || '***';
+      const lastName = patientDemographics.lastName || '***';
+      const ageStr = (patientDemographics.age !== undefined && patientDemographics.age !== null)
+        ? `${patientDemographics.age}-year-old`
+        : '***-year-old';
+      prompt += `  - Use: "${firstName} ${lastName}" for the patient's name\n`;
+      prompt += `  - Use: "${ageStr}" for the patient's age\n`;
+      prompt += `  - Example: "${firstName} ${lastName} is a ${ageStr} [gender] with a history of..."\n`;
+    }
+    prompt += `  - DO NOT use .FNAME, .LNAME, or .age dotphrases in the Assessment section\n`;
+    prompt += `  - The Assessment should read like a natural clinical summary with the actual patient's identifying information\n\n`;
 
     // Final instruction
     prompt += `OUTPUT INSTRUCTIONS:\n`;
