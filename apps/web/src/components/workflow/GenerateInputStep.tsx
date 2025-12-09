@@ -63,7 +63,9 @@ export default function GenerateInputStep({
   const [loadingEncounters, setLoadingEncounters] = useState(false);
   const [selectedEncounterId, setSelectedEncounterId] = useState<string | null>(null);
 
-  // Epic chart data input removed - data comes through transcript/copied note
+  // Epic chart data - only needed for Intake/Consultation (no copied-forward note)
+  const [epicChartData, setEpicChartData] = useState('');
+  const showEpicChartInput = visitType === 'Intake' || visitType === 'Consultation Visit';
 
   // Check if previous note is required
   const requiresPreviousNote = visitType === 'Transfer of Care' || visitType === 'Follow-up';
@@ -205,7 +207,7 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
 
   const handleGenerate = () => {
     if (canGenerate) {
-      onGenerate(transcript, previousNote, selectedPatient, encounterId, undefined);
+      onGenerate(transcript, previousNote, selectedPatient, encounterId, epicChartData || undefined);
     }
   };
 
@@ -396,12 +398,30 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
           </div>
         )}
 
-        {/* Epic Chart Data Input - REMOVED
-            Chart data now comes through:
-            - Intake: Activated DotPhrase in transcript
-            - Follow-up/TOC: Copied-forward last note with SmartLinks
-            No separate input box needed.
-        */}
+        {/* Epic Chart Data Input - Only for Intake/Consultation visits */}
+        {showEpicChartInput && (!isSpanishTranscript || hasTranslated) && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-[#0A1F3D] mb-2">
+              Epic Chart Data <span className="text-[#5A6B7D] font-normal">(optional but recommended)</span>
+            </label>
+            <p className="text-xs text-[#5A6B7D] mb-2">
+              Copy the raw Epic NoteWriter output or chart data. This helps extract current medications, PHQ-9/GAD-7 scores, and other clinical data.
+            </p>
+            <textarea
+              value={epicChartData}
+              onChange={(e) => setEpicChartData(e.target.value)}
+              placeholder="Paste Epic chart data here (medications, PHQ-9, GAD-7, vitals, etc.)..."
+              rows={6}
+              className="w-full px-4 py-3 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm"
+              disabled={isGenerating}
+            />
+            {epicChartData.trim().length > 0 && (
+              <p className="text-sm text-green-600 mt-2">
+                ✓ Epic chart data provided ({epicChartData.length} characters)
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Action Buttons (shown when ready to generate) */}
         {(!isSpanishTranscript || hasTranslated) && (

@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
             if (!patientLastName) patientLastName = patient.last_name;
             if (patientAge === undefined) {
               // Try to get age from database or calculate from DOB
-              patientAge = (patient as any).age || calculateAge((patient as any).dob);
+              patientAge = (patient as any).age || calculateAge(patient.date_of_birth);
             }
 
             if (patient.notes) {
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
           if (!patientLastName) patientLastName = patient.last_name;
           if (patientAge === undefined) {
             // Try to get age from database or calculate from DOB
-            patientAge = (patient as any).age || calculateAge((patient as any).dob);
+            patientAge = (patient as any).age || calculateAge(patient.date_of_birth);
           }
 
           if (patient.notes) {
