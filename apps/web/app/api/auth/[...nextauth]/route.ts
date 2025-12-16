@@ -2,6 +2,9 @@ import NextAuth, { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import { JWT } from 'next-auth/jwt';
 
+// Refresh tokens 5 minutes before they expire to avoid edge cases
+const TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000;
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -32,15 +35,23 @@ export const authOptions: NextAuthOptions = {
       if (account) {
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
-        token.accessTokenExpires = account.expires_at;
+        // IMPORTANT: Always store expiry in milliseconds for consistency
+        // Google's expires_at is in seconds, so convert to ms
+        token.accessTokenExpires = (account.expires_at as number) * 1000;
+        console.log('[Auth] Initial token set, expires at:', new Date(token.accessTokenExpires as number).toISOString());
       }
 
-      // Return previous token if the access token has not expired yet
-      if (Date.now() < (token.accessTokenExpires as number) * 1000) {
+      const expiresAt = token.accessTokenExpires as number;
+      const now = Date.now();
+      const timeUntilExpiry = expiresAt - now;
+
+      // Return previous token if the access token has not expired yet (with buffer)
+      if (timeUntilExpiry > TOKEN_REFRESH_BUFFER_MS) {
         return token;
       }
 
-      // Access token has expired, try to update it
+      // Access token has expired or is about to expire, try to refresh it
+      console.log('[Auth] Token expired or expiring soon, attempting refresh. Time until expiry:', Math.round(timeUntilExpiry / 1000), 'seconds');
       return refreshAccessToken(token);
     },
     async session({ session, token }) {
@@ -64,42 +75,47 @@ export const authOptions: NextAuthOptions = {
  * `accessToken` and `accessTokenExpires`. If an error occurs,
  * returns the old token and an error property
  */
-async function refreshAccessToken(token: JWT) {
+async function refreshAccessToken(token: JWT): Promise<JWT> {
   try {
     if (!token.refreshToken) {
+      console.error('[Auth] No refresh token available - user must re-authenticate');
       throw new Error('No refresh token available');
     }
 
-    const url =
-      'https://oauth2.googleapis.com/token?' +
-      new URLSearchParams({
-        client_id: process.env.GOOGLE_CLIENT_ID!,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-        grant_type: 'refresh_token',
-        refresh_token: token.refreshToken,
-      });
+    console.log('[Auth] Attempting to refresh access token...');
 
-    const response = await fetch(url, {
+    const response = await fetch('https://oauth2.googleapis.com/token', {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       method: 'POST',
+      body: new URLSearchParams({
+        client_id: process.env.GOOGLE_CLIENT_ID!,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+        grant_type: 'refresh_token',
+        refresh_token: token.refreshToken as string,
+      }),
     });
 
     const refreshedTokens = await response.json();
 
     if (!response.ok) {
-      throw refreshedTokens;
+      console.error('[Auth] Token refresh failed:', response.status, refreshedTokens.error, refreshedTokens.error_description);
+      throw new Error(refreshedTokens.error_description || refreshedTokens.error || 'Token refresh failed');
     }
+
+    const newExpiresAt = Date.now() + refreshedTokens.expires_in * 1000;
+    console.log('[Auth] Token refreshed successfully, new expiry:', new Date(newExpiresAt).toISOString());
 
     return {
       ...token,
       accessToken: refreshedTokens.access_token,
-      accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
-      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken, // Fall back to old refresh token
+      accessTokenExpires: newExpiresAt,
+      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
+      error: undefined, // Clear any previous error
     };
   } catch (error) {
-    console.log(error);
+    console.error('[Auth] Failed to refresh access token:', error instanceof Error ? error.message : error);
 
     return {
       ...token,

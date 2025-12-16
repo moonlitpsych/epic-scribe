@@ -2,9 +2,14 @@
 
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-export default function SignIn() {
+function SignInContent() {
   const [isLoading, setIsLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const error = searchParams.get('error');
+  const isSessionExpired = error === 'SessionExpired';
 
   const handleSignIn = async () => {
     setIsLoading(true);
@@ -27,6 +32,21 @@ export default function SignIn() {
             AI-powered clinical documentation for psychiatry
           </p>
         </div>
+
+        {/* Session Expired Notice */}
+        {isSessionExpired && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <span className="text-amber-600 text-xl">&#9888;</span>
+              <div>
+                <h3 className="font-semibold text-amber-900">Session Expired</h3>
+                <p className="text-sm text-amber-800 mt-1">
+                  Your session has expired for security. Please sign in again to continue.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-6">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -91,5 +111,20 @@ export default function SignIn() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Wrap with Suspense because useSearchParams requires it
+export default function SignIn() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-gray-600 border-r-transparent" />
+        </div>
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
   );
 }

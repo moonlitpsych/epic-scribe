@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { User, Plus, Search, Calendar, Video, Clock } from 'lucide-react';
+import { User, Plus, Search, Calendar, Video, Clock, Play, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import debounce from 'lodash/debounce';
 
@@ -40,6 +40,7 @@ export default function PatientSelector({
   const [loading, setLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEncounterModal, setShowEncounterModal] = useState(false);
+  const [isStartingNow, setIsStartingNow] = useState(false);
 
   // New patient form
   const [newPatient, setNewPatient] = useState({
@@ -184,7 +185,54 @@ export default function PatientSelector({
     }
   };
 
-  // Create encounter with Google Calendar
+  // Start appointment NOW - one-click to create and open Meet immediately
+  const handleStartNow = async () => {
+    if (!selectedPatient || isStartingNow) return;
+
+    setIsStartingNow(true);
+
+    // Create appointment starting now with 60-minute duration
+    const startTime = new Date();
+    const endTime = new Date(startTime.getTime() + 60 * 60000); // 60 minutes
+
+    try {
+      const response = await fetch('/api/encounters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientId: selectedPatient.id,
+          setting,
+          visitType,
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        // Notify parent component
+        if (onEncounterCreated) {
+          onEncounterCreated(data);
+        }
+
+        // Open Google Meet link immediately
+        if (data.calendarEncounter?.meetLink) {
+          window.open(data.calendarEncounter.meetLink, '_blank');
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert(errorData.error || 'Failed to start appointment');
+      }
+    } catch (error) {
+      console.error('Error starting appointment:', error);
+      alert('Failed to start appointment');
+    } finally {
+      setIsStartingNow(false);
+    }
+  };
+
+  // Create encounter with Google Calendar (for scheduling later)
   const handleCreateEncounter = async () => {
     if (!selectedPatient) return;
 
@@ -328,24 +376,48 @@ export default function PatientSelector({
               )}
             </div>
 
-            {/* Create Encounter Button - Prominent */}
+            {/* Quick Actions for Appointments */}
             {setting && visitType && (
-              <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-300 rounded-lg p-4">
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Video className="text-indigo-600" size={20} />
-                  <h4 className="text-sm font-semibold text-indigo-900">
-                    Ready to Schedule
+                  <Video className="text-emerald-600" size={20} />
+                  <h4 className="text-sm font-semibold text-emerald-900">
+                    Ready for Appointment
                   </h4>
                 </div>
-                <p className="text-xs text-indigo-700 mb-3">
-                  Create a Google Meet encounter for {setting} • {visitType}
+                <p className="text-xs text-emerald-700 mb-3">
+                  {setting} • {visitType}
                 </p>
+
+                {/* Primary: Start Now - One Click */}
+                <button
+                  onClick={handleStartNow}
+                  disabled={isStartingNow}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white text-base font-semibold rounded-lg hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none mb-2"
+                >
+                  {isStartingNow ? (
+                    <>
+                      <Loader2 size={20} className="animate-spin" />
+                      Creating Meet...
+                    </>
+                  ) : (
+                    <>
+                      <Play size={20} />
+                      Start Appointment Now
+                    </>
+                  )}
+                </button>
+                <p className="text-xs text-emerald-600 text-center mb-3">
+                  One click: creates 60-min appointment and opens Google Meet
+                </p>
+
+                {/* Secondary: Schedule for Later */}
                 <button
                   onClick={() => setShowEncounterModal(true)}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white text-base font-semibold rounded-lg hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02]"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-emerald-400 text-emerald-700 text-sm rounded-lg hover:bg-emerald-100 transition-colors"
                 >
-                  <Calendar size={20} />
-                  Schedule New Encounter & Meet
+                  <Calendar size={16} />
+                  Schedule for Later
                 </button>
               </div>
             )}
