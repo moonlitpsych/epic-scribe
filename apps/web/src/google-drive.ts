@@ -59,6 +59,7 @@ export async function searchFiles(
 
 /**
  * Get file content by ID.
+ * Handles both regular files and Google Workspace files (Docs, Sheets, etc.)
  */
 export async function getFileContent(
   session: Session,
@@ -71,16 +72,46 @@ export async function getFileContent(
   const drive = getDriveClient(session.accessToken);
 
   try {
-    const response = await drive.files.get({
+    // First, get file metadata to check the MIME type
+    const fileMetadata = await drive.files.get({
       fileId,
-      alt: 'media',
-    }, {
-      responseType: 'text',
+      fields: 'mimeType, name',
     });
 
-    return response.data as string;
-  } catch (error) {
-    console.error('Error getting file content:', error);
+    const mimeType = fileMetadata.data.mimeType;
+    console.log('[Drive] Fetching file:', fileMetadata.data.name, 'mimeType:', mimeType);
+
+    // Google Workspace files need to be exported, not downloaded
+    const googleWorkspaceTypes = [
+      'application/vnd.google-apps.document',
+      'application/vnd.google-apps.spreadsheet',
+      'application/vnd.google-apps.presentation',
+    ];
+
+    if (mimeType && googleWorkspaceTypes.includes(mimeType)) {
+      // Export Google Workspace file as plain text
+      console.log('[Drive] Exporting Google Workspace file as text/plain');
+      const response = await drive.files.export({
+        fileId,
+        mimeType: 'text/plain',
+      }, {
+        responseType: 'text',
+      });
+
+      return response.data as string;
+    } else {
+      // Regular file - download directly
+      const response = await drive.files.get({
+        fileId,
+        alt: 'media',
+      }, {
+        responseType: 'text',
+      });
+
+      return response.data as string;
+    }
+  } catch (error: any) {
+    console.error('Error getting file content:', error?.message || error);
     throw new Error('Failed to get file content');
   }
 }

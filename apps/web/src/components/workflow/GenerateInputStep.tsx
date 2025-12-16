@@ -7,6 +7,7 @@ import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle 
 import PatientSelector from './PatientSelector';
 import EncountersList from './EncountersList';
 import ManualNotePanel from './ManualNotePanel';
+import TranscriptSelector from './TranscriptSelector';
 import { CalendarEncounter } from '@/google-calendar';
 
 interface Patient {
@@ -347,6 +348,20 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
           </div>
         )}
 
+        {/* Google Drive Transcript Selector (when patient is selected and in English mode) */}
+        {selectedPatient && !isSpanishTranscript && (
+          <div className="mb-6">
+            <TranscriptSelector
+              encounterId={selectedEncounterId}
+              patientName={selectedPatient ? `${selectedPatient.last_name}, ${selectedPatient.first_name}` : null}
+              onTranscriptLoaded={(content) => {
+                setTranscript(content);
+              }}
+              disabled={isGenerating}
+            />
+          </div>
+        )}
+
         {/* English Transcript Input (when in English mode or after translation) */}
         {(!isSpanishTranscript || hasTranslated) && (
           <div className="mb-6">
@@ -356,11 +371,14 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
               {hasTranslated && (
                 <span className="ml-2 text-green-600 text-xs">✓ Translated from Spanish</span>
               )}
+              {transcript.trim().length > 0 && !hasTranslated && selectedEncounterId && (
+                <span className="ml-2 text-purple-600 text-xs">✓ Loaded from Google Drive</span>
+              )}
             </label>
             <textarea
               value={transcript}
               onChange={(e) => setTranscript(e.target.value)}
-              placeholder="Paste or type the clinical encounter transcript here..."
+              placeholder="Paste or type the clinical encounter transcript here, or load from Google Drive above..."
               rows={12}
               className="w-full px-4 py-3 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm"
               disabled={isGenerating}

@@ -62,6 +62,29 @@ export async function saveGeneratedNote(params: SaveNoteParams): Promise<Generat
     templateId,
   });
 
+  // Check if encounterId is a UUID or a calendar event ID
+  // UUIDs have format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(encounterId || '');
+
+  // If encounterId looks like a calendar event ID (not a UUID), look up the database encounter
+  if (encounterId && !isUUID) {
+    console.log('[saveGeneratedNote] encounterId appears to be a calendar event ID, looking up database encounter');
+    const { data: existingEncounter, error: lookupError } = await supabase
+      .from('encounters')
+      .select('id')
+      .eq('calendar_event_id', encounterId)
+      .single();
+
+    if (existingEncounter) {
+      console.log('[saveGeneratedNote] Found database encounter:', existingEncounter.id);
+      encounterId = existingEncounter.id;
+    } else {
+      console.log('[saveGeneratedNote] No database encounter found for calendar event, will create placeholder');
+      // Clear encounterId so we create a placeholder below
+      encounterId = '';
+    }
+  }
+
   // If encounter doesn't exist, create it
   if (!encounterId && patientId) {
     console.log('[saveGeneratedNote] Creating placeholder encounter for patient:', patientId);
