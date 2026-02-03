@@ -12,7 +12,9 @@
   },
   "scripts": {
     "dev": "pnpm --filter @epic-scribe/web dev",
+    "dev:clipboard": "pnpm --filter @epic-scribe/clipboard-watcher dev",
     "build": "pnpm -r build",
+    "build:clipboard": "pnpm --filter @epic-scribe/clipboard-watcher build",
     "test": "jest --runInBand",
     "lint": "eslint . && tsc -p tsconfig.json --noEmit",
     "format": "prettier --write \"**/*.{js,ts,tsx,json,md}\"",

@@ -9,3 +9,4 @@ export * from './patients';
 export * from './encounters';
 export * from './notes';
 export * from './chart-history';
+export * from './prior-notes';

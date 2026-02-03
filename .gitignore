@@ -66,3 +66,4 @@ test_data/
 
 # pnpm
 pnpm-lock.yaml
+.vercel
