@@ -7,7 +7,7 @@
 
 ---
 
-## Current Status (2025-01-05)
+## Current Status (2026-02-03)
 
 ### Working Features
 - **Note Generation**: Full workflow with Gemini 2.5 Pro API + automatic failover to backup API key
@@ -19,6 +19,7 @@
 - **Patient Management**: Full CRUD with RLS policies, required for note generation; editable demographics
 - **Note Saving**: Save finalized notes with historical context for continuity
 - **Therapy Notes**: Specialized BHIDC therapy prompt builder
+- **IntakeQ Integration (Read Path)**: Auto-fetch prior notes from IntakeQ for Moonlit Psychiatry patients
 
 ### Known Issues
 1. **Google OAuth Token Expiration** - Workaround: Sign out/in to refresh (~1 hour expiry)
@@ -48,6 +49,9 @@ SHARED_CALENDAR_ID=       # For HIPAA-compliant Meet hosting
 # NextAuth
 NEXTAUTH_URL=             # Production: https://strong.work
 NEXTAUTH_SECRET=
+
+# IntakeQ API (for Moonlit Psychiatry prior notes)
+INTAKEQ_API_KEY=          # Get from IntakeQ Settings > Integrations > Developer API
 ```
 
 **Note:** When changing domains, update both:
@@ -110,7 +114,37 @@ pnpm lint         # Check for issues
 
 ---
 
-## Recent Updates (2025-01-05)
+## Recent Updates (2026-02-03)
+
+### IntakeQ Integration - Read Path (COMPLETE)
+Auto-fetch prior notes from IntakeQ for **Moonlit Psychiatry** patients during Follow-up/TOC visits.
+
+**How it works:**
+1. Select Moonlit Psychiatry patient with email for Follow-up or Transfer of Care
+2. System auto-fetches most recent locked note from IntakeQ
+3. Note is formatted and pre-populated in Prior Note field
+4. Patients without email get inline prompt to add one
+
+**Files:**
+- `services/intakeq-api/` - API client, types, note formatter
+- `apps/web/app/api/intakeq/prior-note/route.ts` - API endpoint
+- `apps/web/src/components/workflow/GenerateInputStep.tsx` - UI integration
+
+**Key API details** (learned from debugging):
+- Use `search` param, NOT `email` for client lookup: `/clients?search=email@example.com&includeProfile=true`
+- Notes endpoint: `/notes/summary?clientId=123&status=1` (status 1=locked, 2=unlocked)
+- Full note: `/notes/{noteId}`
+- Reference working code in `/Users/macsweeney/cm-research-app/packages/backend/src/services/intakeq.service.ts`
+
+### IntakeQ Integration - Write Path (DEFERRED)
+Push generated notes TO IntakeQ via Playwright browser automation. Architecture documented in `INTAKEQ_INTEGRATION_ARCHITECTURE.md`. Includes:
+- Creating notes from generated content
+- Adding ICD-10 diagnoses
+- Signing and locking notes
+
+---
+
+## Previous Updates (2025-01-05)
 
 ### Custom Domain Migration
 - Production moved from `epic-scribe.vercel.app` to **https://strong.work**
@@ -124,7 +158,7 @@ pnpm lint         # Check for issues
 
 ---
 
-## Previous Updates (2025-12-08)
+## Previous Updates (2024-12-08)
 
 ### Patient Demographics Enhancement
 - **Patient name/age now used directly** in generated notes instead of `.FNAME`, `.LNAME`, `.age` dotphrases
