@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Template, Setting } from '@epic-scribe/types';
-import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle } from 'lucide-react';
+import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle, CloudDownload, Mail, Save } from 'lucide-react';
 import PatientSelector from './PatientSelector';
 import EncountersList from './EncountersList';
 import ManualNotePanel from './ManualNotePanel';
@@ -17,6 +17,7 @@ interface Patient {
   date_of_birth?: string | null;
   age?: number | null;
   mrn?: string;
+  email?: string;
   notes?: string;
 }
 
@@ -64,6 +65,22 @@ export default function GenerateInputStep({
   const [loadingEncounters, setLoadingEncounters] = useState(false);
   const [selectedEncounterId, setSelectedEncounterId] = useState<string | null>(null);
 
+  // Auto-imported prior note state
+  const [autoImportedNote, setAutoImportedNote] = useState<{
+    id: string;
+    importedAt: string;
+  } | null>(null);
+  const [checkingPriorNotes, setCheckingPriorNotes] = useState(false);
+
+  // IntakeQ prior note state (for Moonlit Psychiatry)
+  const [intakeQEnabled, setIntakeQEnabled] = useState(true);
+  const [intakeQNote, setIntakeQNote] = useState<{ content: string; date: string; noteName: string } | null>(null);
+  const [intakeQLoading, setIntakeQLoading] = useState(false);
+  const [intakeQError, setIntakeQError] = useState<string | null>(null);
+  const [showEmailPrompt, setShowEmailPrompt] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
+  const [savingEmail, setSavingEmail] = useState(false);
+
   // Epic chart data - only needed for Intake/Consultation (no copied-forward note)
   const [epicChartData, setEpicChartData] = useState('');
   const showEpicChartInput = visitType === 'Intake' || visitType === 'Consultation Visit';
@@ -93,6 +110,151 @@ export default function GenerateInputStep({
       setSelectedEncounterId(null);
     }
   }, [selectedPatient]);
+
+  // Check for auto-imported prior notes when patient is selected (for Follow-up/TOC)
+  useEffect(() => {
+    if (selectedPatient && requiresPreviousNote && !previousNote) {
+      checkForPriorNotes();
+    } else if (!selectedPatient) {
+      setAutoImportedNote(null);
+    }
+  }, [selectedPatient, requiresPreviousNote]);
+
+  const checkForPriorNotes = async () => {
+    if (!selectedPatient) return;
+
+    setCheckingPriorNotes(true);
+    try {
+      const response = await fetch(`/api/prior-notes/patient/${selectedPatient.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.priorNotes && data.priorNotes.length > 0) {
+          const latestNote = data.priorNotes[0];
+          setAutoImportedNote({
+            id: latestNote.id,
+            importedAt: latestNote.imported_at,
+          });
+          // Auto-populate the previous note field
+          setPreviousNote(latestNote.note_content);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking prior notes:', error);
+    } finally {
+      setCheckingPriorNotes(false);
+    }
+  };
+
+  const clearAutoImportedNote = () => {
+    setAutoImportedNote(null);
+    setPreviousNote('');
+  };
+
+  // IntakeQ prior note fetching (for Moonlit Psychiatry patients with email)
+  useEffect(() => {
+    // Only fetch from IntakeQ for Moonlit Psychiatry patients
+    if (setting !== 'Moonlit Psychiatry') {
+      setIntakeQNote(null);
+      setIntakeQError(null);
+      setShowEmailPrompt(false);
+      return;
+    }
+
+    // Reset state when patient changes
+    setIntakeQNote(null);
+    setIntakeQError(null);
+    setShowEmailPrompt(false);
+
+    // Check if patient has email
+    if (!selectedPatient?.email) {
+      if (selectedPatient && requiresPreviousNote && intakeQEnabled) {
+        setShowEmailPrompt(true);
+      }
+      return;
+    }
+
+    // Fetch if enabled and visit requires previous note
+    if (intakeQEnabled && requiresPreviousNote && selectedPatient.email) {
+      fetchIntakeQPriorNote(selectedPatient.email);
+    }
+  }, [selectedPatient, setting, intakeQEnabled, requiresPreviousNote]);
+
+  const fetchIntakeQPriorNote = async (email: string) => {
+    setIntakeQLoading(true);
+    setIntakeQError(null);
+
+    try {
+      const response = await fetch(`/api/intakeq/prior-note?email=${encodeURIComponent(email)}`);
+      const data = await response.json();
+
+      if (data.found) {
+        setIntakeQNote({
+          content: data.priorNote,
+          date: data.noteDate,
+          noteName: data.noteName || 'IntakeQ Note',
+        });
+        // Auto-populate the previous note field
+        setPreviousNote(data.priorNote);
+        setAutoImportedNote(null); // Clear any Epic auto-import
+      } else {
+        // Set appropriate error message
+        switch (data.reason) {
+          case 'patient_not_found':
+            setIntakeQError('Patient not found in IntakeQ. You can paste a note manually below.');
+            break;
+          case 'no_notes':
+            setIntakeQError('No prior notes found in IntakeQ. You can paste a note manually below.');
+            break;
+          case 'not_configured':
+            setIntakeQError('IntakeQ integration is not configured.');
+            break;
+          default:
+            setIntakeQError(data.message || 'Failed to fetch from IntakeQ. You can paste a note manually below.');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching IntakeQ prior note:', error);
+      setIntakeQError('Failed to connect to IntakeQ. You can paste a note manually below.');
+    } finally {
+      setIntakeQLoading(false);
+    }
+  };
+
+  const clearIntakeQNote = () => {
+    setIntakeQNote(null);
+    setIntakeQError(null);
+    setPreviousNote('');
+  };
+
+  const handleSavePatientEmail = async () => {
+    if (!selectedPatient || !pendingEmail.trim()) return;
+
+    setSavingEmail(true);
+    try {
+      const response = await fetch(`/api/patients/${selectedPatient.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: pendingEmail.trim() }),
+      });
+
+      if (response.ok) {
+        // Update local patient state with email
+        const updatedPatient = { ...selectedPatient, email: pendingEmail.trim() };
+        setSelectedPatient(updatedPatient);
+        setShowEmailPrompt(false);
+        setPendingEmail('');
+        // Fetch from IntakeQ with new email
+        fetchIntakeQPriorNote(pendingEmail.trim());
+      } else {
+        alert('Failed to save email. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error saving patient email:', error);
+      alert('Failed to save email. Please try again.');
+    } finally {
+      setSavingEmail(false);
+    }
+  };
 
   const fetchPatientEncounters = async () => {
     if (!selectedPatient) return;
@@ -398,20 +560,157 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
         {requiresPreviousNote && (!isSpanishTranscript || hasTranslated) && (
           <div className="mb-6">
             <label className="block text-sm font-medium text-[#0A1F3D] mb-2">
-              Copied-forward Last Note <span className="text-red-500">*</span>
+              {setting === 'Moonlit Psychiatry' ? 'Prior Note' : 'Copied-forward Last Note'}{' '}
+              <span className="text-red-500">*</span>
             </label>
-            <p className="text-xs text-[#5A6B7D] mb-2">
-              Paste the copied-forward note from Epic. SmartLinks will already contain up-to-date chart data.
-            </p>
+
+            {/* IntakeQ Integration UI (Moonlit Psychiatry only) */}
+            {setting === 'Moonlit Psychiatry' && (
+              <div className="mb-3">
+                {/* IntakeQ Toggle */}
+                <div className="flex items-center gap-3 mb-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={intakeQEnabled}
+                      onChange={(e) => setIntakeQEnabled(e.target.checked)}
+                      className="rounded border-gray-300 text-[#E89C8A] focus:ring-[#E89C8A]"
+                    />
+                    <span className="text-sm text-[#5A6B7D]">
+                      <CloudDownload size={14} className="inline mr-1" />
+                      Fetch from IntakeQ
+                    </span>
+                  </label>
+                </div>
+
+                {/* IntakeQ Loading */}
+                {intakeQLoading && (
+                  <div className="flex items-center gap-2 mb-2 p-2 bg-purple-50 border border-purple-200 rounded-lg">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-600 border-t-transparent"></div>
+                    <span className="text-sm text-purple-700">Fetching prior note from IntakeQ...</span>
+                  </div>
+                )}
+
+                {/* IntakeQ Success */}
+                {intakeQNote && (
+                  <div className="flex items-center gap-2 mb-2 p-2 bg-purple-50 border border-purple-200 rounded-lg">
+                    <CheckCircle className="text-purple-600 flex-shrink-0" size={16} />
+                    <span className="text-sm text-purple-700">
+                      Loaded from IntakeQ: {intakeQNote.noteName} ({new Date(intakeQNote.date).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })})
+                    </span>
+                    <button
+                      onClick={clearIntakeQNote}
+                      className="ml-auto text-xs text-purple-600 hover:text-purple-800 underline"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+
+                {/* IntakeQ Error */}
+                {intakeQError && !intakeQLoading && (
+                  <div className="flex items-start gap-2 mb-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                    <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={16} />
+                    <span className="text-sm text-amber-700">{intakeQError}</span>
+                  </div>
+                )}
+
+                {/* Email Prompt (if patient has no email) */}
+                {showEmailPrompt && intakeQEnabled && !intakeQNote && !intakeQLoading && (
+                  <div className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-start gap-2 mb-2">
+                      <Mail className="text-blue-600 flex-shrink-0 mt-0.5" size={16} />
+                      <span className="text-sm text-blue-700">
+                        Add patient email to fetch prior notes from IntakeQ
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="email"
+                        value={pendingEmail}
+                        onChange={(e) => setPendingEmail(e.target.value)}
+                        placeholder="patient@email.com"
+                        className="flex-1 px-3 py-1.5 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                        disabled={savingEmail}
+                      />
+                      <button
+                        onClick={handleSavePatientEmail}
+                        disabled={!pendingEmail.trim() || savingEmail}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Save size={14} />
+                        {savingEmail ? 'Saving...' : 'Save & Fetch'}
+                      </button>
+                    </div>
+                    <p className="text-xs text-blue-600 mt-1">
+                      Or skip and paste a note manually below.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Auto-imported note indicator (non-Moonlit settings) */}
+            {setting !== 'Moonlit Psychiatry' && autoImportedNote && (
+              <div className="flex items-center gap-2 mb-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                <CheckCircle className="text-green-600 flex-shrink-0" size={16} />
+                <span className="text-sm text-green-700">
+                  Auto-imported from Epic ({new Date(autoImportedNote.importedAt).toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                  })})
+                </span>
+                <button
+                  onClick={clearAutoImportedNote}
+                  className="ml-auto text-xs text-green-600 hover:text-green-800 underline"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+
+            {/* Loading indicator (non-Moonlit settings) */}
+            {setting !== 'Moonlit Psychiatry' && checkingPriorNotes && (
+              <div className="flex items-center gap-2 mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                <span className="text-sm text-blue-700">Checking for imported prior notes...</span>
+              </div>
+            )}
+
+            {setting !== 'Moonlit Psychiatry' && !autoImportedNote && !checkingPriorNotes && (
+              <p className="text-xs text-[#5A6B7D] mb-2">
+                Paste the copied-forward note from Epic, or use the clipboard watcher to auto-import.
+              </p>
+            )}
             <textarea
               value={previousNote}
-              onChange={(e) => setPreviousNote(e.target.value)}
-              placeholder="Paste the copied-forward last note from Epic here (includes current chart data via SmartLinks)..."
+              onChange={(e) => {
+                setPreviousNote(e.target.value);
+                // Clear auto-import indicators if user manually edits
+                if (autoImportedNote) {
+                  setAutoImportedNote(null);
+                }
+                if (intakeQNote) {
+                  setIntakeQNote(null);
+                }
+              }}
+              placeholder={setting === 'Moonlit Psychiatry'
+                ? 'Prior note will be loaded from IntakeQ, or paste manually here...'
+                : 'Paste the copied-forward last note from Epic here (includes current chart data via SmartLinks)...'}
               rows={10}
               className="w-full px-4 py-3 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm"
             />
             {previousNote.trim().length === 0 && (
-              <p className="text-sm text-red-500 mt-2">Copied-forward note is required for {visitType}</p>
+              <p className="text-sm text-red-500 mt-2">
+                {setting === 'Moonlit Psychiatry' ? 'Prior note' : 'Copied-forward note'} is required for {visitType}
+              </p>
             )}
           </div>
         )}
