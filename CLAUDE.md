@@ -20,6 +20,7 @@
 - **Note Saving**: Save finalized notes with historical context for continuity
 - **Therapy Notes**: Specialized BHIDC therapy prompt builder
 - **IntakeQ Integration (Read Path)**: Auto-fetch prior notes from IntakeQ for Moonlit Psychiatry patients
+- **IntakeQ Integration (Write Path)**: Push generated notes to IntakeQ via Playwright automation (local only)
 - **Prior Notes Import**: Clipboard-based Epic note import with auto-population in workflow UI
 
 ### Known Issues
@@ -53,6 +54,11 @@ NEXTAUTH_SECRET=
 
 # IntakeQ API (for Moonlit Psychiatry prior notes)
 INTAKEQ_API_KEY=          # Get from IntakeQ Settings > Integrations > Developer API
+
+# IntakeQ Playwright (for pushing notes - local/server only, not Vercel)
+INTAKEQ_USER_EMAIL=       # IntakeQ login email
+INTAKEQ_USER_PASSWORD=    # IntakeQ login password
+INTAKEQ_NOTE_TEMPLATE_NAME=  # Optional, defaults to "Moonlit Psychiatric Note"
 ```
 
 **Note:** When changing domains, update both:
@@ -160,11 +166,32 @@ Auto-fetch prior notes from IntakeQ for **Moonlit Psychiatry** patients during F
 - Full note: `/notes/{noteId}`
 - Reference working code in `/Users/macsweeney/cm-research-app/packages/backend/src/services/intakeq.service.ts`
 
-### IntakeQ Integration - Write Path (DEFERRED)
-Push generated notes TO IntakeQ via Playwright browser automation. Architecture documented in `INTAKEQ_INTEGRATION_ARCHITECTURE.md`. Includes:
-- Creating notes from generated content
-- Adding ICD-10 diagnoses
-- Signing and locking notes
+### IntakeQ Integration - Write Path (IMPLEMENTED - Local Only)
+Push generated notes TO IntakeQ via Playwright browser automation.
+
+**IMPORTANT:** This only works locally or on servers with browser support. Does NOT work on Vercel serverless.
+
+**How it works:**
+1. Generate a note for a Moonlit Psychiatry patient
+2. Call `POST /api/intakeq/push-note` with the generated note
+3. Playwright automation logs into IntakeQ, navigates to patient, creates note
+4. Sections are mapped to IntakeQ form fields, diagnoses extracted and added
+5. Note is signed and locked
+
+**Components:**
+- `services/intakeq-playwright/` - Playwright automation, selectors, note mapper
+- `apps/web/app/api/intakeq/push-note/route.ts` - API endpoint
+- `INTAKEQ_INTEGRATION_ARCHITECTURE.md` - Full architecture documentation
+
+**Env vars required:**
+- `INTAKEQ_USER_EMAIL` - IntakeQ login
+- `INTAKEQ_USER_PASSWORD` - IntakeQ password
+- `INTAKEQ_NOTE_TEMPLATE_NAME` (optional) - Template to use
+
+**Limitations:**
+- Requires real browser (Chromium via Playwright)
+- UI selectors may need updating if IntakeQ changes their interface
+- Currently untested end-to-end (selectors based on architecture doc)
 
 ---
 
