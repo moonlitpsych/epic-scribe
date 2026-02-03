@@ -20,6 +20,7 @@
 - **Note Saving**: Save finalized notes with historical context for continuity
 - **Therapy Notes**: Specialized BHIDC therapy prompt builder
 - **IntakeQ Integration (Read Path)**: Auto-fetch prior notes from IntakeQ for Moonlit Psychiatry patients
+- **Prior Notes Import**: Clipboard-based Epic note import with auto-population in workflow UI
 
 ### Known Issues
 1. **Google OAuth Token Expiration** - Workaround: Sign out/in to refresh (~1 hour expiry)
@@ -94,9 +95,11 @@ Saves both raw AI output and user-edited versions with timestamps.
 
 ### Local Development
 ```bash
-pnpm dev          # Start dev server on :3002
-pnpm build        # Production build
-pnpm lint         # Check for issues
+pnpm dev              # Start dev server on :3002
+pnpm dev:clipboard    # Start clipboard watcher (Electron menu bar app)
+pnpm build            # Production build
+pnpm build:clipboard  # Build clipboard watcher for distribution
+pnpm lint             # Check for issues
 ```
 
 ---
@@ -115,6 +118,27 @@ pnpm lint         # Check for issues
 ---
 
 ## Recent Updates (2026-02-03)
+
+### Prior Notes Import System (COMPLETE)
+Clipboard-based import of Epic copy-forward notes for **non-Moonlit** settings (HMHI, Redwood, Davis, etc.).
+
+**How it works:**
+1. Run clipboard watcher: `pnpm dev:clipboard` (Electron menu bar app)
+2. Copy a note from Epic (copy-forward or chart review)
+3. Clipboard watcher detects Epic note pattern, parses patient info
+4. Note is sent to API, matched to existing patient (or creates new one)
+5. In workflow UI, selecting patient for Follow-up/TOC auto-loads most recent prior note
+
+**Components:**
+- `apps/clipboard-watcher/` - Electron menu bar app (monitors clipboard)
+- `services/epic-note-parser/` - Extracts patient name, DOB, setting, provider from Epic notes
+- `apps/web/app/api/prior-notes/import/route.ts` - Receives and stores imported notes
+- `apps/web/app/api/prior-notes/patient/[patientId]/route.ts` - Fetches prior notes for UI
+- `apps/web/src/lib/db/prior-notes.ts` - Database operations with content hash deduplication
+
+**Database:**
+- `prior_notes` table with SHA-256 content hash for deduplication
+- Tracks import source, setting, provider, usage in generation
 
 ### IntakeQ Integration - Read Path (COMPLETE)
 Auto-fetch prior notes from IntakeQ for **Moonlit Psychiatry** patients during Follow-up/TOC visits.
