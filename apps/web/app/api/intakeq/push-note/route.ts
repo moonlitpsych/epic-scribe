@@ -111,7 +111,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[PushNote] Found patient: ${intakeqClient.ClientName} (ID: ${intakeqClient.ClientId})`);
+    console.log(`[PushNote] Found patient: ${intakeqClient.ClientName} (GUID: ${intakeqClient.Guid})`);
+
+    if (!intakeqClient.Guid) {
+      return NextResponse.json(
+        { error: 'Client GUID not found - required for IntakeQ navigation' },
+        { status: 500 }
+      );
+    }
 
     // Step 2: Map Epic Scribe note to IntakeQ fields
     console.log('[PushNote] Mapping note sections...');
@@ -144,7 +151,7 @@ export async function POST(request: NextRequest) {
       // Step 6: Create the note
       console.log('[PushNote] Creating note...');
       const result = await automation.createNote({
-        clientId: intakeqClient.ClientId,
+        clientGuid: intakeqClient.Guid,
         templateName,
         noteContent: noteSections,
         diagnoses,

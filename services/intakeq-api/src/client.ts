@@ -73,6 +73,7 @@ export class IntakeQApiClient {
         // IntakeQ returns PascalCase fields
         return {
           ClientId: raw.ClientId,
+          Guid: raw.Guid,  // Required for profile URL navigation
           ClientName: raw.Name || `${raw.FirstName || ''} ${raw.LastName || ''}`.trim(),
           FirstName: raw.FirstName,
           LastName: raw.LastName,

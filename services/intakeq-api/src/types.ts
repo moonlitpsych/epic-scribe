@@ -8,6 +8,7 @@
  */
 export interface IntakeQClient {
   ClientId: number;
+  Guid: string;              // Used for client profile URL navigation
   ClientName: string;
   FirstName: string;
   LastName: string;
