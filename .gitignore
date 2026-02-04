@@ -67,3 +67,6 @@ test_data/
 # pnpm
 pnpm-lock.yaml
 .vercel
+
+# IntakeQ Playwright screenshots (may contain PHI)
+services/intakeq-playwright/screenshots/

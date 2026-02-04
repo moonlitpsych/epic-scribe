@@ -106,7 +106,7 @@ export class IntakeQAutomation {
     }
 
     console.log('[IntakeQ] Navigating to login page...');
-    await this.page.goto('https://intakeq.com/login');
+    await this.page.goto('https://intakeq.com/signin');
 
     // Wait for login form to load
     await this.page.waitForSelector(getSelector(SELECTORS.LOGIN.EMAIL_INPUT));
@@ -123,14 +123,19 @@ export class IntakeQAutomation {
     console.log('[IntakeQ] Submitting login...');
     await this.page.click(getSelector(SELECTORS.LOGIN.SUBMIT_BUTTON));
 
-    // Wait for either dashboard or error
+    // Wait for dashboard navigation elements to appear
+    // Don't use networkidle as IntakeQ uses websockets that keep the network active
+    console.log('[IntakeQ] Waiting for dashboard...');
     try {
-      await this.page.waitForSelector(getSelector(SELECTORS.DASHBOARD.INDICATOR), {
-        timeout: 15000,
-      });
+      // Wait for any of these dashboard indicators
+      await Promise.race([
+        this.page.waitForSelector('text=MY FORMS', { timeout: 20000 }),
+        this.page.waitForSelector('text=My Dashboard', { timeout: 20000 }),
+        this.page.waitForSelector('text=BOOKINGS', { timeout: 20000 }),
+      ]);
       this.isLoggedIn = true;
-      console.log('[IntakeQ] Login successful');
-    } catch (error) {
+      console.log('[IntakeQ] Login successful - dashboard detected');
+    } catch {
       // Check for error message
       const errorEl = await this.page.$(getSelector(SELECTORS.LOGIN.ERROR_MESSAGE));
       if (errorEl) {
@@ -163,19 +168,23 @@ export class IntakeQAutomation {
 
   /**
    * Navigate to a client's profile page
+   * IntakeQ uses client GUID in the URL: https://intakeq.com/#/client/{guid}
    */
-  async navigateToClient(clientId: number): Promise<void> {
+  async navigateToClient(clientGuid: string): Promise<void> {
     if (!this.page || !this.isLoggedIn) {
       throw new Error('Not logged in. Call login() first.');
     }
 
-    console.log(`[IntakeQ] Navigating to client ${clientId}...`);
-    await this.page.goto(`https://intakeq.com/clients/${clientId}`);
+    console.log(`[IntakeQ] Navigating to client ${clientGuid}...`);
+    await this.page.goto(`https://intakeq.com/#/client/${clientGuid}?tab=timeline`);
 
-    // Wait for client page to load
-    await this.page.waitForSelector(getSelector(SELECTORS.CLIENT.TIMELINE), {
-      timeout: 15000,
-    });
+    // Wait for client profile to load - look for common profile elements
+    await Promise.race([
+      this.page.waitForSelector('text=Timeline', { timeout: 15000 }),
+      this.page.waitForSelector('text=Notes', { timeout: 15000 }),
+      this.page.waitForSelector('text=Profile', { timeout: 15000 }),
+      this.page.waitForSelector('text=Add Note', { timeout: 15000 }),
+    ]);
 
     console.log('[IntakeQ] Client page loaded');
   }
@@ -194,7 +203,7 @@ export class IntakeQAutomation {
 
     try {
       // Navigate to client
-      await this.navigateToClient(note.clientId);
+      await this.navigateToClient(note.clientGuid);
 
       // Click "Add Note" button
       console.log('[IntakeQ] Clicking Add Note...');

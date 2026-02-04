@@ -19,7 +19,7 @@ export interface DiagnosisCode {
 }
 
 export interface NoteToCreate {
-  clientId: number;
+  clientGuid: string;            // Client GUID (not numeric ID)
   templateName: string;          // Must match IntakeQ template name exactly
   noteContent: NoteSection[];    // Mapped form fields
   diagnoses: DiagnosisCode[];    // ICD-10 codes to add

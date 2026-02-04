@@ -42,15 +42,18 @@ export const SELECTORS = {
   // ============================================================
   DASHBOARD: {
     INDICATOR: [
-      '.dashboard',
-      '[data-page="dashboard"]',
+      'text="My Dashboard"',
+      'text="MY FORMS"',
+      'text="BOOKINGS"',
       '.main-content',
       '#app-container',
+      'a:has-text("My Dashboard")',
     ],
     USER_MENU: [
       '.user-menu',
       '.account-menu',
       '[data-testid="user-menu"]',
+      'text="MORE"',
     ],
   },
 
