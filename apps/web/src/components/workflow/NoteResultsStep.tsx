@@ -20,6 +20,7 @@ interface Patient {
   mrn?: string;
   notes?: string;
   email?: string;
+  intakeq_guid?: string;
 }
 
 interface NoteResultsStepProps {
@@ -64,7 +65,8 @@ export default function NoteResultsStep({
 
   // Check if this is a Moonlit Psychiatry patient eligible for IntakeQ push
   const isMoonlitPatient = setting === 'Moonlit Psychiatry';
-  const canPushToIntakeQ = isMoonlitPatient && selectedPatient?.email;
+  // Can push if we have intakeq_guid (preferred) or email (fallback for first-time lookup)
+  const canPushToIntakeQ = isMoonlitPatient && selectedPatient && (selectedPatient.intakeq_guid || selectedPatient.email);
 
   // Save note data to sessionStorage whenever it changes (auto-backup)
   useEffect(() => {
@@ -141,7 +143,8 @@ export default function NoteResultsStep({
   const hasModifications = editedNote !== generatedNote;
 
   const handlePushToIntakeQ = async () => {
-    if (!selectedPatient?.email || !editedNote) return;
+    if (!selectedPatient || !editedNote) return;
+    if (!selectedPatient.intakeq_guid && !selectedPatient.email) return;
 
     setPushingToIntakeQ(true);
     setIntakeQPushError(null);
@@ -151,6 +154,8 @@ export default function NoteResultsStep({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          patientId: selectedPatient.id,
+          intakeqGuid: selectedPatient.intakeq_guid,
           patientEmail: selectedPatient.email,
           generatedNote: editedNote,
         }),
@@ -322,11 +327,13 @@ export default function NoteResultsStep({
                       : 'bg-[#6366F1] text-white hover:bg-[#4F46E5]'
                   }`}
                   title={
-                    !selectedPatient?.email
-                      ? 'Patient email required for IntakeQ'
+                    !canPushToIntakeQ
+                      ? 'Patient email or IntakeQ link required'
                       : intakeQPushSuccess
                       ? 'Note pushed to IntakeQ'
-                      : 'Push note to IntakeQ'
+                      : selectedPatient?.intakeq_guid
+                      ? 'Push note to IntakeQ (linked)'
+                      : 'Push note to IntakeQ (will link via email)'
                   }
                 >
                   {pushingToIntakeQ ? (
@@ -344,7 +351,7 @@ export default function NoteResultsStep({
                 </button>
                 {!canPushToIntakeQ && selectedPatient && (
                   <span className="hidden group-hover:block absolute top-full left-0 mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap z-10">
-                    Add patient email to enable IntakeQ push
+                    Add patient email or IntakeQ link to enable push
                   </span>
                 )}
               </div>

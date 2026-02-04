@@ -9,16 +9,18 @@
  * - For production, run on a server with browser support (Render, Railway, self-hosted)
  *
  * Request body:
- *   - patientEmail: string - Patient email to find in IntakeQ
+ *   - patientId: string - Epic Scribe patient ID (used to store IntakeQ GUID)
+ *   - intakeqGuid?: string - IntakeQ client GUID (if already known)
+ *   - patientEmail?: string - Patient email (fallback for IntakeQ lookup if no GUID)
  *   - generatedNote: string - The full generated note text
  *   - templateName?: string - IntakeQ template name (default: "Moonlit Psychiatric Note")
  *   - signatureRequired?: boolean - Whether to sign the note (default: true)
- *   - lockAfterPush?: boolean - Whether to lock the note (default: true)
  *
  * Returns:
  *   - success: boolean
  *   - noteId?: string
  *   - noteUrl?: string
+ *   - intakeqGuid?: string - The IntakeQ GUID (for storing on patient record)
  *   - error?: string
  */
 
@@ -31,13 +33,15 @@ import {
   mapEpicScribeNoteToIntakeQ,
   extractDiagnosesFromNote,
 } from '@epic-scribe/intakeq-playwright';
+import { updatePatient } from '@/lib/db/patients';
 
 interface PushNoteRequest {
-  patientEmail: string;
+  patientId: string;
+  intakeqGuid?: string;
+  patientEmail?: string;
   generatedNote: string;
   templateName?: string;
   signatureRequired?: boolean;
-  lockAfterPush?: boolean;
 }
 
 export async function POST(request: NextRequest) {
@@ -82,9 +86,9 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const body: PushNoteRequest = await request.json();
 
-    if (!body.patientEmail) {
+    if (!body.patientId) {
       return NextResponse.json(
-        { error: 'patientEmail is required' },
+        { error: 'patientId is required' },
         { status: 400 }
       );
     }
@@ -96,41 +100,66 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Need either intakeqGuid or patientEmail
+    if (!body.intakeqGuid && !body.patientEmail) {
+      return NextResponse.json(
+        { error: 'Either intakeqGuid or patientEmail is required' },
+        { status: 400 }
+      );
+    }
+
     const templateName = body.templateName || process.env.INTAKEQ_NOTE_TEMPLATE_NAME || 'Moonlit Psychiatric Note';
     const signatureRequired = body.signatureRequired !== false;
 
-    // Step 1: Get client ID from IntakeQ API
-    console.log(`[PushNote] Looking up patient: ${body.patientEmail}`);
-    const apiClient = new IntakeQApiClient({ apiKey });
-    const intakeqClient = await apiClient.getClientByEmail(body.patientEmail);
+    let clientGuid = body.intakeqGuid;
 
-    if (!intakeqClient) {
-      return NextResponse.json(
-        { error: `Patient not found in IntakeQ: ${body.patientEmail}` },
-        { status: 404 }
-      );
+    // If no GUID provided, look up by email
+    if (!clientGuid) {
+      console.log(`[PushNote] Looking up patient by email: ${body.patientEmail}`);
+      const apiClient = new IntakeQApiClient({ apiKey });
+      const intakeqClient = await apiClient.getClientByEmail(body.patientEmail!);
+
+      if (!intakeqClient) {
+        return NextResponse.json(
+          { error: `Patient not found in IntakeQ: ${body.patientEmail}` },
+          { status: 404 }
+        );
+      }
+
+      console.log(`[PushNote] Found patient: ${intakeqClient.ClientName} (GUID: ${intakeqClient.Guid})`);
+
+      if (!intakeqClient.Guid) {
+        return NextResponse.json(
+          { error: 'Client GUID not found - required for IntakeQ navigation' },
+          { status: 500 }
+        );
+      }
+
+      clientGuid = intakeqClient.Guid;
+
+      // Store the GUID on the patient record for future use
+      try {
+        await updatePatient(body.patientId, { intakeq_guid: clientGuid });
+        console.log(`[PushNote] Stored IntakeQ GUID on patient record: ${clientGuid}`);
+      } catch (err) {
+        // Non-fatal - log but continue
+        console.warn('[PushNote] Failed to store IntakeQ GUID on patient:', err);
+      }
+    } else {
+      console.log(`[PushNote] Using provided IntakeQ GUID: ${clientGuid}`);
     }
 
-    console.log(`[PushNote] Found patient: ${intakeqClient.ClientName} (GUID: ${intakeqClient.Guid})`);
-
-    if (!intakeqClient.Guid) {
-      return NextResponse.json(
-        { error: 'Client GUID not found - required for IntakeQ navigation' },
-        { status: 500 }
-      );
-    }
-
-    // Step 2: Map Epic Scribe note to IntakeQ fields
+    // Map Epic Scribe note to IntakeQ fields
     console.log('[PushNote] Mapping note sections...');
     const noteSections = mapEpicScribeNoteToIntakeQ(body.generatedNote);
     console.log(`[PushNote] Mapped ${noteSections.length} sections`);
 
-    // Step 3: Extract diagnoses
+    // Extract diagnoses
     console.log('[PushNote] Extracting diagnoses...');
     const diagnoses = extractDiagnosesFromNote(body.generatedNote);
     console.log(`[PushNote] Found ${diagnoses.length} diagnoses`);
 
-    // Step 4: Initialize Playwright automation
+    // Initialize Playwright automation
     console.log('[PushNote] Initializing browser automation...');
     const automation = new IntakeQAutomation({
       headless: process.env.NODE_ENV === 'production',
@@ -141,17 +170,17 @@ export async function POST(request: NextRequest) {
     try {
       await automation.initialize();
 
-      // Step 5: Login to IntakeQ
+      // Login to IntakeQ
       console.log('[PushNote] Logging in to IntakeQ...');
       await automation.login({
         email: intakeqEmail,
         password: intakeqPassword,
       });
 
-      // Step 6: Create the note
+      // Create the note
       console.log('[PushNote] Creating note...');
       const result = await automation.createNote({
-        clientGuid: intakeqClient.Guid,
+        clientGuid,
         templateName,
         noteContent: noteSections,
         diagnoses,
@@ -164,6 +193,7 @@ export async function POST(request: NextRequest) {
           success: true,
           noteId: result.noteId,
           noteUrl: result.noteUrl,
+          intakeqGuid: clientGuid,
           sectionsWritten: noteSections.length,
           diagnosesAdded: diagnoses.length,
         });

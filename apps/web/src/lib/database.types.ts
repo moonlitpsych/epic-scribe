@@ -19,6 +19,7 @@ export interface Database {
           medicaid_id: string | null;
           phone: string | null;
           email: string | null;
+          intakeq_guid: string | null; // IntakeQ client GUID for Moonlit patients
           created_at: string;
           updated_at: string;
         };
@@ -31,6 +32,7 @@ export interface Database {
           medicaid_id?: string | null;
           phone?: string | null;
           email?: string | null;
+          intakeq_guid?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -43,6 +45,7 @@ export interface Database {
           medicaid_id?: string | null;
           phone?: string | null;
           email?: string | null;
+          intakeq_guid?: string | null;
           created_at?: string;
           updated_at?: string;
         };
