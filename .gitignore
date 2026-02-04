@@ -70,3 +70,9 @@ pnpm-lock.yaml
 
 # IntakeQ Playwright screenshots (may contain PHI)
 services/intakeq-playwright/screenshots/
+
+# Compiled output in services (TypeScript -> JS)
+services/*/src/*.js
+services/*/src/*.d.ts
+services/*/src/*.d.ts.map
+services/*/dist/

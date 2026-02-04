@@ -166,32 +166,65 @@ Auto-fetch prior notes from IntakeQ for **Moonlit Psychiatry** patients during F
 - Full note: `/notes/{noteId}`
 - Reference working code in `/Users/macsweeney/cm-research-app/packages/backend/src/services/intakeq.service.ts`
 
-### IntakeQ Integration - Write Path (IMPLEMENTED - Local Only)
+### IntakeQ Integration - Write Path (IN PROGRESS)
 Push generated notes TO IntakeQ via Playwright browser automation.
 
 **IMPORTANT:** This only works locally or on servers with browser support. Does NOT work on Vercel serverless.
 
-**How it works:**
-1. Generate a note for a Moonlit Psychiatry patient
-2. Call `POST /api/intakeq/push-note` with the generated note
-3. Playwright automation logs into IntakeQ, navigates to patient, creates note
-4. Sections are mapped to IntakeQ form fields, diagnoses extracted and added
-5. Note is signed and locked
+**Current Status (2026-02-03):**
+- ✅ Login automation works (`https://intakeq.com/signin`)
+- ✅ Client navigation works (uses GUID-based URL)
+- ⏳ "Add Note" flow not yet implemented
+- ⏳ Form field filling not yet tested
+- ⏳ Diagnosis addition not yet tested
+- ⏳ Signature/lock not yet tested
+
+**Key Discovery - IntakeQ URL Structure:**
+- Login: `https://intakeq.com/signin`
+- Client profile: `https://intakeq.com/#/client/{GUID}?tab=timeline`
+- The GUID comes from the API response (`Guid` field), NOT the numeric `ClientId`
+
+**Test Scripts (run from `services/intakeq-playwright/`):**
+```bash
+pnpm tsc                      # Compile TypeScript
+node dist/test-login.js       # Test login - WORKS
+node dist/test-client-nav.js  # Test client navigation - WORKS
+```
+
+**What the Next Session Needs to Do:**
+1. Click the blue "+" button next to Timeline to see Add Note flow
+2. Identify selectors for template selection modal
+3. Map Epic Scribe note sections to IntakeQ form fields
+4. Test diagnosis addition via "More → Add Diagnosis"
+5. Test signature and lock functionality
+6. Update `services/intakeq-playwright/src/selectors.ts` with real selectors
 
 **Components:**
 - `services/intakeq-playwright/` - Playwright automation, selectors, note mapper
+- `services/intakeq-playwright/src/intakeq-automation.ts` - Main automation class
+- `services/intakeq-playwright/src/selectors.ts` - CSS selectors (need updates for Add Note flow)
+- `services/intakeq-playwright/src/note-mapper.ts` - Maps Epic Scribe sections to IntakeQ fields
+- `services/intakeq-playwright/src/diagnosis-extractor.ts` - Extracts ICD-10 codes from notes
 - `apps/web/app/api/intakeq/push-note/route.ts` - API endpoint
 - `INTAKEQ_INTEGRATION_ARCHITECTURE.md` - Full architecture documentation
 
-**Env vars required:**
-- `INTAKEQ_USER_EMAIL` - IntakeQ login
+**Env vars required (already configured in .env.local):**
+- `INTAKEQ_API_KEY` - For API lookups
+- `INTAKEQ_USER_EMAIL` - IntakeQ login (hello@trymoonlit.com)
 - `INTAKEQ_USER_PASSWORD` - IntakeQ password
 - `INTAKEQ_NOTE_TEMPLATE_NAME` (optional) - Template to use
+
+**Playwright Setup:**
+```bash
+npx playwright install chromium  # Install browser (already done)
+```
+
+**Screenshots saved to:** `services/intakeq-playwright/screenshots/` (gitignored for PHI)
 
 **Limitations:**
 - Requires real browser (Chromium via Playwright)
 - UI selectors may need updating if IntakeQ changes their interface
-- Currently untested end-to-end (selectors based on architecture doc)
+- Only works locally or on servers with browser support (not Vercel)
 
 ---
 
