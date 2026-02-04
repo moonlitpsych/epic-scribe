@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Template, Setting } from '@epic-scribe/types';
-import { Copy, RefreshCw, RotateCcw, ExternalLink, CheckCircle2, AlertCircle, AlertTriangle, Info, Save, UserPlus } from 'lucide-react';
+import { Copy, RefreshCw, RotateCcw, ExternalLink, CheckCircle2, AlertCircle, AlertTriangle, Info, Save, UserPlus, Upload, Loader2 } from 'lucide-react';
 import PatientSelector from './PatientSelector';
 
 interface ValidationResult {
@@ -19,6 +19,7 @@ interface Patient {
   date_of_birth: string;
   mrn?: string;
   notes?: string;
+  email?: string;
 }
 
 interface NoteResultsStepProps {
@@ -55,6 +56,15 @@ export default function NoteResultsStep({
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showAuthWarning, setShowAuthWarning] = useState(false);
+
+  // IntakeQ push state
+  const [pushingToIntakeQ, setPushingToIntakeQ] = useState(false);
+  const [intakeQPushSuccess, setIntakeQPushSuccess] = useState(false);
+  const [intakeQPushError, setIntakeQPushError] = useState<string | null>(null);
+
+  // Check if this is a Moonlit Psychiatry patient eligible for IntakeQ push
+  const isMoonlitPatient = setting === 'Moonlit Psychiatry';
+  const canPushToIntakeQ = isMoonlitPatient && selectedPatient?.email;
 
   // Save note data to sessionStorage whenever it changes (auto-backup)
   useEffect(() => {
@@ -130,6 +140,44 @@ export default function NoteResultsStep({
 
   const hasModifications = editedNote !== generatedNote;
 
+  const handlePushToIntakeQ = async () => {
+    if (!selectedPatient?.email || !editedNote) return;
+
+    setPushingToIntakeQ(true);
+    setIntakeQPushError(null);
+
+    try {
+      const response = await fetch('/api/intakeq/push-note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientEmail: selectedPatient.email,
+          generatedNote: editedNote,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to push note to IntakeQ');
+      }
+
+      if (result.success) {
+        setIntakeQPushSuccess(true);
+        setTimeout(() => setIntakeQPushSuccess(false), 5000);
+        console.log('[IntakeQ] Note pushed successfully:', result);
+      } else {
+        throw new Error(result.error || 'Unknown error');
+      }
+    } catch (error) {
+      console.error('[IntakeQ] Push failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to push note';
+      setIntakeQPushError(errorMessage);
+    } finally {
+      setPushingToIntakeQ(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Authentication Warning */}
@@ -162,6 +210,29 @@ export default function NoteResultsStep({
               <p className="text-xs text-[#DC2626] mt-3">
                 💾 Your note is auto-saved in your browser and will persist across page refreshes
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IntakeQ Push Error */}
+      {intakeQPushError && (
+        <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6">
+          <div className="flex items-start gap-4">
+            <AlertCircle size={24} className="text-red-600 flex-shrink-0 mt-1" />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-red-800 mb-2">
+                IntakeQ Push Failed
+              </h3>
+              <p className="text-red-700 mb-4">
+                {intakeQPushError}
+              </p>
+              <button
+                onClick={() => setIntakeQPushError(null)}
+                className="px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-100 transition-colors"
+              >
+                Dismiss
+              </button>
             </div>
           </div>
         </div>
@@ -232,6 +303,48 @@ export default function NoteResultsStep({
                 {status === 'authenticated' && (
                   <span className="hidden group-hover:block absolute top-full left-0 mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap z-10">
                     Signed in as {session?.user?.email}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Push to IntakeQ button - only for Moonlit Psychiatry patients with email */}
+            {isMoonlitPatient && (
+              <div className="relative group">
+                <button
+                  onClick={handlePushToIntakeQ}
+                  disabled={pushingToIntakeQ || !canPushToIntakeQ || intakeQPushSuccess}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed ${
+                    intakeQPushSuccess
+                      ? 'bg-[#10B981] text-white'
+                      : intakeQPushError
+                      ? 'bg-red-500 text-white hover:bg-red-600'
+                      : 'bg-[#6366F1] text-white hover:bg-[#4F46E5]'
+                  }`}
+                  title={
+                    !selectedPatient?.email
+                      ? 'Patient email required for IntakeQ'
+                      : intakeQPushSuccess
+                      ? 'Note pushed to IntakeQ'
+                      : 'Push note to IntakeQ'
+                  }
+                >
+                  {pushingToIntakeQ ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : intakeQPushSuccess ? (
+                    <CheckCircle2 size={16} />
+                  ) : (
+                    <Upload size={16} />
+                  )}
+                  {pushingToIntakeQ
+                    ? 'Pushing...'
+                    : intakeQPushSuccess
+                    ? 'Pushed to IntakeQ!'
+                    : 'Push to IntakeQ'}
+                </button>
+                {!canPushToIntakeQ && selectedPatient && (
+                  <span className="hidden group-hover:block absolute top-full left-0 mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap z-10">
+                    Add patient email to enable IntakeQ push
                   </span>
                 )}
               </div>

@@ -273,14 +273,17 @@ Epic Scribe Section → IntakeQ Kyle Roller Intake Note Section:
 - F43.10: Posttraumatic stress disorder
 - F44.4: Functional neurological symptom disorder
 
-**What the Next Session Needs to Do:**
+**Completed Tasks:**
 1. ~~Test Add Diagnosis flow~~ ✅ Done (F32.1 added successfully)
 2. ~~Test Save/Lock flow~~ ✅ Done (working with TestingPt Test)
 3. ~~Map Epic Scribe sections to IntakeQ fields~~ ✅ Done (8 sections mapped)
 4. ~~Implement `pushNoteToIntakeQ()` function~~ ✅ Done
 5. ~~Test full end-to-end~~ ✅ Done (2026-02-04) - WORKING!
+6. ~~Add UI button to push notes~~ ✅ Done (2026-02-04)
 
-**INTEGRATION COMPLETE!** The IntakeQ write path is fully functional:
+**INTEGRATION 100% COMPLETE!** The IntakeQ write path is fully functional with UI:
+- "Push to IntakeQ" button appears in `NoteResultsStep.tsx` for Moonlit Psychiatry patients
+- Button only active when patient has email address
 - `pushNoteToIntakeQ()` takes an Epic Scribe note and creates it in IntakeQ
 - All 8 sections are filled automatically
 - Note is saved and locked
@@ -293,6 +296,7 @@ Epic Scribe Section → IntakeQ Kyle Roller Intake Note Section:
 - `services/intakeq-playwright/src/note-mapper.ts` - Maps Epic Scribe sections to IntakeQ fields
 - `services/intakeq-playwright/src/diagnosis-extractor.ts` - Extracts ICD-10 codes from notes
 - `apps/web/app/api/intakeq/push-note/route.ts` - API endpoint
+- `apps/web/src/components/workflow/NoteResultsStep.tsx` - UI button "Push to IntakeQ"
 - `INTAKEQ_INTEGRATION_ARCHITECTURE.md` - Full architecture documentation
 
 **Env vars required (already configured in .env.local):**
