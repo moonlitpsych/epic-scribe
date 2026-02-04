@@ -171,13 +171,15 @@ Push generated notes TO IntakeQ via Playwright browser automation.
 
 **IMPORTANT:** This only works locally or on servers with browser support. Does NOT work on Vercel serverless.
 
-**Current Status (2026-02-03):**
+**Current Status (2026-02-04):**
 - ✅ Login automation works (`https://intakeq.com/signin`)
 - ✅ Client navigation works (uses GUID-based URL)
-- ✅ Add Note flow identified and implemented (selectors tested)
+- ✅ Add Note flow implemented (selectors tested)
 - ✅ Template selection modal works
+- ✅ Form field filling works:
+  - CC (Chief Complaint): Simple input with `placeholder="Chief Complaint"`
+  - Other sections (HPI, Social History, etc.): Rich text editors using `contenteditable="true"`
 - ✅ More menu → Add Diagnosis identified
-- ⏳ Form field filling needs testing with real note content
 - ⏳ Diagnosis search/select needs testing
 - ⏳ Save/Lock flow needs end-to-end testing
 
@@ -208,11 +210,19 @@ node dist/test-client-nav.js  # Test client navigation - WORKS
 node dist/test-add-note.js    # Test Add Note flow - WORKS (opens note editor)
 ```
 
+**Form Field Types (Kyle Roller Intake Note):**
+- **Section 1**: Demographics (auto-filled from client record)
+- **Section 2 - CC**: Simple input field (`placeholder="Chief Complaint"`)
+- **Section 3 - HPI**: Rich text editor (`contenteditable="true"`)
+- **Section 4 - Psychiatric ROS**: Rich text editor
+- **Section 5 - Social History**: Rich text editor
+- **Section 6 - Substance Use**: Rich text editor
+- **Section 7+ (MSE, Assessment, Plan)**: Rich text editors
+
 **What the Next Session Needs to Do:**
-1. Test filling textarea fields with actual note content
-2. Test Add Diagnosis flow (search for ICD-10, select, close)
-3. Test full end-to-end: create note with content → save → lock
-4. Map Epic Scribe note sections to specific IntakeQ form fields
+1. Test Add Diagnosis flow (search for ICD-10, select, close)
+2. Test full end-to-end: create note with content → save → lock
+3. Map Epic Scribe generated note sections to IntakeQ form fields
 
 **Components:**
 - `services/intakeq-playwright/` - Playwright automation, selectors, note mapper
