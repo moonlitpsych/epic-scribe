@@ -1,8 +1,8 @@
 /**
- * IntakeQ CSS Selectors
+ * IntakeQ/PracticeQ CSS Selectors
  *
  * These selectors target IntakeQ's web UI elements.
- * Update these if IntakeQ changes their UI structure.
+ * Last tested: 2026-02-03
  *
  * Strategy: Use multiple fallback selectors where possible.
  * Priority: data-* attributes > semantic elements > text content > class names
@@ -10,7 +10,7 @@
 
 export const SELECTORS = {
   // ============================================================
-  // LOGIN PAGE
+  // LOGIN PAGE (https://intakeq.com/signin)
   // ============================================================
   LOGIN: {
     EMAIL_INPUT: [
@@ -59,19 +59,25 @@ export const SELECTORS = {
 
   // ============================================================
   // CLIENT / PATIENT PAGE
+  // URL: https://intakeq.com/#/client/{GUID}?tab=timeline
   // ============================================================
   CLIENT: {
     TIMELINE: [
+      '#left-panel',
+      '.timeline',
       '.client-timeline',
-      '.timeline-container',
-      '.patient-timeline',
-      '[data-section="timeline"]',
+      'text=Timeline',
     ],
-    ADD_NOTE_BUTTON: [
-      'button:has-text("Add Note")',
-      'button:has-text("New Note")',
-      '.add-note-btn',
-      '[data-action="add-note"]',
+    // Blue + button next to Timeline - opens dropdown menu
+    ADD_NEW_BUTTON: [
+      '.btn-group.btn-success.add-new',
+      '.add-new',
+      'span.dropdown-toggle:has-text("+")',
+    ],
+    // "Create New Note" option in the add dropdown
+    CREATE_NEW_NOTE: [
+      'a:has-text("Create New Note")',
+      'text=Create New Note',
     ],
     CLIENT_NAME: [
       '.client-name',
@@ -81,57 +87,81 @@ export const SELECTORS = {
   },
 
   // ============================================================
-  // TEMPLATE SELECTION
+  // NEW NOTE MODAL (Template Selection)
   // ============================================================
-  TEMPLATE: {
+  NEW_NOTE_MODAL: {
     MODAL: [
-      '.template-modal',
-      '.template-selector',
-      '[role="dialog"]',
+      '.modal:has-text("New Note")',
+      '[role="dialog"]:has-text("New Note")',
     ],
-    OPTION: [
-      '.template-option',
-      '.note-template-item',
-      '.template-card',
+    TEMPLATE_SELECT: [
+      '.modal select',
+      'select[ng-model*="template"]',
+      'select:first-of-type',
     ],
-    SEARCH: [
-      '.template-search input',
-      'input[placeholder*="template" i]',
+    CONTINUE_BUTTON: [
+      'button:has-text("Continue")',
+      '.modal button.btn-primary',
+    ],
+    CLOSE_BUTTON: [
+      'button:has-text("Close")',
+      '.modal button.btn-default',
     ],
   },
 
   // ============================================================
   // NOTE EDITOR
+  // Header bar contains: Save, Lock, Print, Heidi, More, Close Note
   // ============================================================
   NOTE_EDITOR: {
+    // Main container
     CONTAINER: [
       '.note-editor',
       '.treatment-note-form',
       '.note-form',
       '[data-section="note-editor"]',
     ],
+    // Header buttons (all at y ≈ 110)
+    SAVE_BUTTON: [
+      'button.btn-primary:has-text("Save")',
+      'button:has-text("Save")',
+    ],
+    LOCK_BUTTON: [
+      'button.btn-nav:has-text("Lock")',
+      'button:has-text("Lock")',
+    ],
+    PRINT_BUTTON: [
+      'button.btn-nav:has-text("Print")',
+      'button:has-text("Print")',
+    ],
+    // More dropdown in note header (NOT the top nav MORE)
+    MORE_BUTTON: [
+      '.note-header button:has-text("More")',
+      'button.btn-nav.dropdown-toggle:has-text("More")',
+      'button.dropdown-toggle:has-text("More")',
+    ],
+    CLOSE_NOTE_BUTTON: [
+      'button:has-text("Close Note")',
+      'button.btn-nav:has-text("Close Note")',
+    ],
+    // Form fields
     QUESTION_CONTAINER: [
-      '.question-container',
-      '.form-question',
-      '.note-question',
+      '.question',
+      '.form-group',
+      '[class*="question"]',
     ],
     QUESTION_LABEL: [
-      '.question-label',
       '.question-text',
       'label',
+      '[class*="label"]',
     ],
     TEXTAREA: [
       'textarea',
-      '.text-area-input',
+      'textarea[name^="content-"]',
     ],
     TEXT_INPUT: [
       'input[type="text"]',
       '.text-input',
-    ],
-    SAVE_BUTTON: [
-      'button:has-text("Save")',
-      '.save-note-btn',
-      '[data-action="save"]',
     ],
     NOTE_ID_ATTR: [
       'data-note-id',
@@ -140,33 +170,47 @@ export const SELECTORS = {
   },
 
   // ============================================================
-  // DIAGNOSES
+  // MORE MENU (in note editor header)
+  // Dropdown items when clicking More button
+  // ============================================================
+  MORE_MENU: {
+    DOWNLOAD: ['text=Download'],
+    SHARE: ['text=Share'],
+    REQUEST_SIGNATURE: ['text=Request Signature'],
+    REPLICATE: ['text=Replicate'],
+    FAX: ['text=Fax'],
+    LINK_APPOINTMENT: ['text=Link Appointment'],
+    ADD_PRESCRIPTIONS: ['text=Add Prescriptions'],
+    LINK_PRESCRIPTIONS: ['text=Link Prescriptions'],
+    ADD_DIAGNOSIS: [
+      'a:has-text("Add Diagnosis")',
+      'text=Add Diagnosis',
+    ],
+    ASSIGN_TO: ['text=Assign to'],
+    DELETE: ['text=Delete'],
+  },
+
+  // ============================================================
+  // DIAGNOSIS MODAL
+  // Opened from More → Add Diagnosis
   // ============================================================
   DIAGNOSIS: {
-    MORE_MENU: [
-      'button:has-text("More")',
-      '.more-actions-btn',
-      '.dropdown-toggle',
-    ],
-    ADD_DIAGNOSIS_OPTION: [
-      'text="Add Diagnosis"',
-      '[data-action="add-diagnosis"]',
-      '.add-diagnosis-option',
-    ],
     MODAL: [
       '.diagnosis-modal',
-      '.diagnosis-selector',
-      '[data-modal="diagnosis"]',
+      '.modal:has-text("Diagnosis")',
+      '[role="dialog"]:has-text("Diagnosis")',
     ],
     SEARCH_INPUT: [
       '.diagnosis-search input',
       'input[placeholder*="diagnosis" i]',
       'input[placeholder*="ICD" i]',
+      'input[placeholder*="search" i]',
     ],
     RESULT_ITEM: [
       '.diagnosis-option',
       '.diagnosis-item',
       '.diagnosis-result',
+      '.list-group-item',
     ],
     SELECTED_LIST: [
       '.selected-diagnoses',
@@ -174,9 +218,8 @@ export const SELECTORS = {
     ],
     DONE_BUTTON: [
       'button:has-text("Done")',
-      'button:has-text("Done Selecting")',
+      'button:has-text("Close")',
       'button:has-text("Apply")',
-      '.done-btn',
     ],
   },
 
@@ -208,10 +251,8 @@ export const SELECTORS = {
   // ============================================================
   LOCK: {
     BUTTON: [
+      'button.btn-nav:has-text("Lock")',
       'button:has-text("Lock")',
-      'button:has-text("Lock Note")',
-      '.lock-note-btn',
-      '[data-action="lock"]',
     ],
     CONFIRM_BUTTON: [
       'button:has-text("Confirm")',
@@ -250,14 +291,18 @@ export const SELECTORS = {
       '.error-notification',
       '[role="alert"]',
     ],
+    DROPDOWN_MENU: [
+      '.dropdown-menu',
+      '[role="menu"]',
+    ],
   },
 };
 
 /**
  * Helper to try multiple selectors and return the first match
+ * Uses Playwright's :is() selector to try multiple options
  */
 export function getSelector(selectors: string[]): string {
-  // For Playwright, we can use :is() to try multiple selectors
   return `:is(${selectors.join(', ')})`;
 }
 

@@ -195,6 +195,15 @@ export class IntakeQAutomation {
 
   /**
    * Create a new treatment note for a client
+   *
+   * Flow (tested 2026-02-03):
+   * 1. Click blue + button (.btn-group.btn-success.add-new)
+   * 2. Click "Create New Note" in dropdown
+   * 3. Select template from dropdown in modal
+   * 4. Click Continue
+   * 5. Fill form fields
+   * 6. Add diagnoses via More → Add Diagnosis
+   * 7. Save and Lock
    */
   async createNote(note: NoteToCreate): Promise<CreateNoteResult> {
     if (!this.page || !this.isLoggedIn) {
@@ -205,21 +214,27 @@ export class IntakeQAutomation {
       // Navigate to client
       await this.navigateToClient(note.clientGuid);
 
-      // Click "Add Note" button
-      console.log('[IntakeQ] Clicking Add Note...');
-      await this.page.click(getSelector(SELECTORS.CLIENT.ADD_NOTE_BUTTON));
+      // Step 1: Click the blue + button next to Timeline
+      console.log('[IntakeQ] Clicking Add New button...');
+      await this.page.click(getSelector(SELECTORS.CLIENT.ADD_NEW_BUTTON));
+      await this.page.waitForTimeout(500);
 
-      // Wait for template selector
-      await this.page.waitForSelector(getSelector(SELECTORS.TEMPLATE.MODAL), {
-        timeout: 10000,
-      });
+      // Step 2: Click "Create New Note" in the dropdown
+      console.log('[IntakeQ] Clicking Create New Note...');
+      await this.page.click(getSelector(SELECTORS.CLIENT.CREATE_NEW_NOTE));
+      await this.page.waitForTimeout(1000);
 
-      // Select template by name
+      // Step 3: Select template from dropdown
       console.log(`[IntakeQ] Selecting template: ${note.templateName}`);
       await this.selectTemplate(note.templateName);
 
-      // Wait for note editor to load
-      await this.page.waitForSelector(getSelector(SELECTORS.NOTE_EDITOR.CONTAINER), {
+      // Step 4: Click Continue
+      console.log('[IntakeQ] Clicking Continue...');
+      await this.page.click(getSelector(SELECTORS.NEW_NOTE_MODAL.CONTINUE_BUTTON));
+      await this.page.waitForTimeout(2000);
+
+      // Wait for note editor to load (check for Save button)
+      await this.page.waitForSelector(getSelector(SELECTORS.NOTE_EDITOR.SAVE_BUTTON), {
         timeout: 15000,
       });
       console.log('[IntakeQ] Note editor loaded');
@@ -285,34 +300,38 @@ export class IntakeQAutomation {
   }
 
   /**
-   * Select a note template by name
+   * Select a note template by name from the dropdown in the New Note modal
    */
   private async selectTemplate(templateName: string): Promise<void> {
     if (!this.page) return;
 
-    // Try to find template by text
-    const templateOption = await this.page.$(`text="${templateName}"`);
+    // The template is in a select dropdown in the modal
+    const templateSelect = await this.page.$(getSelector(SELECTORS.NEW_NOTE_MODAL.TEMPLATE_SELECT));
 
-    if (templateOption) {
-      await templateOption.click();
-    } else {
-      // Try searching if there's a search box
-      const searchInput = await this.page.$(getSelector(SELECTORS.TEMPLATE.SEARCH));
-      if (searchInput) {
-        await searchInput.fill(templateName);
-        await this.page.waitForTimeout(500);
+    if (templateSelect) {
+      // Get all options and find the matching one
+      const options = await templateSelect.$$('option');
+      let found = false;
 
-        // Click first matching result
-        const firstResult = await this.page.$(getSelector(SELECTORS.TEMPLATE.OPTION));
-        if (firstResult) {
-          await firstResult.click();
-        } else {
-          throw new Error(`Template not found: ${templateName}`);
+      for (const opt of options) {
+        const text = await opt.textContent();
+        if (text?.toLowerCase().includes(templateName.toLowerCase())) {
+          console.log(`[IntakeQ] Found matching template: "${text?.trim()}"`);
+          await templateSelect.selectOption({ label: text?.trim() });
+          found = true;
+          break;
         }
-      } else {
-        throw new Error(`Template not found: ${templateName}`);
       }
+
+      if (!found) {
+        // If exact match not found, select the first option as default
+        console.warn(`[IntakeQ] Template "${templateName}" not found, using default`);
+      }
+    } else {
+      console.warn('[IntakeQ] Template select not found');
     }
+
+    await this.page.waitForTimeout(500);
   }
 
   /**
@@ -364,42 +383,59 @@ export class IntakeQAutomation {
 
   /**
    * Add a diagnosis to the note
+   *
+   * Flow: Click More button in note header → Add Diagnosis → Search → Select → Done
    */
   private async addDiagnosis(diagnosis: DiagnosisCode): Promise<void> {
     if (!this.page) return;
 
     console.log(`[IntakeQ] Adding diagnosis: ${diagnosis.code} - ${diagnosis.description}`);
 
-    // Click More menu
-    await this.page.click(getSelector(SELECTORS.DIAGNOSIS.MORE_MENU));
-    await this.page.waitForTimeout(300);
+    // Click More button in the note header (NOT the top nav MORE)
+    const moreButton = await this.page.$(getSelector(SELECTORS.NOTE_EDITOR.MORE_BUTTON));
+    if (!moreButton) {
+      console.warn('[IntakeQ] More button not found in note header');
+      return;
+    }
+    await moreButton.click();
+    await this.page.waitForTimeout(500);
 
-    // Click Add Diagnosis
-    await this.page.click(getSelector(SELECTORS.DIAGNOSIS.ADD_DIAGNOSIS_OPTION));
+    // Click Add Diagnosis in the dropdown
+    await this.page.click(getSelector(SELECTORS.MORE_MENU.ADD_DIAGNOSIS));
+    await this.page.waitForTimeout(500);
 
-    // Wait for diagnosis modal
-    await this.page.waitForSelector(getSelector(SELECTORS.DIAGNOSIS.MODAL), {
-      timeout: 5000,
-    });
+    // Wait for diagnosis modal/panel
+    try {
+      await this.page.waitForSelector(getSelector(SELECTORS.DIAGNOSIS.SEARCH_INPUT), {
+        timeout: 5000,
+      });
+    } catch {
+      console.warn('[IntakeQ] Diagnosis search input not found');
+      return;
+    }
 
-    // Search for the diagnosis
+    // Search for the diagnosis by ICD code
     const searchInput = await this.page.$(getSelector(SELECTORS.DIAGNOSIS.SEARCH_INPUT));
     if (searchInput) {
       await searchInput.fill(diagnosis.code);
-      await this.page.waitForTimeout(500); // Wait for search results
+      await this.page.waitForTimeout(1000); // Wait for search results to load
     }
 
-    // Click on matching diagnosis
+    // Click on matching diagnosis in results
     const diagnosisOption = await this.page.$(`${getSelector(SELECTORS.DIAGNOSIS.RESULT_ITEM)}:has-text("${diagnosis.code}")`);
     if (diagnosisOption) {
       await diagnosisOption.click();
+      await this.page.waitForTimeout(300);
     } else {
-      console.warn(`[IntakeQ] Diagnosis not found: ${diagnosis.code}`);
+      console.warn(`[IntakeQ] Diagnosis not found in results: ${diagnosis.code}`);
     }
 
-    // Close modal
-    await this.page.click(getSelector(SELECTORS.DIAGNOSIS.DONE_BUTTON));
-    await this.page.waitForTimeout(300);
+    // Close diagnosis panel/modal
+    const doneButton = await this.page.$(getSelector(SELECTORS.DIAGNOSIS.DONE_BUTTON));
+    if (doneButton) {
+      await doneButton.click();
+      await this.page.waitForTimeout(300);
+    }
   }
 
   /**

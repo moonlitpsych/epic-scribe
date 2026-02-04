@@ -174,35 +174,50 @@ Push generated notes TO IntakeQ via Playwright browser automation.
 **Current Status (2026-02-03):**
 - ✅ Login automation works (`https://intakeq.com/signin`)
 - ✅ Client navigation works (uses GUID-based URL)
-- ⏳ "Add Note" flow not yet implemented
-- ⏳ Form field filling not yet tested
-- ⏳ Diagnosis addition not yet tested
-- ⏳ Signature/lock not yet tested
+- ✅ Add Note flow identified and implemented (selectors tested)
+- ✅ Template selection modal works
+- ✅ More menu → Add Diagnosis identified
+- ⏳ Form field filling needs testing with real note content
+- ⏳ Diagnosis search/select needs testing
+- ⏳ Save/Lock flow needs end-to-end testing
 
-**Key Discovery - IntakeQ URL Structure:**
-- Login: `https://intakeq.com/signin`
-- Client profile: `https://intakeq.com/#/client/{GUID}?tab=timeline`
-- The GUID comes from the API response (`Guid` field), NOT the numeric `ClientId`
+**Complete Add Note Flow (tested 2026-02-03):**
+1. Click blue "+" button (`.btn-group.btn-success.add-new`)
+2. Click "Create New Note" in dropdown
+3. Select template from dropdown (options: Kyle Roller Intake/Progress, Anthony Privratsky Intake/Progress, etc.)
+4. Click "Continue"
+5. Note editor loads with sections: Demographics, CC, HPI, etc.
+6. Fill form fields (textareas with names like `content-0`, `content-1`, etc.)
+7. Click More → Add Diagnosis to add ICD-10 codes
+8. Click Save (blue button in header)
+9. Click Lock (gray button in header)
+
+**Note Editor Header Buttons:**
+- Save (`button.btn-primary:has-text("Save")`)
+- Lock (`button.btn-nav:has-text("Lock")`)
+- Print
+- Heidi
+- More (dropdown with: Download, Share, Request Signature, Add Diagnosis, etc.)
+- Close Note
 
 **Test Scripts (run from `services/intakeq-playwright/`):**
 ```bash
 pnpm tsc                      # Compile TypeScript
 node dist/test-login.js       # Test login - WORKS
 node dist/test-client-nav.js  # Test client navigation - WORKS
+node dist/test-add-note.js    # Test Add Note flow - WORKS (opens note editor)
 ```
 
 **What the Next Session Needs to Do:**
-1. Click the blue "+" button next to Timeline to see Add Note flow
-2. Identify selectors for template selection modal
-3. Map Epic Scribe note sections to IntakeQ form fields
-4. Test diagnosis addition via "More → Add Diagnosis"
-5. Test signature and lock functionality
-6. Update `services/intakeq-playwright/src/selectors.ts` with real selectors
+1. Test filling textarea fields with actual note content
+2. Test Add Diagnosis flow (search for ICD-10, select, close)
+3. Test full end-to-end: create note with content → save → lock
+4. Map Epic Scribe note sections to specific IntakeQ form fields
 
 **Components:**
 - `services/intakeq-playwright/` - Playwright automation, selectors, note mapper
-- `services/intakeq-playwright/src/intakeq-automation.ts` - Main automation class
-- `services/intakeq-playwright/src/selectors.ts` - CSS selectors (need updates for Add Note flow)
+- `services/intakeq-playwright/src/intakeq-automation.ts` - Main automation class (updated)
+- `services/intakeq-playwright/src/selectors.ts` - CSS selectors (updated with tested values)
 - `services/intakeq-playwright/src/note-mapper.ts` - Maps Epic Scribe sections to IntakeQ fields
 - `services/intakeq-playwright/src/diagnosis-extractor.ts` - Extracts ICD-10 codes from notes
 - `apps/web/app/api/intakeq/push-note/route.ts` - API endpoint
@@ -213,6 +228,11 @@ node dist/test-client-nav.js  # Test client navigation - WORKS
 - `INTAKEQ_USER_EMAIL` - IntakeQ login (hello@trymoonlit.com)
 - `INTAKEQ_USER_PASSWORD` - IntakeQ password
 - `INTAKEQ_NOTE_TEMPLATE_NAME` (optional) - Template to use
+
+**Key Discovery - IntakeQ URL Structure:**
+- Login: `https://intakeq.com/signin`
+- Client profile: `https://intakeq.com/#/client/{GUID}?tab=timeline`
+- The GUID comes from the API response (`Guid` field), NOT the numeric `ClientId`
 
 **Playwright Setup:**
 ```bash
