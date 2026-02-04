@@ -77,7 +77,7 @@ export const SELECTORS = {
     // "Create New Note" option in the add dropdown
     CREATE_NEW_NOTE: [
       'a:has-text("Create New Note")',
-      'text=Create New Note',
+      'li:has-text("Create New Note")',
     ],
     CLIENT_NAME: [
       '.client-name',
@@ -172,22 +172,23 @@ export const SELECTORS = {
   // ============================================================
   // MORE MENU (in note editor header)
   // Dropdown items when clicking More button
+  // Note: Use :has-text() instead of text= for compatibility with :is()
   // ============================================================
   MORE_MENU: {
-    DOWNLOAD: ['text=Download'],
-    SHARE: ['text=Share'],
-    REQUEST_SIGNATURE: ['text=Request Signature'],
-    REPLICATE: ['text=Replicate'],
-    FAX: ['text=Fax'],
-    LINK_APPOINTMENT: ['text=Link Appointment'],
-    ADD_PRESCRIPTIONS: ['text=Add Prescriptions'],
-    LINK_PRESCRIPTIONS: ['text=Link Prescriptions'],
+    DOWNLOAD: ['a:has-text("Download")'],
+    SHARE: ['a:has-text("Share")'],
+    REQUEST_SIGNATURE: ['a:has-text("Request Signature")'],
+    REPLICATE: ['a:has-text("Replicate")'],
+    FAX: ['a:has-text("Fax")'],
+    LINK_APPOINTMENT: ['a:has-text("Link Appointment")'],
+    ADD_PRESCRIPTIONS: ['a:has-text("Add Prescriptions")'],
+    LINK_PRESCRIPTIONS: ['a:has-text("Link Prescriptions")'],
     ADD_DIAGNOSIS: [
       'a:has-text("Add Diagnosis")',
-      'text=Add Diagnosis',
+      'li:has-text("Add Diagnosis")',
     ],
-    ASSIGN_TO: ['text=Assign to'],
-    DELETE: ['text=Delete'],
+    ASSIGN_TO: ['a:has-text("Assign to")'],
+    DELETE: ['a:has-text("Delete")'],
   },
 
   // ============================================================
@@ -248,6 +249,7 @@ export const SELECTORS = {
 
   // ============================================================
   // LOCK / FINALIZE
+  // When a note is locked, the "Lock" button changes to "Edit" button
   // ============================================================
   LOCK: {
     BUTTON: [
@@ -259,11 +261,19 @@ export const SELECTORS = {
       'button:has-text("Yes")',
       '.confirm-lock-btn',
     ],
+    // When locked, "Lock" becomes "Edit" - this is the primary indicator
     LOCKED_INDICATOR: [
+      'button:has-text("Edit")',  // Primary indicator - Edit button appears
+      'a:has-text("Edit")',
       'text="locked"',
       '.note-locked',
       '.locked-badge',
       '[data-status="locked"]',
+    ],
+    // Edit button appears when note is locked (to allow unlocking)
+    EDIT_BUTTON: [
+      'button:has-text("Edit")',
+      'a:has-text("Edit")',
     ],
   },
 

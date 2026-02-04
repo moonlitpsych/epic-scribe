@@ -7,7 +7,7 @@
 
 ---
 
-## Current Status (2026-02-03)
+## Current Status (2026-02-04)
 
 ### Working Features
 - **Note Generation**: Full workflow with Gemini 2.5 Pro API + automatic failover to backup API key
@@ -123,7 +123,7 @@ pnpm lint             # Check for issues
 
 ---
 
-## Recent Updates (2026-02-03)
+## Recent Updates (2026-02-04)
 
 ### Prior Notes Import System (COMPLETE)
 Clipboard-based import of Epic copy-forward notes for **non-Moonlit** settings (HMHI, Redwood, Davis, etc.).
@@ -166,7 +166,7 @@ Auto-fetch prior notes from IntakeQ for **Moonlit Psychiatry** patients during F
 - Full note: `/notes/{noteId}`
 - Reference working code in `/Users/macsweeney/cm-research-app/packages/backend/src/services/intakeq.service.ts`
 
-### IntakeQ Integration - Write Path (IN PROGRESS)
+### IntakeQ Integration - Write Path (COMPLETE)
 Push generated notes TO IntakeQ via Playwright browser automation.
 
 **IMPORTANT:** This only works locally or on servers with browser support. Does NOT work on Vercel serverless.
@@ -180,8 +180,16 @@ Push generated notes TO IntakeQ via Playwright browser automation.
   - CC (Chief Complaint): Simple input with `placeholder="Chief Complaint"`
   - Other sections (HPI, Social History, etc.): Rich text editors using `contenteditable="true"`
 - ✅ More menu → Add Diagnosis works
-- ✅ Diagnosis search/select tested (F32.1 successfully added)
-- ⏳ Save/Lock flow needs end-to-end testing
+- ✅ Diagnosis search/select tested (F32.1 added successfully)
+- ✅ **Save/Lock flow WORKING** (tested 2026-02-04)
+- ⏳ Map Epic Scribe sections to IntakeQ fields
+- ⏳ Implement full `pushNoteToIntakeQ()` function
+
+**Test Patient (use for all testing):**
+- Name: TestingPt Test
+- GUID: `420b2da2-6678-4036-b54a-62b2d22ae1f9`
+- IntakeQ ID: 155
+- URL: `https://intakeq.com/#/client/420b2da2-6678-4036-b54a-62b2d22ae1f9?tab=timeline`
 
 **Complete Add Note Flow (tested 2026-02-03):**
 1. Click blue "+" button (`.btn-group.btn-success.add-new`)
@@ -210,6 +218,10 @@ node dist/test-client-nav.js    # Test client navigation - WORKS
 node dist/test-add-note.js      # Test Add Note flow - WORKS (opens note editor)
 node dist/test-fill-note.js     # Test form filling - WORKS (CC + rich text editors)
 node dist/test-add-diagnosis.js # Test Add Diagnosis - WORKS (F32.1 added successfully)
+node dist/test-save-lock.js     # Test Save/Lock flow - WORKS (uses TestingPt Test)
+node dist/test-explore-fields.js # Explore IntakeQ form structure
+node dist/test-note-mapper.js   # Test section mapping against SAMPLE_PATIENT_NOTE.md
+node dist/test-full-push.js     # FULL END-TO-END TEST - Epic Scribe → IntakeQ ✅
 ```
 
 **Form Field Types (Kyle Roller Intake Note):**
@@ -230,11 +242,49 @@ node dist/test-add-diagnosis.js # Test Add Diagnosis - WORKS (F32.1 added succes
 6. Diagnosis appears in "Diagnostic Codes" panel
 7. Selector for More button: `button.dropdown-toggle:has-text("More")` at y > 100
 
+**Save/Lock Flow (tested 2026-02-04):**
+1. Save button: `button.btn-primary:has-text("Save")` at y ≈ 110
+2. Click Save → wait for "saved" indicator (green badge appears)
+3. Lock button: `button:has-text("Lock")` at y ≈ 110
+4. Click Lock → **Lock button changes to "Edit" button** (this indicates locked state!)
+5. Verification: Look for `button:has-text("Edit")` or `a:has-text("Edit")` at y ≈ 110
+6. No confirmation dialog required (at least for this template)
+
+**Section Mapping (completed 2026-02-04):**
+
+Epic Scribe Section → IntakeQ Kyle Roller Intake Note Section:
+| Epic Scribe | IntakeQ Section # | IntakeQ Field | Type |
+|-------------|-------------------|---------------|------|
+| Chief Complaint | 2 | CC | input |
+| History (HPI) | 3 | HPI | contenteditable |
+| Psychiatric Review of Symptoms | 4 | Psychiatric Review of Systems | contenteditable |
+| Social History | 5 | Social History | contenteditable |
+| (Substance Use) | 6 | Substance Use History | contenteditable |
+| Current Medications | 7 | Medication History | contenteditable |
+| Review of Systems | 8 | Medical Review of Systems | contenteditable |
+| Mental Status Examination | 10 | Mental Status Exam (MSE) | contenteditable |
+| Risk Assessment + FORMULATION + PLAN | 13 | Assessment and Plan | contenteditable |
+| DIAGNOSIS | 12 | Via Add Diagnosis flow | ICD-10 codes |
+
+**Note:** Risk Assessment is combined into Assessment and Plan (no separate field in IntakeQ template).
+
+**Diagnosis Extraction (tested with sample note):**
+- F33.1: Major depressive disorder, recurrent episode, moderate
+- F43.10: Posttraumatic stress disorder
+- F44.4: Functional neurological symptom disorder
+
 **What the Next Session Needs to Do:**
 1. ~~Test Add Diagnosis flow~~ ✅ Done (F32.1 added successfully)
-2. Test full end-to-end: create note with content → save → lock
-3. Map Epic Scribe generated note sections to IntakeQ form fields
-4. Implement `pushNoteToIntakeQ()` function that combines all steps
+2. ~~Test Save/Lock flow~~ ✅ Done (working with TestingPt Test)
+3. ~~Map Epic Scribe sections to IntakeQ fields~~ ✅ Done (8 sections mapped)
+4. ~~Implement `pushNoteToIntakeQ()` function~~ ✅ Done
+5. ~~Test full end-to-end~~ ✅ Done (2026-02-04) - WORKING!
+
+**INTEGRATION COMPLETE!** The IntakeQ write path is fully functional:
+- `pushNoteToIntakeQ()` takes an Epic Scribe note and creates it in IntakeQ
+- All 8 sections are filled automatically
+- Note is saved and locked
+- Test: `node dist/test-full-push.js`
 
 **Components:**
 - `services/intakeq-playwright/` - Playwright automation, selectors, note mapper

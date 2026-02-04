@@ -24,6 +24,7 @@ import {
   AutomationConfig,
 } from './types';
 import { SELECTORS, getSelector } from './selectors';
+import { buildIntakeQNote, MappedNote } from './note-mapper';
 
 const DEFAULT_CONFIG: Required<AutomationConfig> = {
   headless: true,
@@ -124,10 +125,8 @@ export class IntakeQAutomation {
     await this.page.click(getSelector(SELECTORS.LOGIN.SUBMIT_BUTTON));
 
     // Wait for dashboard navigation elements to appear
-    // Don't use networkidle as IntakeQ uses websockets that keep the network active
     console.log('[IntakeQ] Waiting for dashboard...');
     try {
-      // Wait for any of these dashboard indicators
       await Promise.race([
         this.page.waitForSelector('text=MY FORMS', { timeout: 20000 }),
         this.page.waitForSelector('text=My Dashboard', { timeout: 20000 }),
@@ -136,7 +135,6 @@ export class IntakeQAutomation {
       this.isLoggedIn = true;
       console.log('[IntakeQ] Login successful - dashboard detected');
     } catch {
-      // Check for error message
       const errorEl = await this.page.$(getSelector(SELECTORS.LOGIN.ERROR_MESSAGE));
       if (errorEl) {
         const errorText = await errorEl.textContent();
@@ -168,7 +166,6 @@ export class IntakeQAutomation {
 
   /**
    * Navigate to a client's profile page
-   * IntakeQ uses client GUID in the URL: https://intakeq.com/#/client/{guid}
    */
   async navigateToClient(clientGuid: string): Promise<void> {
     if (!this.page || !this.isLoggedIn) {
@@ -178,7 +175,6 @@ export class IntakeQAutomation {
     console.log(`[IntakeQ] Navigating to client ${clientGuid}...`);
     await this.page.goto(`https://intakeq.com/#/client/${clientGuid}?tab=timeline`);
 
-    // Wait for client profile to load - look for common profile elements
     await Promise.race([
       this.page.waitForSelector('text=Timeline', { timeout: 15000 }),
       this.page.waitForSelector('text=Notes', { timeout: 15000 }),
@@ -190,22 +186,65 @@ export class IntakeQAutomation {
   }
 
   // ============================================================
-  // NOTE CREATION
+  // HIGH-LEVEL API: Push Epic Scribe Note to IntakeQ
   // ============================================================
 
   /**
-   * Create a new treatment note for a client
+   * Push an Epic Scribe generated note to IntakeQ
    *
-   * Flow (tested 2026-02-03):
-   * 1. Click blue + button (.btn-group.btn-success.add-new)
-   * 2. Click "Create New Note" in dropdown
-   * 3. Select template from dropdown in modal
-   * 4. Click Continue
-   * 5. Fill form fields
-   * 6. Add diagnoses via More → Add Diagnosis
-   * 7. Save and Lock
+   * This is the main entry point for the write path integration.
+   * Takes a raw Epic Scribe note, maps it to IntakeQ format, and creates the note.
+   *
+   * @param clientGuid - The IntakeQ client GUID
+   * @param epicScribeNote - The raw generated note from Epic Scribe
+   * @param options - Configuration options
    */
-  async createNote(note: NoteToCreate): Promise<CreateNoteResult> {
+  async pushNoteToIntakeQ(
+    clientGuid: string,
+    epicScribeNote: string,
+    options: {
+      template?: 'intake' | 'progress';
+      signatureRequired?: boolean;
+      lockAfterSave?: boolean;
+    } = {}
+  ): Promise<CreateNoteResult> {
+    const {
+      template = 'intake',
+      signatureRequired = false,
+      lockAfterSave = true,
+    } = options;
+
+    console.log('[IntakeQ] === Starting Push Note to IntakeQ ===');
+    console.log(`[IntakeQ] Client GUID: ${clientGuid}`);
+    console.log(`[IntakeQ] Template: ${template}`);
+
+    // Step 1: Map the Epic Scribe note to IntakeQ format
+    console.log('[IntakeQ] Mapping Epic Scribe note to IntakeQ format...');
+    const mappedNote = buildIntakeQNote(epicScribeNote, { template });
+
+    console.log(`[IntakeQ] Mapped ${mappedNote.sections.length} sections`);
+    console.log(`[IntakeQ] Found ${mappedNote.diagnoses.length} diagnoses`);
+
+    // Step 2: Create the note using the mapped content
+    const noteToCreate: NoteToCreate = {
+      clientGuid,
+      templateName: mappedNote.templateName,
+      noteContent: mappedNote.sections,
+      diagnoses: mappedNote.diagnoses,
+      signatureRequired,
+    };
+
+    // Step 3: Execute the note creation
+    return this.createNoteWithMappedContent(noteToCreate, lockAfterSave);
+  }
+
+  /**
+   * Create a note with pre-mapped content
+   */
+  private async createNoteWithMappedContent(
+    note: NoteToCreate,
+    lockAfterSave: boolean
+  ): Promise<CreateNoteResult> {
     if (!this.page || !this.isLoggedIn) {
       throw new Error('Not logged in. Call login() first.');
     }
@@ -214,67 +253,64 @@ export class IntakeQAutomation {
       // Navigate to client
       await this.navigateToClient(note.clientGuid);
 
-      // Step 1: Click the blue + button next to Timeline
-      console.log('[IntakeQ] Clicking Add New button...');
+      // Step 1: Click the blue + button
+      console.log('[IntakeQ] Opening Add New menu...');
       await this.page.click(getSelector(SELECTORS.CLIENT.ADD_NEW_BUTTON));
       await this.page.waitForTimeout(500);
 
-      // Step 2: Click "Create New Note" in the dropdown
+      // Step 2: Click "Create New Note"
       console.log('[IntakeQ] Clicking Create New Note...');
       await this.page.click(getSelector(SELECTORS.CLIENT.CREATE_NEW_NOTE));
       await this.page.waitForTimeout(1000);
 
-      // Step 3: Select template from dropdown
+      // Step 3: Select template
       console.log(`[IntakeQ] Selecting template: ${note.templateName}`);
       await this.selectTemplate(note.templateName);
 
       // Step 4: Click Continue
       console.log('[IntakeQ] Clicking Continue...');
       await this.page.click(getSelector(SELECTORS.NEW_NOTE_MODAL.CONTINUE_BUTTON));
-      await this.page.waitForTimeout(2000);
+      await this.page.waitForTimeout(3000);
 
-      // Wait for note editor to load (check for Save button)
-      await this.page.waitForSelector(getSelector(SELECTORS.NOTE_EDITOR.SAVE_BUTTON), {
-        timeout: 15000,
-      });
+      // Wait for note editor to load
+      await this.waitForNoteEditor();
       console.log('[IntakeQ] Note editor loaded');
 
-      // Fill in note content
+      // Step 5: Fill all sections
       console.log('[IntakeQ] Filling note sections...');
-      for (const section of note.noteContent) {
-        await this.fillNoteSection(section);
-      }
+      await this.fillAllSections(note.noteContent);
 
-      // Add diagnoses
+      // Step 6: Add diagnoses
       if (note.diagnoses.length > 0) {
-        console.log('[IntakeQ] Adding diagnoses...');
+        console.log(`[IntakeQ] Adding ${note.diagnoses.length} diagnoses...`);
         for (const diagnosis of note.diagnoses) {
           await this.addDiagnosis(diagnosis);
         }
       }
 
-      // Sign if required
+      // Step 7: Sign if required
       if (note.signatureRequired) {
         console.log('[IntakeQ] Signing note...');
         await this.signNote();
       }
 
-      // Save the note first
+      // Step 8: Save the note
       console.log('[IntakeQ] Saving note...');
       await this.saveNote();
 
-      // Get note ID before locking
+      // Get note ID from URL
       const noteId = await this.getNoteId();
 
-      // Lock the note
-      console.log('[IntakeQ] Locking note...');
-      await this.lockNote();
+      // Step 9: Lock the note if requested
+      if (lockAfterSave) {
+        console.log('[IntakeQ] Locking note...');
+        await this.lockNote();
+      }
 
-      const noteUrl = noteId
-        ? `https://intakeq.com/notes/${noteId}`
-        : this.page.url();
+      const noteUrl = this.page.url();
 
-      console.log('[IntakeQ] Note created successfully');
+      console.log('[IntakeQ] === Note created successfully ===');
+      console.log(`[IntakeQ] Note URL: ${noteUrl}`);
 
       return {
         success: true,
@@ -284,7 +320,6 @@ export class IntakeQAutomation {
     } catch (error) {
       console.error('[IntakeQ] Error creating note:', error);
 
-      // Take screenshot on error
       if (this.config.screenshotOnError && this.page) {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const path = `${this.config.screenshotDir}/error-${timestamp}.png`;
@@ -299,17 +334,26 @@ export class IntakeQAutomation {
     }
   }
 
+  // ============================================================
+  // NOTE CREATION (Legacy API - kept for backwards compatibility)
+  // ============================================================
+
   /**
-   * Select a note template by name from the dropdown in the New Note modal
+   * Create a new treatment note for a client (legacy method)
+   */
+  async createNote(note: NoteToCreate): Promise<CreateNoteResult> {
+    return this.createNoteWithMappedContent(note, true);
+  }
+
+  /**
+   * Select a note template by name
    */
   private async selectTemplate(templateName: string): Promise<void> {
     if (!this.page) return;
 
-    // The template is in a select dropdown in the modal
     const templateSelect = await this.page.$(getSelector(SELECTORS.NEW_NOTE_MODAL.TEMPLATE_SELECT));
 
     if (templateSelect) {
-      // Get all options and find the matching one
       const options = await templateSelect.$$('option');
       let found = false;
 
@@ -324,8 +368,10 @@ export class IntakeQAutomation {
       }
 
       if (!found) {
-        // If exact match not found, select the first option as default
-        console.warn(`[IntakeQ] Template "${templateName}" not found, using default`);
+        console.warn(`[IntakeQ] Template "${templateName}" not found, using first option`);
+        if (options.length > 0) {
+          await templateSelect.selectOption({ index: 0 });
+        }
       }
     } else {
       console.warn('[IntakeQ] Template select not found');
@@ -335,107 +381,192 @@ export class IntakeQAutomation {
   }
 
   /**
-   * Fill a single note section/question
+   * Wait for note editor to load
    */
-  private async fillNoteSection(section: NoteSection): Promise<void> {
+  private async waitForNoteEditor(): Promise<void> {
     if (!this.page) return;
 
-    console.log(`[IntakeQ] Filling section: ${section.questionText}`);
+    await Promise.race([
+      this.page.waitForSelector('button:has-text("Lock")', { timeout: 15000 }),
+      this.page.waitForSelector('button:has-text("Close Note")', { timeout: 15000 }),
+      this.page.waitForSelector('[contenteditable="true"]', { timeout: 15000 }),
+      this.page.waitForSelector('input[placeholder="Chief Complaint"]', { timeout: 15000 }),
+    ]);
+  }
 
-    // Strategy 1: Find by question ID
-    if (section.questionId) {
-      const byId = await this.page.$(`[data-question-id="${section.questionId}"]`);
-      if (byId) {
-        const input = await byId.$('textarea, input[type="text"]');
-        if (input) {
-          await input.fill(section.value);
-          return;
+  /**
+   * Fill all sections of the note
+   *
+   * IntakeQ note structure:
+   * - Section 2 (CC): input field with placeholder="Chief Complaint"
+   * - Sections 3-13: contenteditable rich text editors
+   */
+  private async fillAllSections(sections: NoteSection[]): Promise<void> {
+    if (!this.page) return;
+
+    // Sort sections by section number
+    const sortedSections = [...sections].sort(
+      (a, b) => (a.sectionNumber || 0) - (b.sectionNumber || 0)
+    );
+
+    // Get all contenteditable elements (for rich text sections)
+    // These appear in order on the page after the CC field
+    const contenteditables = await this.page.$$('[contenteditable="true"]');
+    console.log(`[IntakeQ] Found ${contenteditables.length} contenteditable elements`);
+
+    // Map section numbers to contenteditable indices
+    // Kyle Roller Intake Note has 8 contenteditables (after CC input):
+    // 0: HPI, 1: Psych ROS, 2: Social, 3: Substance Use, 4: Meds, 5: Medical ROS, 6: MSE, 7: Assessment/Plan
+    // Note: No separate Risk Assessment field - it should be included in Assessment and Plan
+    const sectionToEditableIndex: { [key: number]: number } = {
+      3: 0,   // HPI
+      4: 1,   // Psychiatric ROS
+      5: 2,   // Social History
+      6: 3,   // Substance Use
+      7: 4,   // Medication History
+      8: 5,   // Medical ROS
+      // 9: Allergies (checkbox, skip)
+      10: 6,  // MSE
+      // 11: Risk Assessment - NO separate field, include in Assessment and Plan
+      // 12: Diagnosis (via Add Diagnosis, skip)
+      13: 7,  // Assessment and Plan (includes Risk Assessment)
+    };
+
+    for (const section of sortedSections) {
+      const sectionNum = section.sectionNumber || 0;
+
+      console.log(`[IntakeQ] Filling section ${sectionNum}: ${section.questionText}`);
+
+      // Section 2: CC (Chief Complaint) - input field
+      if (sectionNum === 2 || section.fieldType === 'input') {
+        const ccInput = await this.page.$('input[placeholder="Chief Complaint"]');
+        if (ccInput) {
+          await ccInput.fill(section.value);
+          console.log(`[IntakeQ] ✓ Filled CC`);
+        } else {
+          console.warn('[IntakeQ] ✗ CC input not found');
+        }
+        continue;
+      }
+
+      // Contenteditable sections
+      if (section.fieldType === 'contenteditable') {
+        const editableIndex = sectionToEditableIndex[sectionNum];
+
+        if (editableIndex !== undefined && editableIndex < contenteditables.length) {
+          const editor = contenteditables[editableIndex];
+
+          // Scroll into view
+          await editor.scrollIntoViewIfNeeded();
+          await this.page.waitForTimeout(200);
+
+          // Click to focus
+          await editor.click();
+          await this.page.waitForTimeout(100);
+
+          // Clear existing content and type new content
+          await this.page.keyboard.press('Control+A');
+          await this.page.keyboard.type(section.value);
+
+          console.log(`[IntakeQ] ✓ Filled section ${sectionNum}`);
+        } else {
+          console.warn(`[IntakeQ] ✗ No contenteditable for section ${sectionNum}`);
         }
       }
+
+      await this.page.waitForTimeout(200);
     }
+  }
 
-    // Strategy 2: Find by question text
-    const questionContainers = await this.page.$$(getSelector(SELECTORS.NOTE_EDITOR.QUESTION_CONTAINER));
-
-    for (const container of questionContainers) {
-      const label = await container.$(getSelector(SELECTORS.NOTE_EDITOR.QUESTION_LABEL));
-      if (label) {
-        const labelText = await label.textContent();
-        if (labelText && labelText.toLowerCase().includes(section.questionText.toLowerCase())) {
-          // Found the matching question
-          const textarea = await container.$('textarea');
-          if (textarea) {
-            await textarea.fill(section.value);
-            return;
-          }
-
-          const textInput = await container.$('input[type="text"]');
-          if (textInput) {
-            await textInput.fill(section.value);
-            return;
-          }
-        }
-      }
-    }
-
-    console.warn(`[IntakeQ] Could not find field for: ${section.questionText}`);
+  /**
+   * Fill a single note section (legacy method)
+   */
+  private async fillNoteSection(section: NoteSection): Promise<void> {
+    await this.fillAllSections([section]);
   }
 
   /**
    * Add a diagnosis to the note
-   *
-   * Flow: Click More button in note header → Add Diagnosis → Search → Select → Done
    */
   private async addDiagnosis(diagnosis: DiagnosisCode): Promise<void> {
     if (!this.page) return;
 
     console.log(`[IntakeQ] Adding diagnosis: ${diagnosis.code} - ${diagnosis.description}`);
 
-    // Click More button in the note header (NOT the top nav MORE)
-    const moreButton = await this.page.$(getSelector(SELECTORS.NOTE_EDITOR.MORE_BUTTON));
+    // Find and click More button in note header (y between 100-150)
+    const allMoreButtons = await this.page.$$('button:has-text("More")');
+    let moreButton = null;
+
+    for (const btn of allMoreButtons) {
+      const box = await btn.boundingBox();
+      if (box && box.y > 100 && box.y < 150) {
+        moreButton = btn;
+        break;
+      }
+    }
+
     if (!moreButton) {
       console.warn('[IntakeQ] More button not found in note header');
       return;
     }
+
     await moreButton.click();
     await this.page.waitForTimeout(500);
 
     // Click Add Diagnosis in the dropdown
-    await this.page.click(getSelector(SELECTORS.MORE_MENU.ADD_DIAGNOSIS));
-    await this.page.waitForTimeout(500);
+    const addDiagnosisLink = await this.page.$('a:has-text("Add Diagnosis")');
+    if (addDiagnosisLink) {
+      await addDiagnosisLink.click();
+    } else {
+      await this.page.click('text=Add Diagnosis');
+    }
+    await this.page.waitForTimeout(1000);
 
-    // Wait for diagnosis modal/panel
-    try {
-      await this.page.waitForSelector(getSelector(SELECTORS.DIAGNOSIS.SEARCH_INPUT), {
-        timeout: 5000,
-      });
-    } catch {
+    // Find search input
+    const searchSelectors = [
+      'input[placeholder*="search" i]',
+      'input[placeholder*="diagnosis" i]',
+      'input[placeholder*="ICD" i]',
+      'input[type="text"]',
+    ];
+
+    let searchInput = null;
+    for (const selector of searchSelectors) {
+      const inputs = await this.page.$$(selector);
+      for (const input of inputs) {
+        const isVisible = await input.isVisible();
+        if (isVisible) {
+          searchInput = input;
+          break;
+        }
+      }
+      if (searchInput) break;
+    }
+
+    if (!searchInput) {
       console.warn('[IntakeQ] Diagnosis search input not found');
       return;
     }
 
-    // Search for the diagnosis by ICD code
-    const searchInput = await this.page.$(getSelector(SELECTORS.DIAGNOSIS.SEARCH_INPUT));
-    if (searchInput) {
-      await searchInput.fill(diagnosis.code);
-      await this.page.waitForTimeout(1000); // Wait for search results to load
-    }
+    // Search for the diagnosis
+    await searchInput.fill(diagnosis.code);
+    await this.page.waitForTimeout(1500);
 
     // Click on matching diagnosis in results
-    const diagnosisOption = await this.page.$(`${getSelector(SELECTORS.DIAGNOSIS.RESULT_ITEM)}:has-text("${diagnosis.code}")`);
-    if (diagnosisOption) {
-      await diagnosisOption.click();
-      await this.page.waitForTimeout(300);
+    const resultSelector = `.list-group-item:has-text("${diagnosis.code}")`;
+    const diagnosisResult = await this.page.$(resultSelector);
+    if (diagnosisResult) {
+      await diagnosisResult.click();
+      console.log(`[IntakeQ] ✓ Added diagnosis: ${diagnosis.code}`);
     } else {
-      console.warn(`[IntakeQ] Diagnosis not found in results: ${diagnosis.code}`);
+      console.warn(`[IntakeQ] ✗ Diagnosis not found in results: ${diagnosis.code}`);
     }
 
-    // Close diagnosis panel/modal
-    const doneButton = await this.page.$(getSelector(SELECTORS.DIAGNOSIS.DONE_BUTTON));
-    if (doneButton) {
-      await doneButton.click();
-      await this.page.waitForTimeout(300);
-    }
+    await this.page.waitForTimeout(500);
+
+    // Close the diagnosis panel (click outside or press Escape)
+    await this.page.keyboard.press('Escape');
+    await this.page.waitForTimeout(300);
   }
 
   /**
@@ -444,13 +575,11 @@ export class IntakeQAutomation {
   private async signNote(): Promise<void> {
     if (!this.page) return;
 
-    // Find signature canvas
     const signaturePad = await this.page.$(getSelector(SELECTORS.SIGNATURE.PAD));
 
     if (signaturePad) {
       const box = await signaturePad.boundingBox();
       if (box) {
-        // Draw a simple signature line
         await this.page.mouse.move(box.x + 20, box.y + box.height / 2);
         await this.page.mouse.down();
         await this.page.mouse.move(box.x + box.width - 20, box.y + box.height / 2, {
@@ -460,7 +589,6 @@ export class IntakeQAutomation {
         console.log('[IntakeQ] Signature drawn');
       }
     } else {
-      // Try typed signature as fallback
       const typeButton = await this.page.$(getSelector(SELECTORS.SIGNATURE.TYPE_SIGNATURE));
       if (typeButton) {
         await typeButton.click();
@@ -477,37 +605,94 @@ export class IntakeQAutomation {
 
   /**
    * Save the note
+   *
+   * IntakeQ has auto-save, so we need to:
+   * 1. Try to click Save button if enabled
+   * 2. If disabled, check if "Saved" indicator is present (auto-saved)
+   * 3. Wait for save to complete
    */
   private async saveNote(): Promise<void> {
     if (!this.page) return;
 
-    const saveButton = await this.page.$(getSelector(SELECTORS.NOTE_EDITOR.SAVE_BUTTON));
+    // First, scroll to top to make sure header is visible
+    await this.page.evaluate(() => window.scrollTo(0, 0));
+    await this.page.waitForTimeout(500);
+
+    // Find Save button in the note header (y between 100-150)
+    const allSaveButtons = await this.page.$$('button:has-text("Save")');
+    let saveButton = null;
+
+    for (const btn of allSaveButtons) {
+      const box = await btn.boundingBox();
+      const text = await btn.textContent();
+      // Must be in header and not "Save Comment"
+      if (box && box.y > 50 && box.y < 150 && !text?.includes('Comment')) {
+        saveButton = btn;
+        break;
+      }
+    }
+
     if (saveButton) {
-      await saveButton.click();
-      await this.page.waitForTimeout(1000); // Wait for save to complete
+      // Check if button is enabled
+      const isDisabled = await saveButton.evaluate((el: HTMLButtonElement) => el.disabled);
+
+      if (isDisabled) {
+        console.log('[IntakeQ] Save button disabled - checking for auto-save...');
+
+        // Check if "Saved" indicator is present
+        const savedIndicator = await this.page.$('button:has-text("Saved"), .btn:has-text("Saved")');
+        if (savedIndicator) {
+          console.log('[IntakeQ] ✓ Note auto-saved');
+          return;
+        }
+
+        // Wait a bit and try clicking anyway (might become enabled)
+        await this.page.waitForTimeout(2000);
+      }
+
+      // Try clicking the save button
+      try {
+        await saveButton.click({ timeout: 5000 });
+        console.log('[IntakeQ] ✓ Clicked Save');
+        await this.page.waitForTimeout(2000);
+      } catch (e) {
+        // Button might be disabled due to auto-save - check for Saved indicator
+        const savedIndicator = await this.page.$('button:has-text("Saved"), .btn:has-text("Saved")');
+        if (savedIndicator) {
+          console.log('[IntakeQ] ✓ Note already saved (auto-save)');
+          return;
+        }
+        throw new Error('Save button not clickable and no Saved indicator found');
+      }
+    } else {
+      // Check if already saved
+      const savedIndicator = await this.page.$('button:has-text("Saved"), .btn:has-text("Saved")');
+      if (savedIndicator) {
+        console.log('[IntakeQ] ✓ Note already saved');
+        return;
+      }
+      throw new Error('Save button not found');
     }
   }
 
   /**
-   * Get the note ID from the current page
+   * Get the note ID from the current page URL
    */
   private async getNoteId(): Promise<string | null> {
     if (!this.page) return null;
 
-    // Try to get from URL first
     const url = this.page.url();
+
+    // Try itemId parameter
+    const itemIdMatch = url.match(/itemId=([a-f0-9-]+)/i);
+    if (itemIdMatch) {
+      return itemIdMatch[1];
+    }
+
+    // Try notes path
     const urlMatch = url.match(/notes\/([a-f0-9-]+)/i);
     if (urlMatch) {
       return urlMatch[1];
-    }
-
-    // Try to get from data attribute
-    const noteEditor = await this.page.$(getSelector(SELECTORS.NOTE_EDITOR.CONTAINER));
-    if (noteEditor) {
-      for (const attr of SELECTORS.NOTE_EDITOR.NOTE_ID_ATTR) {
-        const noteId = await noteEditor.getAttribute(attr);
-        if (noteId) return noteId;
-      }
     }
 
     return null;
@@ -519,8 +704,24 @@ export class IntakeQAutomation {
   private async lockNote(): Promise<void> {
     if (!this.page) return;
 
-    // Click Lock button
-    await this.page.click(getSelector(SELECTORS.LOCK.BUTTON));
+    // Find Lock button in the header (y between 100-150)
+    const lockButtons = await this.page.$$('button:has-text("Lock")');
+    let lockButton = null;
+    for (const btn of lockButtons) {
+      const box = await btn.boundingBox();
+      if (box && box.y > 100 && box.y < 150) {
+        lockButton = btn;
+        break;
+      }
+    }
+
+    if (!lockButton) {
+      throw new Error('Lock button not found in note header');
+    }
+
+    await lockButton.click();
+    console.log('[IntakeQ] ✓ Clicked Lock');
+    await this.page.waitForTimeout(1000);
 
     // Handle confirmation dialog if present
     try {
@@ -528,16 +729,32 @@ export class IntakeQAutomation {
         timeout: 3000,
       });
       await this.page.click(getSelector(SELECTORS.LOCK.CONFIRM_BUTTON));
+      await this.page.waitForTimeout(1000);
     } catch {
-      // No confirmation dialog, that's fine
+      // No confirmation dialog
     }
 
-    // Wait for locked indicator
-    await this.page.waitForSelector(getSelector(SELECTORS.LOCK.LOCKED_INDICATOR), {
-      timeout: 10000,
-    });
+    // Verify locked state (Edit button appears)
+    let lockVerified = false;
+    for (let i = 0; i < 10; i++) {
+      const editElements = await this.page.$$('button:has-text("Edit"), a:has-text("Edit")');
+      for (const el of editElements) {
+        const box = await el.boundingBox();
+        const text = await el.textContent();
+        if (box && box.y > 100 && box.y < 150 && text?.trim() === 'Edit') {
+          lockVerified = true;
+          break;
+        }
+      }
+      if (lockVerified) break;
+      await this.page.waitForTimeout(500);
+    }
 
-    console.log('[IntakeQ] Note locked');
+    if (!lockVerified) {
+      throw new Error('Could not verify note was locked');
+    }
+
+    console.log('[IntakeQ] ✓ Note locked');
   }
 
   // ============================================================
@@ -561,5 +778,59 @@ export class IntakeQAutomation {
    */
   getCurrentUrl(): string | null {
     return this.page?.url() || null;
+  }
+}
+
+// ============================================================
+// CONVENIENCE FUNCTION: Push Note (standalone)
+// ============================================================
+
+/**
+ * Push an Epic Scribe note to IntakeQ (convenience function)
+ *
+ * This is a one-shot function that handles the entire flow:
+ * 1. Initialize browser
+ * 2. Login
+ * 3. Push note
+ * 4. Close browser
+ *
+ * @example
+ * const result = await pushNoteToIntakeQ({
+ *   credentials: { email: 'user@example.com', password: 'pass' },
+ *   clientGuid: 'abc-123',
+ *   epicScribeNote: '## Chief Complaint\nPatient presents with...',
+ *   template: 'intake',
+ * });
+ */
+export async function pushNoteToIntakeQ(options: {
+  credentials: IntakeQCredentials;
+  clientGuid: string;
+  epicScribeNote: string;
+  template?: 'intake' | 'progress';
+  signatureRequired?: boolean;
+  lockAfterSave?: boolean;
+  headless?: boolean;
+  screenshotDir?: string;
+}): Promise<CreateNoteResult> {
+  const automation = new IntakeQAutomation({
+    headless: options.headless ?? true,
+    screenshotDir: options.screenshotDir ?? './screenshots',
+  });
+
+  try {
+    await automation.initialize();
+    await automation.login(options.credentials);
+
+    return await automation.pushNoteToIntakeQ(
+      options.clientGuid,
+      options.epicScribeNote,
+      {
+        template: options.template,
+        signatureRequired: options.signatureRequired,
+        lockAfterSave: options.lockAfterSave,
+      }
+    );
+  } finally {
+    await automation.close();
   }
 }
