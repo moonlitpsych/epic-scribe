@@ -179,8 +179,8 @@ Push generated notes TO IntakeQ via Playwright browser automation.
 - ✅ Form field filling works:
   - CC (Chief Complaint): Simple input with `placeholder="Chief Complaint"`
   - Other sections (HPI, Social History, etc.): Rich text editors using `contenteditable="true"`
-- ✅ More menu → Add Diagnosis identified
-- ⏳ Diagnosis search/select needs testing
+- ✅ More menu → Add Diagnosis works
+- ✅ Diagnosis search/select tested (F32.1 successfully added)
 - ⏳ Save/Lock flow needs end-to-end testing
 
 **Complete Add Note Flow (tested 2026-02-03):**
@@ -204,10 +204,12 @@ Push generated notes TO IntakeQ via Playwright browser automation.
 
 **Test Scripts (run from `services/intakeq-playwright/`):**
 ```bash
-pnpm tsc                      # Compile TypeScript
-node dist/test-login.js       # Test login - WORKS
-node dist/test-client-nav.js  # Test client navigation - WORKS
-node dist/test-add-note.js    # Test Add Note flow - WORKS (opens note editor)
+pnpm tsc                        # Compile TypeScript
+node dist/test-login.js         # Test login - WORKS
+node dist/test-client-nav.js    # Test client navigation - WORKS
+node dist/test-add-note.js      # Test Add Note flow - WORKS (opens note editor)
+node dist/test-fill-note.js     # Test form filling - WORKS (CC + rich text editors)
+node dist/test-add-diagnosis.js # Test Add Diagnosis - WORKS (F32.1 added successfully)
 ```
 
 **Form Field Types (Kyle Roller Intake Note):**
@@ -219,10 +221,20 @@ node dist/test-add-note.js    # Test Add Note flow - WORKS (opens note editor)
 - **Section 6 - Substance Use**: Rich text editor
 - **Section 7+ (MSE, Assessment, Plan)**: Rich text editors
 
+**Add Diagnosis Flow (tested 2026-02-04):**
+1. Click More button in note header (position y ≈ 110-130, NOT top nav)
+2. Click "Add Diagnosis" from dropdown menu
+3. Search input appears - enter ICD-10 code (e.g., "F32.1")
+4. Results appear as `.list-group-item` elements
+5. Click on result to add diagnosis
+6. Diagnosis appears in "Diagnostic Codes" panel
+7. Selector for More button: `button.dropdown-toggle:has-text("More")` at y > 100
+
 **What the Next Session Needs to Do:**
-1. Test Add Diagnosis flow (search for ICD-10, select, close)
+1. ~~Test Add Diagnosis flow~~ ✅ Done (F32.1 added successfully)
 2. Test full end-to-end: create note with content → save → lock
 3. Map Epic Scribe generated note sections to IntakeQ form fields
+4. Implement `pushNoteToIntakeQ()` function that combines all steps
 
 **Components:**
 - `services/intakeq-playwright/` - Playwright automation, selectors, note mapper
