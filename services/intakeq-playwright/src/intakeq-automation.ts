@@ -550,21 +550,58 @@ export class IntakeQAutomation {
 
     // Search for the diagnosis
     await searchInput.fill(diagnosis.code);
-    await this.page.waitForTimeout(1500);
+    await this.page.waitForTimeout(2000); // Wait longer for search to filter
 
-    // Click on matching diagnosis in results
-    const resultSelector = `.list-group-item:has-text("${diagnosis.code}")`;
-    const diagnosisResult = await this.page.$(resultSelector);
-    if (diagnosisResult) {
-      await diagnosisResult.click();
-      console.log(`[IntakeQ] ✓ Added diagnosis: ${diagnosis.code}`);
-    } else {
-      console.warn(`[IntakeQ] ✗ Diagnosis not found in results: ${diagnosis.code}`);
+    // Try multiple selectors to find the diagnosis result
+    // IntakeQ uses custom card/row elements, not .list-group-item
+    const selectors = [
+      `div:has-text("${diagnosis.code}"):not(:has(input))`, // Div containing code (not the input)
+      `[class*="diagnostic"]:has-text("${diagnosis.code}")`, // Any diagnostic-related class
+      `[class*="code"]:has-text("${diagnosis.code}")`, // Code-related class
+      `tr:has-text("${diagnosis.code}")`, // Table row
+      `.list-group-item:has-text("${diagnosis.code}")`, // Original selector as fallback
+    ];
+
+    let clicked = false;
+    for (const selector of selectors) {
+      try {
+        // Find all matching elements
+        const elements = await this.page.$$(selector);
+        for (const el of elements) {
+          const box = await el.boundingBox();
+          // Only click elements within the diagnostic codes panel (right side of screen, reasonable size)
+          if (box && box.x > 500 && box.width > 200 && box.height > 30 && box.height < 150) {
+            await el.click();
+            console.log(`[IntakeQ] ✓ Added diagnosis: ${diagnosis.code}`);
+            clicked = true;
+            break;
+          }
+        }
+        if (clicked) break;
+      } catch {
+        // Selector didn't match, try next
+      }
+    }
+
+    if (!clicked) {
+      // Try clicking by text directly
+      try {
+        await this.page.click(`text="${diagnosis.code}"`, { timeout: 2000 });
+        console.log(`[IntakeQ] ✓ Added diagnosis via text click: ${diagnosis.code}`);
+        clicked = true;
+      } catch {
+        console.warn(`[IntakeQ] ✗ Diagnosis not found in results: ${diagnosis.code}`);
+      }
     }
 
     await this.page.waitForTimeout(500);
 
-    // Close the diagnosis panel (click outside or press Escape)
+    // Close the diagnosis panel after adding this diagnosis
+    // IntakeQ sometimes opens snippet modals that need to be dismissed
+    await this.page.keyboard.press('Escape');
+    await this.page.waitForTimeout(500);
+
+    // Try pressing Escape again in case there are nested modals
     await this.page.keyboard.press('Escape');
     await this.page.waitForTimeout(300);
   }
