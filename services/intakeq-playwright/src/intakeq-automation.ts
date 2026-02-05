@@ -22,9 +22,10 @@ import {
   DiagnosisCode,
   CreateNoteResult,
   AutomationConfig,
+  IntakeQFieldMapping,
 } from './types';
 import { SELECTORS, getSelector } from './selectors';
-import { buildIntakeQNote, MappedNote } from './note-mapper';
+import { buildIntakeQNote, mapEpicScribeNoteToIntakeQ, extractDiagnoses, MappedNote } from './note-mapper';
 
 const DEFAULT_CONFIG: Required<AutomationConfig> = {
   headless: true,
@@ -204,23 +205,47 @@ export class IntakeQAutomation {
     epicScribeNote: string,
     options: {
       template?: 'intake' | 'progress';
+      templateName?: string;
       signatureRequired?: boolean;
       lockAfterSave?: boolean;
+      /** Custom field mappings from database (overrides hardcoded mappings) */
+      fieldMappings?: IntakeQFieldMapping[];
+      /** Custom section-to-editable-index mapping (overrides hardcoded mappings) */
+      sectionToEditableIndex?: Record<number, number>;
     } = {}
   ): Promise<CreateNoteResult> {
     const {
       template = 'intake',
+      templateName,
       signatureRequired = false,
       lockAfterSave = true,
+      fieldMappings,
+      sectionToEditableIndex,
     } = options;
 
     console.log('[IntakeQ] === Starting Push Note to IntakeQ ===');
     console.log(`[IntakeQ] Client GUID: ${clientGuid}`);
-    console.log(`[IntakeQ] Template: ${template}`);
+    console.log(`[IntakeQ] Template: ${templateName || template}`);
+
+    let mappedNote: MappedNote;
 
     // Step 1: Map the Epic Scribe note to IntakeQ format
-    console.log('[IntakeQ] Mapping Epic Scribe note to IntakeQ format...');
-    const mappedNote = buildIntakeQNote(epicScribeNote, { template });
+    if (fieldMappings && fieldMappings.length > 0) {
+      // Use custom field mappings from database
+      console.log(`[IntakeQ] Using custom field mappings (${fieldMappings.length} fields)`);
+      const sections = mapEpicScribeNoteToIntakeQ(epicScribeNote, fieldMappings);
+      const diagnoses = extractDiagnoses(epicScribeNote);
+
+      mappedNote = {
+        sections,
+        diagnoses,
+        templateName: templateName || (template === 'intake' ? 'Kyle Roller Intake Note' : 'Kyle Roller Progress Note'),
+      };
+    } else {
+      // Use hardcoded mappings (legacy behavior)
+      console.log('[IntakeQ] Using hardcoded field mappings');
+      mappedNote = buildIntakeQNote(epicScribeNote, { template });
+    }
 
     console.log(`[IntakeQ] Mapped ${mappedNote.sections.length} sections`);
     console.log(`[IntakeQ] Found ${mappedNote.diagnoses.length} diagnoses`);
@@ -234,8 +259,8 @@ export class IntakeQAutomation {
       signatureRequired,
     };
 
-    // Step 3: Execute the note creation
-    return this.createNoteWithMappedContent(noteToCreate, lockAfterSave);
+    // Step 3: Execute the note creation (pass sectionToEditableIndex if provided)
+    return this.createNoteWithMappedContent(noteToCreate, lockAfterSave, sectionToEditableIndex);
   }
 
   /**
@@ -243,7 +268,8 @@ export class IntakeQAutomation {
    */
   private async createNoteWithMappedContent(
     note: NoteToCreate,
-    lockAfterSave: boolean
+    lockAfterSave: boolean,
+    sectionToEditableIndex?: Record<number, number>
   ): Promise<CreateNoteResult> {
     if (!this.page || !this.isLoggedIn) {
       throw new Error('Not logged in. Call login() first.');
@@ -278,7 +304,7 @@ export class IntakeQAutomation {
 
       // Step 5: Fill all sections
       console.log('[IntakeQ] Filling note sections...');
-      await this.fillAllSections(note.noteContent);
+      await this.fillAllSections(note.noteContent, sectionToEditableIndex);
 
       // Step 6: Add diagnoses
       if (note.diagnoses.length > 0) {
@@ -341,8 +367,11 @@ export class IntakeQAutomation {
   /**
    * Create a new treatment note for a client (legacy method)
    */
-  async createNote(note: NoteToCreate): Promise<CreateNoteResult> {
-    return this.createNoteWithMappedContent(note, true);
+  async createNote(
+    note: NoteToCreate,
+    sectionToEditableIndex?: Record<number, number>
+  ): Promise<CreateNoteResult> {
+    return this.createNoteWithMappedContent(note, true, sectionToEditableIndex);
   }
 
   /**
@@ -395,13 +424,37 @@ export class IntakeQAutomation {
   }
 
   /**
+   * Default section-to-editable-index mapping for Kyle Roller Intake Note
+   * Used when no custom mapping is provided
+   */
+  private static readonly DEFAULT_SECTION_TO_EDITABLE_INDEX: Record<number, number> = {
+    3: 0,   // HPI
+    4: 1,   // Psychiatric ROS
+    5: 2,   // Social History
+    6: 3,   // Substance Use
+    7: 4,   // Medication History
+    8: 5,   // Medical ROS
+    // 9: Allergies (checkbox, skip)
+    10: 6,  // MSE
+    // 11: Risk Assessment - NO separate field, include in Assessment and Plan
+    // 12: Diagnosis (via Add Diagnosis, skip)
+    13: 7,  // Assessment and Plan (includes Risk Assessment)
+  };
+
+  /**
    * Fill all sections of the note
    *
    * IntakeQ note structure:
    * - Section 2 (CC): input field with placeholder="Chief Complaint"
    * - Sections 3-13: contenteditable rich text editors
+   *
+   * @param sections - Note sections to fill
+   * @param customSectionMapping - Optional custom section-to-editable-index mapping
    */
-  private async fillAllSections(sections: NoteSection[]): Promise<void> {
+  private async fillAllSections(
+    sections: NoteSection[],
+    customSectionMapping?: Record<number, number>
+  ): Promise<void> {
     if (!this.page) return;
 
     // Sort sections by section number
@@ -414,23 +467,12 @@ export class IntakeQAutomation {
     const contenteditables = await this.page.$$('[contenteditable="true"]');
     console.log(`[IntakeQ] Found ${contenteditables.length} contenteditable elements`);
 
-    // Map section numbers to contenteditable indices
-    // Kyle Roller Intake Note has 8 contenteditables (after CC input):
-    // 0: HPI, 1: Psych ROS, 2: Social, 3: Substance Use, 4: Meds, 5: Medical ROS, 6: MSE, 7: Assessment/Plan
-    // Note: No separate Risk Assessment field - it should be included in Assessment and Plan
-    const sectionToEditableIndex: { [key: number]: number } = {
-      3: 0,   // HPI
-      4: 1,   // Psychiatric ROS
-      5: 2,   // Social History
-      6: 3,   // Substance Use
-      7: 4,   // Medication History
-      8: 5,   // Medical ROS
-      // 9: Allergies (checkbox, skip)
-      10: 6,  // MSE
-      // 11: Risk Assessment - NO separate field, include in Assessment and Plan
-      // 12: Diagnosis (via Add Diagnosis, skip)
-      13: 7,  // Assessment and Plan (includes Risk Assessment)
-    };
+    // Use custom mapping if provided, otherwise use default
+    const sectionToEditableIndex = customSectionMapping || IntakeQAutomation.DEFAULT_SECTION_TO_EDITABLE_INDEX;
+
+    if (customSectionMapping) {
+      console.log(`[IntakeQ] Using custom section mapping: ${JSON.stringify(customSectionMapping)}`);
+    }
 
     for (const section of sortedSections) {
       const sectionNum = section.sectionNumber || 0;
@@ -844,10 +886,15 @@ export async function pushNoteToIntakeQ(options: {
   clientGuid: string;
   epicScribeNote: string;
   template?: 'intake' | 'progress';
+  templateName?: string;
   signatureRequired?: boolean;
   lockAfterSave?: boolean;
   headless?: boolean;
   screenshotDir?: string;
+  /** Custom field mappings from database (overrides hardcoded mappings) */
+  fieldMappings?: IntakeQFieldMapping[];
+  /** Custom section-to-editable-index mapping (overrides hardcoded mappings) */
+  sectionToEditableIndex?: Record<number, number>;
 }): Promise<CreateNoteResult> {
   const automation = new IntakeQAutomation({
     headless: options.headless ?? true,
@@ -863,8 +910,11 @@ export async function pushNoteToIntakeQ(options: {
       options.epicScribeNote,
       {
         template: options.template,
+        templateName: options.templateName,
         signatureRequired: options.signatureRequired,
         lockAfterSave: options.lockAfterSave,
+        fieldMappings: options.fieldMappings,
+        sectionToEditableIndex: options.sectionToEditableIndex,
       }
     );
   } finally {

@@ -7,7 +7,7 @@
 
 ---
 
-## Current Status (2026-02-04)
+## Current Status (2026-02-05)
 
 ### Working Features
 - **Note Generation**: Full workflow with Gemini 2.5 Pro API + automatic failover to backup API key
@@ -22,6 +22,7 @@
 - **IntakeQ Integration (Read Path)**: Auto-fetch prior notes from IntakeQ for Moonlit Psychiatry patients
 - **IntakeQ Integration (Write Path)**: Push generated notes to IntakeQ via Playwright automation (local only)
 - **Prior Notes Import**: Clipboard-based Epic note import with auto-population in workflow UI
+- **Multi-Provider Support**: Per-provider IntakeQ credentials and template configurations via Admin UI
 
 ### Known Issues
 1. **Google OAuth Token Expiration** - Workaround: Sign out/in to refresh (~1 hour expiry)
@@ -56,9 +57,10 @@ NEXTAUTH_SECRET=
 INTAKEQ_API_KEY=          # Get from IntakeQ Settings > Integrations > Developer API
 
 # IntakeQ Playwright (for pushing notes - local/server only, not Vercel)
-INTAKEQ_USER_EMAIL=       # IntakeQ login email
-INTAKEQ_USER_PASSWORD=    # IntakeQ login password
-INTAKEQ_NOTE_TEMPLATE_NAME=  # Optional, defaults to "Moonlit Psychiatric Note"
+# These are fallbacks - prefer configuring per-provider in Admin UI
+INTAKEQ_USER_EMAIL=       # IntakeQ login email (fallback if no DB credentials)
+INTAKEQ_USER_PASSWORD=    # IntakeQ login password (fallback if no DB credentials)
+INTAKEQ_NOTE_TEMPLATE_NAME=  # Optional, defaults to "Kyle Roller Intake Note"
 ```
 
 **Note:** When changing domains, update both:
@@ -123,7 +125,46 @@ pnpm lint             # Check for issues
 
 ---
 
-## Recent Updates (2026-02-04)
+## Recent Updates (2026-02-05)
+
+### Multi-Provider IntakeQ Integration (COMPLETE)
+Transformed from single-user MVP to multi-provider system where each provider has their own IntakeQ credentials and template configurations.
+
+**Database Tables (Migration 018-019):**
+- `epic_scribe_user_providers` - Links NextAuth users (by email) to moonlit-scheduler providers
+- `provider_intakeq_credentials` - IntakeQ login credentials per provider for Playwright automation
+- `intakeq_templates` - IntakeQ note template definitions (name, type, field count)
+- `intakeq_template_fields` - Field mappings from Epic Scribe sections to IntakeQ form fields
+
+**Admin UI (`/admin`):**
+- Configure IntakeQ credentials (email, password, default template)
+- View/edit linked users (admin only)
+- View available IntakeQ templates
+
+**How it works:**
+1. User signs in with Google (NextAuth)
+2. System looks up provider via `epic_scribe_user_providers` (by email)
+3. When pushing notes to IntakeQ:
+   - Uses provider's DB credentials (fallback to env vars if not configured)
+   - Loads template field mappings from database
+   - Passes dynamic mappings to Playwright automation
+4. Admin users can link new users to providers and manage credentials
+
+**Initial Providers:**
+- Rufus Sweeney (rufussweeney@gmail.com) - Admin
+- Merrick Reynolds (merricksreynolds@gmail.com)
+- Kyle Roller (bigrollerdad@gmail.com)
+
+**Files:**
+- `apps/web/src/lib/db/providers.ts` - Provider DB operations
+- `apps/web/src/lib/db/intakeq-templates.ts` - Template DB operations
+- `apps/web/app/(protected)/admin/page.tsx` - Admin dashboard UI
+- `apps/web/app/api/admin/` - Admin API routes (data, credentials, link-user)
+- `services/intakeq-playwright/src/intakeq-automation.ts` - Updated for dynamic field mappings
+
+---
+
+## Previous Updates (2026-02-04)
 
 ### Prior Notes Import System (COMPLETE)
 Clipboard-based import of Epic copy-forward notes for **non-Moonlit** settings (HMHI, Redwood, Davis, etc.).
