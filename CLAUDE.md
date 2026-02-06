@@ -150,10 +150,13 @@ Transformed from single-user MVP to multi-provider system where each provider ha
    - Passes dynamic mappings to Playwright automation
 4. Admin users can link new users to providers and manage credentials
 
-**Initial Providers:**
-- Rufus Sweeney (rufussweeney@gmail.com) - Admin
-- Merrick Reynolds (merricksreynolds@gmail.com)
-- Kyle Roller (bigrollerdad@gmail.com)
+**Linked Users (epic_scribe_user_providers):**
+- hello@trymoonlit.com → Rufus Sweeney (Admin) - primary login for Epic Scribe
+- rufussweeney@gmail.com → Rufus Sweeney (Admin)
+- merricksreynolds@gmail.com → Merrick Reynolds
+- bigrollerdad@gmail.com → Kyle Roller
+
+**Note:** Users must be linked in `epic_scribe_user_providers` table by their NextAuth login email (the Google account they use to sign into Epic Scribe), not their provider email in moonlit-scheduler.
 
 **Files:**
 - `apps/web/src/lib/db/providers.ts` - Provider DB operations
