@@ -19,7 +19,7 @@ import {
   getAllProviders,
   getProviderIntakeQCredentials,
 } from '@/lib/db/providers';
-import { getAllTemplates } from '@/lib/db/intakeq-templates';
+import { getAllTemplates, getTemplatesForProvider } from '@/lib/db/intakeq-templates';
 
 export async function GET() {
   try {
@@ -33,8 +33,10 @@ export async function GET() {
     const currentProvider = await getProviderByEmail(session.user.email);
     const isAdmin = currentProvider?.is_admin || false;
 
-    // Get templates (available to all)
-    const templates = await getAllTemplates();
+    // Get templates filtered by provider (or all if no provider)
+    const templates = currentProvider
+      ? await getTemplatesForProvider(currentProvider.id)
+      : await getAllTemplates();
 
     // Get current user's credentials (if they have any)
     let currentCredentials = null;

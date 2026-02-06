@@ -26,8 +26,21 @@ interface FormField {
 }
 
 async function exploreFields() {
+  // Parse CLI args
+  const args = process.argv.slice(2);
+  const listMode = args.includes('--list');
+  const emailIdx = args.indexOf('--email');
+  const passwordIdx = args.indexOf('--password');
+  const loginEmail = emailIdx >= 0 && args[emailIdx + 1] ? args[emailIdx + 1] : (process.env.INTAKEQ_LOGIN_EMAIL || 'hello@trymoonlit.com');
+  const loginPassword = passwordIdx >= 0 && args[passwordIdx + 1] ? args[passwordIdx + 1] : (process.env.INTAKEQ_LOGIN_PASSWORD || '2LB8VMvP@edQO$4k');
+  const templateArg = args.find(a => !a.startsWith('--') && args.indexOf(a) !== emailIdx + 1 && args.indexOf(a) !== passwordIdx + 1);
+  const selectedTemplate = templateArg || 'Kyle Roller Intake Note';
+
   console.log('=== IntakeQ Form Field Explorer ===\n');
   console.log(`Test Patient: ${TEST_PATIENT.name}\n`);
+  if (!listMode) {
+    console.log(`Template: ${selectedTemplate}\n`);
+  }
 
   const automation = new IntakeQAutomation({
     headless: false,
@@ -39,8 +52,8 @@ async function exploreFields() {
     console.log('1. Initializing and logging in...');
     await automation.initialize();
     await automation.login({
-      email: 'hello@trymoonlit.com',
-      password: '2LB8VMvP@edQO$4k',
+      email: loginEmail,
+      password: loginPassword,
     });
 
     console.log('2. Navigating to test patient...');
@@ -66,10 +79,16 @@ async function exploreFields() {
       }
     }
 
-    // Select "Kyle Roller Intake Note" for full exploration (has more fields)
-    console.log('\n4. Selecting "Kyle Roller Intake Note" template...');
+    // In list mode, just print templates and exit
+    if (listMode) {
+      console.log('\n(--list mode: exiting after listing templates)');
+      return;
+    }
+
+    // Select the requested template
+    console.log(`\n4. Selecting "${selectedTemplate}" template...`);
     if (templateSelect) {
-      await templateSelect.selectOption({ label: 'Kyle Roller Intake Note' });
+      await templateSelect.selectOption({ label: selectedTemplate });
     }
     await page.waitForTimeout(500);
 

@@ -158,6 +158,7 @@ export default function NoteResultsStep({
           intakeqGuid: selectedPatient.intakeq_guid,
           patientEmail: selectedPatient.email,
           generatedNote: editedNote,
+          visitType: visitType,
         }),
       });
 

@@ -37,6 +37,7 @@ import { updatePatient } from '@/lib/db/patients';
 import { getProviderByEmail } from '@/lib/db/providers';
 import {
   getTemplateByName,
+  getTemplatesForProvider,
   convertToFieldMappings,
   buildSectionToEditableIndex,
 } from '@/lib/db/intakeq-templates';
@@ -47,6 +48,7 @@ interface PushNoteRequest {
   patientEmail?: string;
   generatedNote: string;
   templateName?: string;
+  visitType?: string;
   signatureRequired?: boolean;
 }
 
@@ -75,17 +77,18 @@ export async function POST(request: NextRequest) {
     let intakeqEmail: string | undefined;
     let intakeqPassword: string | undefined;
     let defaultTemplateName: string | undefined;
+    let currentProvider: Awaited<ReturnType<typeof getProviderByEmail>> = null;
 
     if (userEmail) {
-      const provider = await getProviderByEmail(userEmail);
+      currentProvider = await getProviderByEmail(userEmail);
 
-      if (provider?.intakeq_credentials) {
-        console.log(`[PushNote] Using DB credentials for provider: ${provider.first_name} ${provider.last_name}`);
-        intakeqEmail = provider.intakeq_credentials.login_email;
-        intakeqPassword = provider.intakeq_credentials.login_password;
-        defaultTemplateName = provider.intakeq_credentials.default_template_name || undefined;
-      } else if (provider) {
-        console.log(`[PushNote] Provider found but no IntakeQ credentials: ${provider.first_name} ${provider.last_name}`);
+      if (currentProvider?.intakeq_credentials) {
+        console.log(`[PushNote] Using DB credentials for provider: ${currentProvider.first_name} ${currentProvider.last_name}`);
+        intakeqEmail = currentProvider.intakeq_credentials.login_email;
+        intakeqPassword = currentProvider.intakeq_credentials.login_password;
+        defaultTemplateName = currentProvider.intakeq_credentials.default_template_name || undefined;
+      } else if (currentProvider) {
+        console.log(`[PushNote] Provider found but no IntakeQ credentials: ${currentProvider.first_name} ${currentProvider.last_name}`);
       }
     }
 
@@ -138,8 +141,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determine template name (priority: request > provider default > env > hardcoded)
-    const templateName = body.templateName || defaultTemplateName || process.env.INTAKEQ_NOTE_TEMPLATE_NAME || 'Kyle Roller Intake Note';
+    // Determine template name (priority: request > visit-type match > provider default > env > hardcoded)
+    let templateName = body.templateName || defaultTemplateName;
+
+    // If no explicit template and we have a provider + visitType, auto-select intake vs progress
+    if (!templateName && currentProvider && body.visitType) {
+      const isIntake = body.visitType === 'Intake';
+      const providerTemplates = await getTemplatesForProvider(currentProvider.id);
+      const match = providerTemplates.find(t => t.template_type === (isIntake ? 'intake' : 'progress'));
+      if (match) {
+        templateName = match.name;
+        console.log(`[PushNote] Auto-selected template by visit type (${body.visitType}): ${templateName}`);
+      }
+    }
+
+    templateName = templateName || process.env.INTAKEQ_NOTE_TEMPLATE_NAME || 'Kyle Roller Intake Note';
     const signatureRequired = body.signatureRequired !== false;
 
     let clientGuid = body.intakeqGuid;
