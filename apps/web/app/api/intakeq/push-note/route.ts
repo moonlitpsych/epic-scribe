@@ -3,10 +3,9 @@
  *
  * Uses Playwright browser automation to create a note in IntakeQ.
  *
- * IMPORTANT: This endpoint requires a real browser, which means:
- * - Works locally (pnpm dev)
- * - Does NOT work on Vercel serverless functions
- * - For production, run on a server with browser support (Render, Railway, self-hosted)
+ * Browser strategy:
+ * - If BROWSERBASE_API_KEY is set: uses Browserbase (remote browser-as-a-service) — works on Vercel
+ * - Otherwise: launches local Chromium via Playwright — works in local dev
  *
  * Request body:
  *   - patientId: string - Epic Scribe patient ID (used to store IntakeQ GUID)
@@ -42,6 +41,9 @@ import {
   buildSectionToEditableIndex,
 } from '@/lib/db/intakeq-templates';
 
+// Allow up to 60s for browser automation (login + form fill + save/lock)
+export const maxDuration = 60;
+
 interface PushNoteRequest {
   patientId: string;
   intakeqGuid?: string;
@@ -53,18 +55,6 @@ interface PushNoteRequest {
 }
 
 export async function POST(request: NextRequest) {
-  // Check if we're in a serverless environment
-  const isServerless = process.env.VERCEL === '1' || process.env.AWS_LAMBDA_FUNCTION_NAME;
-  if (isServerless) {
-    return NextResponse.json(
-      {
-        error: 'Browser automation not supported in serverless environment',
-        hint: 'Run this endpoint locally or on a server with browser support',
-      },
-      { status: 501 }
-    );
-  }
-
   try {
     const session = await getServerSession(authOptions);
 
@@ -223,12 +213,28 @@ export async function POST(request: NextRequest) {
     const diagnoses = extractDiagnosesFromNote(body.generatedNote);
     console.log(`[PushNote] Found ${diagnoses.length} diagnoses`);
 
+    // Determine browser strategy: Browserbase (remote) or local Chromium
+    const browserbaseApiKey = process.env.BROWSERBASE_API_KEY;
+    const browserbaseProjectId = process.env.BROWSERBASE_PROJECT_ID;
+    const isServerless = process.env.VERCEL === '1' || process.env.AWS_LAMBDA_FUNCTION_NAME;
+
+    if (isServerless && !browserbaseApiKey) {
+      return NextResponse.json(
+        {
+          error: 'Browser automation requires Browserbase in serverless environments. Set BROWSERBASE_API_KEY and BROWSERBASE_PROJECT_ID.',
+        },
+        { status: 501 }
+      );
+    }
+
     // Initialize Playwright automation
-    console.log('[PushNote] Initializing browser automation...');
+    console.log(`[PushNote] Initializing browser automation (${browserbaseApiKey ? 'Browserbase' : 'local'})...`);
     const automation = new IntakeQAutomation({
       headless: process.env.NODE_ENV === 'production',
       screenshotOnError: true,
       screenshotDir: '/tmp/intakeq-screenshots',
+      browserbaseApiKey,
+      browserbaseProjectId,
     });
 
     try {

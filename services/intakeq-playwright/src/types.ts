@@ -48,6 +48,8 @@ export interface AutomationConfig {
   timeout?: number;                // Default timeout (ms), default: 30000
   screenshotOnError?: boolean;     // Take screenshot on failure
   screenshotDir?: string;          // Where to save screenshots
+  browserbaseApiKey?: string;      // If set, use Browserbase instead of local browser
+  browserbaseProjectId?: string;   // Browserbase project ID
 }
 
 /**

@@ -13,8 +13,9 @@
     "test:headed": "npx playwright test --headed"
   },
   "dependencies": {
+    "@browserbasehq/sdk": "^2.0.0",
     "@epic-scribe/intakeq-api": "workspace:*",
-    "playwright": "^1.41.0"
+    "playwright-core": "^1.41.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

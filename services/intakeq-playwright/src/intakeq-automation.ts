@@ -8,11 +8,11 @@
  * This module should only be used server-side (API routes, not client components).
  */
 
-import type { Browser, BrowserContext, Page } from 'playwright';
+import type { Browser, BrowserContext, Page } from 'playwright-core';
 
 // Dynamic import to avoid bundling issues
 async function getPlaywright() {
-  const { chromium } = await import('playwright');
+  const { chromium } = await import('playwright-core');
   return chromium;
 }
 import {
@@ -27,7 +27,7 @@ import {
 import { SELECTORS, getSelector } from './selectors';
 import { buildIntakeQNote, mapEpicScribeNoteToIntakeQ, extractDiagnoses, MappedNote } from './note-mapper';
 
-const DEFAULT_CONFIG: Required<AutomationConfig> = {
+const DEFAULT_CONFIG: AutomationConfig & { headless: boolean; slowMo: number; timeout: number; screenshotOnError: boolean; screenshotDir: string } = {
   headless: true,
   slowMo: 50,
   timeout: 30000,
@@ -39,8 +39,9 @@ export class IntakeQAutomation {
   private browser: Browser | null = null;
   private context: BrowserContext | null = null;
   private page: Page | null = null;
-  private config: Required<AutomationConfig>;
+  private config: typeof DEFAULT_CONFIG & AutomationConfig;
   private isLoggedIn = false;
+  private browserbaseSessionId: string | null = null;
 
   constructor(config: AutomationConfig = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -52,25 +53,52 @@ export class IntakeQAutomation {
 
   /**
    * Initialize the browser
+   *
+   * When browserbaseApiKey is configured, connects to a remote Browserbase session
+   * via CDP. Otherwise launches a local Chromium instance.
    */
   async initialize(): Promise<void> {
-    console.log('[IntakeQ] Initializing browser...');
-
     const chromium = await getPlaywright();
-    this.browser = await chromium.launch({
-      headless: this.config.headless,
-      slowMo: this.config.slowMo,
-    });
 
-    this.context = await this.browser.newContext({
-      viewport: { width: 1280, height: 800 },
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    });
+    if (this.config.browserbaseApiKey) {
+      // Remote browser via Browserbase
+      console.log('[IntakeQ] Initializing remote browser via Browserbase...');
 
-    this.page = await this.context.newPage();
-    this.page.setDefaultTimeout(this.config.timeout);
+      const { Browserbase } = await import('@browserbasehq/sdk');
+      const bb = new Browserbase({ apiKey: this.config.browserbaseApiKey });
 
-    console.log('[IntakeQ] Browser initialized');
+      const session = await bb.sessions.create({
+        projectId: this.config.browserbaseProjectId!,
+      });
+      this.browserbaseSessionId = session.id;
+
+      console.log(`[IntakeQ] Browserbase session created: ${session.id}`);
+
+      this.browser = await chromium.connectOverCDP(session.connectUrl);
+      this.context = this.browser.contexts()[0];
+      this.page = this.context.pages()[0];
+      this.page.setDefaultTimeout(this.config.timeout);
+
+      console.log('[IntakeQ] Remote browser connected');
+    } else {
+      // Local browser
+      console.log('[IntakeQ] Initializing local browser...');
+
+      this.browser = await chromium.launch({
+        headless: this.config.headless,
+        slowMo: this.config.slowMo,
+      });
+
+      this.context = await this.browser.newContext({
+        viewport: { width: 1280, height: 800 },
+        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      });
+
+      this.page = await this.context.newPage();
+      this.page.setDefaultTimeout(this.config.timeout);
+
+      console.log('[IntakeQ] Local browser initialized');
+    }
   }
 
   /**
@@ -79,16 +107,27 @@ export class IntakeQAutomation {
   async close(): Promise<void> {
     console.log('[IntakeQ] Closing browser...');
 
-    if (this.context) {
-      await this.context.close();
-      this.context = null;
+    if (this.browserbaseSessionId) {
+      // For Browserbase, close the page then disconnect
+      if (this.page) {
+        await this.page.close().catch(() => {});
+      }
+      if (this.browser) {
+        await this.browser.close().catch(() => {});
+      }
+      this.browserbaseSessionId = null;
+    } else {
+      // Local browser — close context then browser
+      if (this.context) {
+        await this.context.close();
+      }
+      if (this.browser) {
+        await this.browser.close();
+      }
     }
 
-    if (this.browser) {
-      await this.browser.close();
-      this.browser = null;
-    }
-
+    this.context = null;
+    this.browser = null;
     this.page = null;
     this.isLoggedIn = false;
 
@@ -895,10 +934,16 @@ export async function pushNoteToIntakeQ(options: {
   fieldMappings?: IntakeQFieldMapping[];
   /** Custom section-to-editable-index mapping (overrides hardcoded mappings) */
   sectionToEditableIndex?: Record<number, number>;
+  /** Browserbase API key — if set, uses a remote browser instead of local Chromium */
+  browserbaseApiKey?: string;
+  /** Browserbase project ID */
+  browserbaseProjectId?: string;
 }): Promise<CreateNoteResult> {
   const automation = new IntakeQAutomation({
     headless: options.headless ?? true,
     screenshotDir: options.screenshotDir ?? './screenshots',
+    browserbaseApiKey: options.browserbaseApiKey,
+    browserbaseProjectId: options.browserbaseProjectId,
   });
 
   try {
