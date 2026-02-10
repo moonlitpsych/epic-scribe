@@ -2,7 +2,7 @@
 
 **Owner:** Dr. Rufus Sweeney (PGY‑3 Psychiatry)
 **Stack:** Next.js 14, pnpm monorepo, Supabase, Gemini API
-**Production URL:** https://strong.work (custom domain on Vercel)
+**Production URL:** https://epic-scribe.vercel.app
 **North Star:** Generate Epic-ready psychiatry notes with SmartTools that require <5 minutes of edits
 
 ---
@@ -50,7 +50,7 @@ GOOGLE_CLIENT_SECRET=
 SHARED_CALENDAR_ID=       # For HIPAA-compliant Meet hosting
 
 # NextAuth
-NEXTAUTH_URL=             # Production: https://strong.work
+NEXTAUTH_URL=             # Production: https://epic-scribe.vercel.app
 NEXTAUTH_SECRET=
 
 # IntakeQ API (for Moonlit Psychiatry prior notes)
@@ -394,8 +394,8 @@ npx playwright install chromium  # Install browser (only needed for local, not B
 ## Previous Updates (2025-01-05)
 
 ### Custom Domain Migration
-- Production moved from `epic-scribe.vercel.app` to **https://strong.work**
-- Google OAuth configured for new domain
+- Production URL: `https://epic-scribe.vercel.app`
+- Google OAuth configured for this domain
 - No hardcoded URLs in codebase - all use `NEXTAUTH_URL` env var
 
 ### Patient Demographics Editing
