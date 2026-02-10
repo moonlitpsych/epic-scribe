@@ -64,6 +64,8 @@ async function testFullPush() {
     lockAfterSave: true,
     headless: false,  // Set to true for production
     screenshotDir: '/Users/macsweeney/Projects/epic-scribe/services/intakeq-playwright/screenshots',
+    browserbaseApiKey: process.env.BROWSERBASE_API_KEY,
+    browserbaseProjectId: process.env.BROWSERBASE_PROJECT_ID,
   });
 
   console.log('=' .repeat(50));

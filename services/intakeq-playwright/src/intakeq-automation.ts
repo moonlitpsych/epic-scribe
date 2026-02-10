@@ -386,10 +386,14 @@ export class IntakeQAutomation {
       console.error('[IntakeQ] Error creating note:', error);
 
       if (this.config.screenshotOnError && this.page) {
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const path = `${this.config.screenshotDir}/error-${timestamp}.png`;
-        await this.page.screenshot({ path, fullPage: true });
-        console.log(`[IntakeQ] Screenshot saved: ${path}`);
+        try {
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+          const path = `${this.config.screenshotDir}/error-${timestamp}.png`;
+          await this.page.screenshot({ path, fullPage: true });
+          console.log(`[IntakeQ] Screenshot saved: ${path}`);
+        } catch {
+          console.warn('[IntakeQ] Could not take error screenshot (browser may be closed)');
+        }
       }
 
       return {
@@ -537,17 +541,15 @@ export class IntakeQAutomation {
         if (editableIndex !== undefined && editableIndex < contenteditables.length) {
           const editor = contenteditables[editableIndex];
 
-          // Scroll into view
+          // Scroll into view and set content via evaluate (much faster over CDP)
           await editor.scrollIntoViewIfNeeded();
           await this.page.waitForTimeout(200);
 
-          // Click to focus
-          await editor.click();
-          await this.page.waitForTimeout(100);
-
-          // Clear existing content and type new content
-          await this.page.keyboard.press('Control+A');
-          await this.page.keyboard.type(section.value);
+          await editor.evaluate((el: HTMLElement, text: string) => {
+            el.focus();
+            el.innerText = text;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+          }, section.value);
 
           console.log(`[IntakeQ] ✓ Filled section ${sectionNum}`);
         } else {
