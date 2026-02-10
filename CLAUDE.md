@@ -20,7 +20,7 @@
 - **Note Saving**: Save finalized notes with historical context for continuity
 - **Therapy Notes**: Specialized BHIDC therapy prompt builder
 - **IntakeQ Integration (Read Path)**: Auto-fetch prior notes from IntakeQ for Moonlit Psychiatry patients
-- **IntakeQ Integration (Write Path)**: Push generated notes to IntakeQ via Playwright automation (local only)
+- **IntakeQ Integration (Write Path)**: Push generated notes to IntakeQ via Playwright automation (Browserbase on Vercel, local Chromium in dev)
 - **Prior Notes Import**: Clipboard-based Epic note import with auto-population in workflow UI
 - **Multi-Provider Support**: Per-provider IntakeQ credentials and template configurations via Admin UI
 
@@ -56,11 +56,15 @@ NEXTAUTH_SECRET=
 # IntakeQ API (for Moonlit Psychiatry prior notes)
 INTAKEQ_API_KEY=          # Get from IntakeQ Settings > Integrations > Developer API
 
-# IntakeQ Playwright (for pushing notes - local/server only, not Vercel)
+# IntakeQ Playwright (for pushing notes)
 # These are fallbacks - prefer configuring per-provider in Admin UI
 INTAKEQ_USER_EMAIL=       # IntakeQ login email (fallback if no DB credentials)
 INTAKEQ_USER_PASSWORD=    # IntakeQ login password (fallback if no DB credentials)
 INTAKEQ_NOTE_TEMPLATE_NAME=  # Optional, defaults to "Kyle Roller Intake Note"
+
+# Browserbase (remote browser for serverless IntakeQ push)
+BROWSERBASE_API_KEY=      # Enables remote browser on Vercel; omit for local Chromium
+BROWSERBASE_PROJECT_ID=   # Browserbase project ID
 ```
 
 **Note:** When changing domains, update both:
@@ -125,7 +129,28 @@ pnpm lint             # Check for issues
 
 ---
 
-## Recent Updates (2026-02-05)
+## Recent Updates (2026-02-09)
+
+### Serverless IntakeQ Push via Browserbase (COMPLETE)
+IntakeQ write path now works on Vercel via Browserbase remote browser-as-a-service.
+
+**What changed:**
+- `playwright` → `playwright-core` (no bundled browsers for remote connect)
+- Added `@browserbasehq/sdk` dependency
+- `initialize()` branches: Browserbase CDP when `browserbaseApiKey` set, local Chromium otherwise
+- Contenteditable fields filled via `evaluate` + `innerText` instead of `keyboard.type` (instant over CDP)
+- API route: removed serverless 501 block, added `maxDuration = 60`, passes Browserbase config from env vars
+- `AutomationConfig` type extended with `browserbaseApiKey` / `browserbaseProjectId`
+
+**Files modified:**
+- `services/intakeq-playwright/package.json` — deps
+- `services/intakeq-playwright/src/types.ts` — config type
+- `services/intakeq-playwright/src/intakeq-automation.ts` — `initialize()`, `close()`, `fillAllSections()`, `pushNoteToIntakeQ()`
+- `apps/web/app/api/intakeq/push-note/route.ts` — serverless support
+
+---
+
+## Previous Updates (2026-02-05)
 
 ### Multi-Provider IntakeQ Integration (COMPLETE)
 Transformed from single-user MVP to multi-provider system where each provider has their own IntakeQ credentials and template configurations.
@@ -213,21 +238,17 @@ Auto-fetch prior notes from IntakeQ for **Moonlit Psychiatry** patients during F
 ### IntakeQ Integration - Write Path (COMPLETE)
 Push generated notes TO IntakeQ via Playwright browser automation.
 
-**IMPORTANT:** This only works locally or on servers with browser support. Does NOT work on Vercel serverless.
+**Browser strategy:**
+- **Vercel/serverless:** Uses [Browserbase](https://browserbase.com) (remote browser-as-a-service) via CDP connection. Requires `BROWSERBASE_API_KEY` + `BROWSERBASE_PROJECT_ID` env vars.
+- **Local dev:** Falls back to local Chromium when Browserbase env vars are not set. Set them locally to test the remote path.
+- API route timeout set to 60s (`maxDuration = 60`) for the full login + fill + save/lock flow.
+- Contenteditable fields are filled via `evaluate` + `innerText` (instant) rather than `keyboard.type` (too slow over CDP).
 
-**Current Status (2026-02-04):**
-- ✅ Login automation works (`https://intakeq.com/signin`)
-- ✅ Client navigation works (uses GUID-based URL)
-- ✅ Add Note flow implemented (selectors tested)
-- ✅ Template selection modal works
-- ✅ Form field filling works:
-  - CC (Chief Complaint): Simple input with `placeholder="Chief Complaint"`
-  - Other sections (HPI, Social History, etc.): Rich text editors using `contenteditable="true"`
-- ✅ More menu → Add Diagnosis works
-- ✅ Diagnosis search/select tested (F32.1 added successfully)
-- ✅ **Save/Lock flow WORKING** (tested 2026-02-04)
-- ⏳ Map Epic Scribe sections to IntakeQ fields
-- ⏳ Implement full `pushNoteToIntakeQ()` function
+**Current Status (2026-02-09):**
+- ✅ Full end-to-end working on Browserbase (tested 2026-02-09 with TestingPt Test)
+- ✅ Login, client navigation, template selection, form filling, diagnosis, save/lock
+- ✅ CC field filled via `input.fill()`, rich text sections via `evaluate` + `innerText`
+- ✅ Deployed to Vercel with Browserbase env vars
 
 **Test Patient (use for all testing):**
 - Name: TestingPt Test
@@ -343,28 +364,30 @@ Epic Scribe Section → IntakeQ Kyle Roller Intake Note Section:
 - `apps/web/src/components/workflow/NoteResultsStep.tsx` - UI button "Push to IntakeQ"
 - `INTAKEQ_INTEGRATION_ARCHITECTURE.md` - Full architecture documentation
 
-**Env vars required (already configured in .env.local):**
+**Env vars required (configured in .env.local + Vercel):**
 - `INTAKEQ_API_KEY` - For API lookups
 - `INTAKEQ_USER_EMAIL` - IntakeQ login (hello@trymoonlit.com)
 - `INTAKEQ_USER_PASSWORD` - IntakeQ password
 - `INTAKEQ_NOTE_TEMPLATE_NAME` (optional) - Template to use
+- `BROWSERBASE_API_KEY` - Remote browser for Vercel deployment
+- `BROWSERBASE_PROJECT_ID` - Browserbase project ID
 
 **Key Discovery - IntakeQ URL Structure:**
 - Login: `https://intakeq.com/signin`
 - Client profile: `https://intakeq.com/#/client/{GUID}?tab=timeline`
 - The GUID comes from the API response (`Guid` field), NOT the numeric `ClientId`
 
-**Playwright Setup:**
+**Playwright Setup (local dev only):**
 ```bash
-npx playwright install chromium  # Install browser (already done)
+npx playwright install chromium  # Install browser (only needed for local, not Browserbase)
 ```
 
 **Screenshots saved to:** `services/intakeq-playwright/screenshots/` (gitignored for PHI)
 
 **Limitations:**
-- Requires real browser (Chromium via Playwright)
 - UI selectors may need updating if IntakeQ changes their interface
-- Only works locally or on servers with browser support (not Vercel)
+- Browserbase sessions have a default timeout; long notes should be fine with `evaluate` but monitor if issues arise
+- Browserbase dashboard at browserbase.com has session replays for debugging
 
 ---
 
