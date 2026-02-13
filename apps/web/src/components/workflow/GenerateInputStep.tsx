@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Template, Setting } from '@epic-scribe/types';
-import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle, CloudDownload, Mail, Save } from 'lucide-react';
+import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle, CloudDownload, Mail, Save, Link2 } from 'lucide-react';
 import PatientSelector from './PatientSelector';
 import EncountersList from './EncountersList';
 import ManualNotePanel from './ManualNotePanel';
@@ -32,6 +32,7 @@ interface GenerateInputStepProps {
   initialPreviousNote?: string;
   selectedPatient?: Patient | null;
   encounterId?: string | null;
+  companionPriorNote?: string | null;
 }
 
 export default function GenerateInputStep({
@@ -45,6 +46,7 @@ export default function GenerateInputStep({
   initialPreviousNote = '',
   selectedPatient: initialPatient = null,
   encounterId: initialEncounterId = null,
+  companionPriorNote,
 }: GenerateInputStepProps) {
   const [transcript, setTranscript] = useState(initialTranscript);
   const [previousNote, setPreviousNote] = useState(initialPreviousNote);
@@ -80,6 +82,9 @@ export default function GenerateInputStep({
   const [showEmailPrompt, setShowEmailPrompt] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
   const [savingEmail, setSavingEmail] = useState(false);
+
+  // Companion sync state
+  const [companionSynced, setCompanionSynced] = useState(false);
 
   // Epic chart data - only needed for Intake/Consultation (no copied-forward note)
   const [epicChartData, setEpicChartData] = useState('');
@@ -178,6 +183,19 @@ export default function GenerateInputStep({
       fetchIntakeQPriorNote(selectedPatient.email);
     }
   }, [selectedPatient, setting, intakeQEnabled, requiresPreviousNote]);
+
+  // Auto-populate from Companion Portal prior note
+  useEffect(() => {
+    if (companionPriorNote && !previousNote && !companionSynced) {
+      setPreviousNote(companionPriorNote);
+      setCompanionSynced(true);
+      setAutoImportedNote(null);
+      setIntakeQNote(null);
+    } else if (companionPriorNote && companionPriorNote !== previousNote && !companionSynced) {
+      setPreviousNote(companionPriorNote);
+      setCompanionSynced(true);
+    }
+  }, [companionPriorNote]);
 
   const fetchIntakeQPriorNote = async (email: string) => {
     setIntakeQLoading(true);
@@ -651,6 +669,25 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
                     </p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Companion sync indicator */}
+            {companionSynced && (
+              <div className="flex items-center gap-2 mb-2 p-2 bg-indigo-50 border border-indigo-200 rounded-lg">
+                <Link2 className="text-indigo-600 flex-shrink-0" size={16} />
+                <span className="text-sm text-indigo-700">
+                  Synced from Companion Portal
+                </span>
+                <button
+                  onClick={() => {
+                    setCompanionSynced(false);
+                    setPreviousNote('');
+                  }}
+                  className="ml-auto text-xs text-indigo-600 hover:text-indigo-800 underline"
+                >
+                  Clear
+                </button>
               </div>
             )}
 

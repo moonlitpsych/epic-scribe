@@ -10,3 +10,4 @@ export * from './encounters';
 export * from './notes';
 export * from './chart-history';
 export * from './prior-notes';
+export * from './sync-sessions';

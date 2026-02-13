@@ -6,7 +6,9 @@ import { PromptReceipt } from '@/types/prompt';
 import TemplateReviewStep from './TemplateReviewStep';
 import GenerateInputStep from './GenerateInputStep';
 import NoteResultsStep from './NoteResultsStep';
-import { Check } from 'lucide-react';
+import CompanionPairingModal from './CompanionPairingModal';
+import { useSyncSession } from '@/hooks/useSyncSession';
+import { Check, Link2, Wifi } from 'lucide-react';
 
 type Step = 'review' | 'generate' | 'results';
 
@@ -53,6 +55,20 @@ export default function WorkflowWizard() {
 
   // UI state
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showPairingModal, setShowPairingModal] = useState(false);
+
+  // Companion sync
+  const {
+    hasPairedDevice,
+    isConnected: companionConnected,
+    companionPriorNote,
+    sendGeneratedNote,
+    sendPatientContext,
+    generatePairingCode,
+    disconnectDevice,
+    pairingCode: currentPairingCode,
+    pairingExpiresAt,
+  } = useSyncSession();
 
   // Step navigation handlers
   const handleTemplateSelected = (sel: Setting, vt: string, tmpl: Template) => {
@@ -73,6 +89,17 @@ export default function WorkflowWizard() {
     setSelectedPatient(patient);
     setEncounterId(encId);
     setIsGenerating(true);
+
+    // Sync patient context to companion
+    if (hasPairedDevice && patient) {
+      sendPatientContext({
+        firstName: patient.first_name,
+        lastName: patient.last_name,
+        setting: setting as string,
+        visitType,
+        status: 'generating',
+      });
+    }
 
     try {
       const response = await fetch('/api/generate', {
@@ -103,6 +130,11 @@ export default function WorkflowWizard() {
         setExtractedEpicData(data.receipt.epicChartData);
       }
       setCurrentStep('results');
+
+      // Sync generated note to companion device
+      if (hasPairedDevice) {
+        sendGeneratedNote(data.note);
+      }
     } catch (error) {
       console.error('Error generating note:', error);
       alert('Failed to generate note. Please try again.');
@@ -200,6 +232,20 @@ export default function WorkflowWizard() {
     <div className="space-y-6">
       {/* Progress Indicator */}
       <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-6">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex-1" />
+          <button
+            onClick={() => setShowPairingModal(true)}
+            className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg transition-colors ${
+              hasPairedDevice
+                ? 'bg-green-50 text-green-700 border border-green-200'
+                : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'
+            }`}
+          >
+            {hasPairedDevice ? <Wifi size={14} /> : <Link2 size={14} />}
+            {hasPairedDevice ? 'Companion Linked' : 'Link Work Device'}
+          </button>
+        </div>
         <div className="flex items-center justify-between">
           {steps.map((step, index) => {
             const isComplete = index < currentStepIndex;
@@ -264,6 +310,7 @@ export default function WorkflowWizard() {
           initialPreviousNote={previousNote}
           selectedPatient={selectedPatient}
           encounterId={encounterId}
+          companionPriorNote={companionPriorNote}
         />
       )}
 
@@ -281,8 +328,21 @@ export default function WorkflowWizard() {
           visitType={visitType!}
           selectedPatient={selectedPatient}
           onPatientSelect={setSelectedPatient}
+          hasPairedDevice={hasPairedDevice}
         />
       )}
+
+      {/* Companion Pairing Modal */}
+      <CompanionPairingModal
+        isOpen={showPairingModal}
+        onClose={() => setShowPairingModal(false)}
+        hasPairedDevice={hasPairedDevice}
+        isConnected={companionConnected}
+        pairingCode={currentPairingCode}
+        pairingExpiresAt={pairingExpiresAt}
+        onGenerateCode={generatePairingCode}
+        onDisconnect={disconnectDevice}
+      />
     </div>
   );
 }

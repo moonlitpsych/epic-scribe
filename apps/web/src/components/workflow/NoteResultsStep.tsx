@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Template, Setting } from '@epic-scribe/types';
-import { Copy, RefreshCw, RotateCcw, ExternalLink, CheckCircle2, AlertCircle, AlertTriangle, Info, Save, UserPlus, Upload, Loader2 } from 'lucide-react';
+import { Copy, RefreshCw, RotateCcw, ExternalLink, CheckCircle2, AlertCircle, AlertTriangle, Info, Save, UserPlus, Upload, Loader2, Link2 } from 'lucide-react';
 import PatientSelector from './PatientSelector';
 
 interface ValidationResult {
@@ -36,6 +36,7 @@ interface NoteResultsStepProps {
   visitType: string;
   selectedPatient?: Patient | null;
   onPatientSelect?: (patient: Patient) => void;
+  hasPairedDevice?: boolean;
 }
 
 export default function NoteResultsStep({
@@ -51,6 +52,7 @@ export default function NoteResultsStep({
   visitType,
   selectedPatient,
   onPatientSelect,
+  hasPairedDevice,
 }: NoteResultsStepProps) {
   const { data: session, status } = useSession();
   const [copySuccess, setCopySuccess] = useState(false);
@@ -391,6 +393,13 @@ export default function NoteResultsStep({
               <ExternalLink size={14} />
               Edit Template
             </a>
+
+            {hasPairedDevice && (
+              <span className="flex items-center gap-1 text-xs text-indigo-600">
+                <Link2 size={12} />
+                Synced to companion
+              </span>
+            )}
           </div>
         </div>
       </div>
