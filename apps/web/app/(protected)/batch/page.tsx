@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useBatchQueue } from '@/hooks/useBatchQueue';
 import TranscriptSelector from '@/components/workflow/TranscriptSelector';
 import {
@@ -15,6 +15,7 @@ import {
   Wifi,
   WifiOff,
   ClipboardPaste,
+  Download,
 } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -40,6 +41,7 @@ export default function BatchPage() {
     isLoading,
     refreshBatchItems,
     updateItemTranscript,
+    fetchPriorNote,
     generateForItem,
     generateAll,
     isGenerating,
@@ -50,6 +52,9 @@ export default function BatchPage() {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [transcriptDrafts, setTranscriptDrafts] = useState<Record<string, string>>({});
   const [savingTranscript, setSavingTranscript] = useState<string | null>(null);
+  const [fetchingPriorNote, setFetchingPriorNote] = useState<Set<string>>(new Set());
+  const [priorNoteErrors, setPriorNoteErrors] = useState<Record<string, string>>({});
+  const fetchedPriorNoteRef = useRef<Set<string>>(new Set());
 
   const toggleExpanded = (id: string) => {
     setExpandedItems((prev) => {
@@ -59,6 +64,40 @@ export default function BatchPage() {
       return next;
     });
   };
+
+  // Auto-fetch prior notes when expanding an item that needs one
+  const needsPriorNote = useCallback(
+    (item: (typeof batchItems)[0]) =>
+      (item.visit_type === 'Follow-up' || item.visit_type === 'Transfer of Care') &&
+      !item.prior_note_content,
+    []
+  );
+
+  useEffect(() => {
+    for (const itemId of expandedItems) {
+      const item = batchItems.find((i) => i.id === itemId);
+      if (
+        item &&
+        needsPriorNote(item) &&
+        !fetchingPriorNote.has(itemId) &&
+        !fetchedPriorNoteRef.current.has(itemId)
+      ) {
+        fetchedPriorNoteRef.current.add(itemId);
+        setFetchingPriorNote((prev) => new Set(prev).add(itemId));
+
+        fetchPriorNote(itemId).then((result) => {
+          setFetchingPriorNote((prev) => {
+            const next = new Set(prev);
+            next.delete(itemId);
+            return next;
+          });
+          if (!result.success && result.message) {
+            setPriorNoteErrors((prev) => ({ ...prev, [itemId]: result.message! }));
+          }
+        });
+      }
+    }
+  }, [expandedItems, batchItems, fetchPriorNote, fetchingPriorNote, needsPriorNote]);
 
   const handleTranscriptSave = useCallback(
     async (itemId: string) => {
@@ -263,6 +302,22 @@ export default function BatchPage() {
                 {/* Expanded content */}
                 {isExpanded && (
                   <div className="border-t border-[#C5A882]/10 p-4 space-y-4">
+                    {/* Prior note: fetching indicator */}
+                    {fetchingPriorNote.has(item.id) && (
+                      <div className="flex items-center gap-2 text-[#C5A882]/70 text-xs">
+                        <Download size={12} className="animate-bounce" />
+                        Fetching prior note...
+                      </div>
+                    )}
+
+                    {/* Prior note: error/not found message */}
+                    {!fetchingPriorNote.has(item.id) && priorNoteErrors[item.id] && !item.prior_note_content && (
+                      <div className="flex items-center gap-2 text-amber-400/80 text-xs">
+                        <AlertCircle size={12} />
+                        {priorNoteErrors[item.id]}
+                      </div>
+                    )}
+
                     {/* Prior note preview */}
                     {item.prior_note_content && (
                       <div>

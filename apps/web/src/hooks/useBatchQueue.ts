@@ -99,6 +99,29 @@ export function useBatchQueue() {
     []
   );
 
+  // Fetch prior note for a batch item (laptop-side)
+  const fetchPriorNote = useCallback(
+    async (itemId: string): Promise<{ success: boolean; message?: string }> => {
+      try {
+        const response = await fetch(`/api/companion/session/batch/${itemId}/fetch-prior-note`, {
+          method: 'POST',
+        });
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          return { success: false, message: err.error || 'Failed to fetch prior note' };
+        }
+        const data = await response.json();
+        return { success: data.success, message: data.message };
+      } catch (error) {
+        return {
+          success: false,
+          message: error instanceof Error ? error.message : 'Failed to fetch prior note',
+        };
+      }
+    },
+    []
+  );
+
   // Generate note for a single batch item
   const generateForItem = useCallback(
     async (itemId: string) => {
@@ -195,6 +218,7 @@ export function useBatchQueue() {
     isLoading,
     refreshBatchItems,
     updateItemTranscript,
+    fetchPriorNote,
     generateForItem,
     generateAll,
     isGenerating,
