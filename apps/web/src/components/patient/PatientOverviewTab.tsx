@@ -9,6 +9,7 @@ interface Patient {
   last_name: string;
   date_of_birth: string;
   mrn: string | null;
+  email: string | null;
   notes: string | null;
   active: boolean;
   created_at: string;
@@ -38,6 +39,7 @@ export default function PatientOverviewTab({
   const [editLastName, setEditLastName] = useState(patient.last_name);
   const [editDob, setEditDob] = useState(patient.date_of_birth?.split('T')[0] || '');
   const [editMrn, setEditMrn] = useState(patient.mrn || '');
+  const [editEmail, setEditEmail] = useState(patient.email || '');
   const [savingDemographics, setSavingDemographics] = useState(false);
 
   const calculateAge = (dob: string) => {
@@ -81,6 +83,7 @@ export default function PatientOverviewTab({
     setEditLastName(patient.last_name);
     setEditDob(patient.date_of_birth?.split('T')[0] || '');
     setEditMrn(patient.mrn || '');
+    setEditEmail(patient.email || '');
     setEditingDemographics(true);
   };
 
@@ -105,6 +108,7 @@ export default function PatientOverviewTab({
           lastName: editLastName.trim(),
           dateOfBirth: editDob || null,
           mrn: editMrn.trim() || null,
+          email: editEmail.trim() || null,
         }),
       });
 
@@ -276,6 +280,16 @@ export default function PatientOverviewTab({
                   className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
                 />
               </div>
+              <div>
+                <label className="text-sm text-[#5A6B7D] block mb-1">Email</label>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  placeholder="Required for IntakeQ push"
+                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                />
+              </div>
             </>
           ) : (
             <>
@@ -294,6 +308,10 @@ export default function PatientOverviewTab({
               <div>
                 <label className="text-sm text-[#5A6B7D]">MRN</label>
                 <p className="text-[#0A1F3D] font-medium">{patient.mrn || 'Not assigned'}</p>
+              </div>
+              <div>
+                <label className="text-sm text-[#5A6B7D]">Email</label>
+                <p className="text-[#0A1F3D] font-medium">{patient.email || 'Not set'}</p>
               </div>
               <div>
                 <label className="text-sm text-[#5A6B7D]">Record Created</label>

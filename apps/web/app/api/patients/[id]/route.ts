@@ -93,7 +93,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { firstName, lastName, dateOfBirth, mrn, notes, active } = body;
+    const { firstName, lastName, dateOfBirth, mrn, email, notes, active } = body;
 
     const updates: any = {};
 
@@ -111,6 +111,7 @@ export async function PATCH(
       updates.date_of_birth = dateOfBirth;
     }
     if (mrn !== undefined) updates.mrn = mrn;
+    if (email !== undefined) updates.email = email;
     if (notes !== undefined) updates.notes = notes;
     if (active !== undefined) updates.active = active;
 

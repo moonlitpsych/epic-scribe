@@ -31,6 +31,7 @@ export default function PatientsPage() {
     lastName: '',
     dateOfBirth: '',
     mrn: '',
+    email: '',
     notes: '',
   });
 
@@ -90,6 +91,7 @@ export default function PatientsPage() {
         lastName: '',
         dateOfBirth: '',
         mrn: '',
+        email: '',
         notes: '',
       });
       setShowAddModal(false);
@@ -352,6 +354,19 @@ export default function PatientsPage() {
                     type="text"
                     value={formData.mrn}
                     onChange={(e) => setFormData({ ...formData, mrn: e.target.value })}
+                    className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
+                    Email <span className="text-[#5A6B7D] font-normal">(for IntakeQ)</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="Required for IntakeQ push"
                     className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
                   />
                 </div>

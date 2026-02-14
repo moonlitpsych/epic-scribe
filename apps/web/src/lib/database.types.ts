@@ -332,6 +332,62 @@ export interface Database {
           created_at?: string;
         };
       };
+      batch_queue_items: {
+        Row: {
+          id: string;
+          sync_session_id: string;
+          patient_id: string;
+          patient_first_name: string;
+          patient_last_name: string;
+          setting: string;
+          visit_type: string;
+          prior_note_content: string | null;
+          prior_note_source: string | null;
+          transcript: string | null;
+          generated_note_content: string | null;
+          status: string;
+          error_message: string | null;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          sync_session_id: string;
+          patient_id: string;
+          patient_first_name: string;
+          patient_last_name: string;
+          setting: string;
+          visit_type: string;
+          prior_note_content?: string | null;
+          prior_note_source?: string | null;
+          transcript?: string | null;
+          generated_note_content?: string | null;
+          status?: string;
+          error_message?: string | null;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          sync_session_id?: string;
+          patient_id?: string;
+          patient_first_name?: string;
+          patient_last_name?: string;
+          setting?: string;
+          visit_type?: string;
+          prior_note_content?: string | null;
+          prior_note_source?: string | null;
+          transcript?: string | null;
+          generated_note_content?: string | null;
+          status?: string;
+          error_message?: string | null;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       // You can add view types here if needed
