@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useBatchQueue } from '@/hooks/useBatchQueue';
+import TranscriptSelector from '@/components/workflow/TranscriptSelector';
 import {
   Loader2,
   ChevronDown,
@@ -74,6 +75,21 @@ export default function BatchPage() {
       }
     },
     [transcriptDrafts, updateItemTranscript]
+  );
+
+  const handleDriveTranscriptLoaded = useCallback(
+    async (itemId: string, content: string) => {
+      setTranscriptDrafts((prev) => ({ ...prev, [itemId]: content }));
+      setSavingTranscript(itemId);
+      try {
+        await updateItemTranscript(itemId, content);
+      } catch (error) {
+        console.error('Failed to save Drive transcript:', error);
+      } finally {
+        setSavingTranscript(null);
+      }
+    },
+    [updateItemTranscript]
   );
 
   const handleGenerateOne = useCallback(
@@ -262,7 +278,14 @@ export default function BatchPage() {
                       </div>
                     )}
 
-                    {/* Transcript input */}
+                    {/* Google Drive transcript auto-fetch */}
+                    <TranscriptSelector
+                      patientName={`${item.patient_last_name}, ${item.patient_first_name}`}
+                      onTranscriptLoaded={(content) => handleDriveTranscriptLoaded(item.id, content)}
+                      disabled={isGenerating}
+                    />
+
+                    {/* Manual transcript input (fallback) */}
                     <div>
                       <p className="text-xs text-[#C5A882]/50 mb-1">Transcript</p>
                       <textarea
