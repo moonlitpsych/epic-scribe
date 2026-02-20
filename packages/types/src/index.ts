@@ -213,6 +213,7 @@ export interface GenerateNoteRequest {
   staffingTranscript?: string; // Optional separate staffing conversation transcript
   collateralTranscript?: string; // Optional collateral (parent/guardian) conversation transcript for Teenscope
   epicChartData?: string; // Optional pasted Epic DotPhrase data (full text - extraction happens server-side)
+  healthKitData?: HealthKitClinicalData; // Optional HealthKit clinical data (auto-fetched from DB)
 }
 
 export interface GenerateNoteResponse {
@@ -261,6 +262,80 @@ export interface DrivePathsConfig {
   root: string;
   pattern: string;
   transcript_extensions: string[];
+}
+
+// HealthKit Clinical Data Types (FHIR R4 summaries from iOS app)
+export interface HealthKitClinicalData {
+  medications?: MedicationSummary[];
+  conditions?: ConditionSummary[];
+  labResults?: LabResultSummary[];
+  vitalSigns?: VitalSignSummary[];
+  allergies?: AllergySummary[];
+  clinicalNotes?: ClinicalNoteSummary[];
+  procedures?: ProcedureSummary[];
+}
+
+export interface MedicationSummary {
+  name: string;
+  dose?: string;
+  frequency?: string;
+  rxNormCode?: string;
+  status?: 'active' | 'stopped' | 'on-hold';
+  startDate?: string;
+}
+
+export interface ConditionSummary {
+  displayName: string;
+  icd10Code?: string;
+  snomedCode?: string;
+  clinicalStatus?: 'active' | 'resolved' | 'inactive' | 'remission';
+  onsetDate?: string;
+}
+
+export interface LabResultSummary {
+  name: string;
+  value: string;
+  units?: string;
+  referenceRange?: string;
+  loincCode?: string;
+  collectionDate?: string;
+  isAbnormal?: boolean;
+}
+
+export interface VitalSignSummary {
+  name: string;
+  value: string;
+  units?: string;
+  loincCode?: string;
+  recordedDate?: string;
+}
+
+export interface AllergySummary {
+  substance: string;
+  reaction?: string;
+  severity?: 'mild' | 'moderate' | 'severe';
+  onsetDate?: string;
+}
+
+export interface ClinicalNoteSummary {
+  title: string;
+  date: string;
+  author?: string;
+  narrativeText: string;
+  encounterType?: string;
+}
+
+export interface ProcedureSummary {
+  name: string;
+  date?: string;
+  cptCode?: string;
+  snomedCode?: string;
+}
+
+export interface ClinicalDataPayload {
+  patientId: string;
+  data: HealthKitClinicalData;
+  syncTimestamp: string;
 }
 
 // Error Types

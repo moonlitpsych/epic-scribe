@@ -9,7 +9,8 @@ import {
   VisitType,
   SmartList,
   PromptManifest,
-  TemplateSection
+  TemplateSection,
+  HealthKitClinicalData
 } from '@epic-scribe/types';
 import { getSmartListService } from '../smartlists/smartlist-service';
 import { noteParser, ExtractedNoteData } from '../parsers/note-parser';
@@ -25,6 +26,7 @@ export interface PromptBuilderOptions {
   collateralTranscript?: string; // Collateral (parent/guardian) transcript for Teenscope
   epicChartData?: string; // Epic DotPhrase data (questionnaires, meds) for strengthening Assessment
   longitudinalChartData?: string; // Formatted longitudinal chart data (PHQ-9/GAD-7 trends, medication history)
+  healthKitData?: HealthKitClinicalData; // HealthKit clinical data (meds, labs, conditions, etc.)
   patientContext?: string;  // Clinical context from patient record
   historicalNotes?: string;  // All previous finalized notes for this patient
   setting: Setting;
@@ -166,7 +168,7 @@ export class PromptBuilder {
    * Build a complete prompt from components
    */
   async build(options: PromptBuilderOptions): Promise<CompiledPrompt> {
-    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, epicChartData, longitudinalChartData, patientContext, historicalNotes, setting, visitType, patientFirstName, patientLastName, patientAge } = options;
+    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, epicChartData, longitudinalChartData, healthKitData, patientContext, historicalNotes, setting, visitType, patientFirstName, patientLastName, patientAge } = options;
 
     // Check if this is a therapy-focused template (BHIDC therapy)
     const isTherapyFocused = template.setting === 'BHIDC therapy' ||
@@ -270,7 +272,7 @@ export class PromptBuilder {
         firstName: patientFirstName,
         lastName: patientLastName,
         age: patientAge
-      }, longitudinalChartData);
+      }, longitudinalChartData, healthKitData);
     }
 
     // Generate hash
@@ -445,7 +447,7 @@ export class PromptBuilder {
     firstName?: string;
     lastName?: string;
     age?: number | null;
-  }, longitudinalChartData?: string): string {
+  }, longitudinalChartData?: string, healthKitData?: HealthKitClinicalData): string {
     let prompt = '';
 
     // System prompt
@@ -467,6 +469,22 @@ export class PromptBuilder {
         prompt += `Use "***-year-old" in the note where age is needed\n`;
       }
       prompt += `\nIMPORTANT: Use "${patientDemographics.firstName || '***'} ${patientDemographics.lastName || '***'}" as the patient's name throughout the note. DO NOT use .FNAME or .LNAME dotphrases.\n\n`;
+    }
+
+    // HealthKit clinical data (if available)
+    if (healthKitData) {
+      const { buildHealthKitContext } = require('../fhir/fhir-to-context');
+      const healthKitContext = buildHealthKitContext(healthKitData);
+      if (healthKitContext) {
+        prompt += `CLINICAL DATA FROM PATIENT HEALTH RECORDS:\n`;
+        prompt += `${healthKitContext}\n\n`;
+        prompt += `INSTRUCTIONS FOR HEALTH RECORDS DATA:\n`;
+        prompt += `- Use verified medications to populate the Current Medications section\n`;
+        prompt += `- Reference active diagnoses with ICD-10 codes in the Assessment/Formulation\n`;
+        prompt += `- Incorporate abnormal lab values into the clinical reasoning\n`;
+        prompt += `- Note any allergies in the appropriate section\n`;
+        prompt += `- The transcript remains the primary source for the clinical narrative\n\n`;
+      }
     }
 
     // Follow-up specific instructions

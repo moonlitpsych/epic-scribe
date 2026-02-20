@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Template, Setting } from '@epic-scribe/types';
-import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle, CloudDownload, Mail, Save, Link2 } from 'lucide-react';
+import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle, CloudDownload, Mail, Save, Link2, Heart } from 'lucide-react';
 import PatientSelector from './PatientSelector';
 import EncountersList from './EncountersList';
 import ManualNotePanel from './ManualNotePanel';
@@ -86,6 +86,13 @@ export default function GenerateInputStep({
   // Companion sync state
   const [companionSynced, setCompanionSynced] = useState(false);
 
+  // HealthKit clinical data summary
+  const [clinicalDataSummary, setClinicalDataSummary] = useState<{
+    hasClinicalData: boolean;
+    lastSyncedAt: string | null;
+    counts: Record<string, number>;
+  } | null>(null);
+
   // Epic chart data - only needed for Intake/Consultation (no copied-forward note)
   const [epicChartData, setEpicChartData] = useState('');
   const showEpicChartInput = visitType === 'Intake' || visitType === 'Consultation Visit';
@@ -113,6 +120,24 @@ export default function GenerateInputStep({
     } else {
       setEncounters([]);
       setSelectedEncounterId(null);
+    }
+  }, [selectedPatient]);
+
+  // Check for HealthKit clinical data when patient is selected
+  useEffect(() => {
+    if (selectedPatient) {
+      fetch(`/api/clinical-data/summary?patientId=${selectedPatient.id}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.hasClinicalData) {
+            setClinicalDataSummary(data);
+          } else {
+            setClinicalDataSummary(null);
+          }
+        })
+        .catch(() => setClinicalDataSummary(null));
+    } else {
+      setClinicalDataSummary(null);
     }
   }, [selectedPatient]);
 
@@ -438,6 +463,30 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
               onSelectEncounter={handleSelectEncounter}
               loading={loadingEncounters}
             />
+          </div>
+        )}
+
+        {/* HealthKit Clinical Data Badge */}
+        {selectedPatient && clinicalDataSummary?.hasClinicalData && (
+          <div className="mt-3 flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+            <Heart className="text-green-600 flex-shrink-0" size={16} />
+            <span className="text-sm text-green-700">
+              Health Records synced
+              {clinicalDataSummary.lastSyncedAt && (
+                <> ({new Date(clinicalDataSummary.lastSyncedAt).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric'
+                })})</>
+              )}
+              {Object.keys(clinicalDataSummary.counts).length > 0 && (
+                <span className="text-green-600">
+                  {' '}&mdash; {Object.entries(clinicalDataSummary.counts)
+                    .map(([type, count]) => `${count} ${type}`)
+                    .join(', ')}
+                </span>
+              )}
+            </span>
           </div>
         )}
       </div>

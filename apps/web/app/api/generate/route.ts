@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GenerateNoteRequest, GenerateNoteResponse, Setting, PromptReceipt, EpicChartData, LongitudinalChartData } from '@epic-scribe/types';
+import { GenerateNoteRequest, GenerateNoteResponse, Setting, PromptReceipt, EpicChartData, LongitudinalChartData, HealthKitClinicalData } from '@epic-scribe/types';
 import { templateService } from '@epic-scribe/note-service/src/templates/template-service';
 import { getPromptBuilder } from '@epic-scribe/note-service/src/prompts/prompt-builder';
 import { getGeminiClient } from '@epic-scribe/note-service/src/llm/gemini-client';
 import { getSmartListService } from '@epic-scribe/note-service/src/smartlists/smartlist-service';
 import { epicChartExtractor } from '@epic-scribe/note-service/src/extractors/epic-chart-extractor';
 import { getLongitudinalChartData, formatLongitudinalDataForPrompt } from '@/lib/db/chart-history';
+import { getClinicalDataForPatient } from '@/lib/db/clinical-data';
 import crypto from 'crypto';
 
 /**
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest) {
     let historicalNotes: string | undefined;
     let longitudinalChartData: LongitudinalChartData | null = null;
     let longitudinalChartDataPrompt: string | undefined;
+    let healthKitData: HealthKitClinicalData | null = null;
 
     // Helper function to calculate age from DOB
     const calculateAge = (dob: string | null | undefined): number | null => {
@@ -107,6 +109,16 @@ export async function POST(request: NextRequest) {
               gad7Trend: longitudinalChartData.summary.gad7_trend,
             });
           }
+
+          // Fetch HealthKit clinical data if available
+          try {
+            healthKitData = await getClinicalDataForPatient(encounter.patient_id, 'healthkit');
+            if (healthKitData) {
+              console.log(`[Generate] Loaded HealthKit clinical data for patient ${encounter.patient_id}`);
+            }
+          } catch (hkError) {
+            console.warn(`[Generate] Could not fetch HealthKit data:`, hkError);
+          }
         }
       } catch (error) {
         console.warn(`[Generate] Could not fetch encounter ${encounterId}:`, error);
@@ -149,6 +161,16 @@ export async function POST(request: NextRequest) {
             phq9Trend: longitudinalChartData.summary.phq9_trend,
             gad7Trend: longitudinalChartData.summary.gad7_trend,
           });
+        }
+
+        // Fetch HealthKit clinical data if available
+        try {
+          healthKitData = await getClinicalDataForPatient(patientId, 'healthkit');
+          if (healthKitData) {
+            console.log(`[Generate] Loaded HealthKit clinical data for patient ${patientId}`);
+          }
+        } catch (hkError) {
+          console.warn(`[Generate] Could not fetch HealthKit data:`, hkError);
         }
       } catch (error) {
         console.warn(`[Generate] Could not fetch patient ${patientId}:`, error);
@@ -220,6 +242,7 @@ export async function POST(request: NextRequest) {
       collateralTranscript, // Include collateral transcript for Teenscope
       epicChartData: epicChartData?.trim() || undefined, // Include raw Epic chart data for AI to use
       longitudinalChartData: longitudinalChartDataPrompt, // Include PHQ-9/GAD-7 trends and medication history
+      healthKitData: healthKitData || undefined, // Include HealthKit clinical data if available
       patientContext, // Include patient clinical context if available
       historicalNotes, // Include all previous finalized notes for continuity
       setting: setting as Setting,
