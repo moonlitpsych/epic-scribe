@@ -1,0 +1,336 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		07513E1AA014CEC743690CCC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA7F0619D212BF7D295F3A1 /* ContentView.swift */; };
+		254AB60E22BB28402EFEB448 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBB3347BE6C264E793CBDD11 /* Config.swift */; };
+		30A91EC2757ABA52AEF7B025 /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5711CEE6B61C5B5F1BDB5FC9 /* QRScannerView.swift */; };
+		345AEEC8E7F94A16B2C214DC /* HealthKitSyncApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CE840808A3E02A39118BBC1 /* HealthKitSyncApp.swift */; };
+		3A79C61A781040A4A0E20D01 /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D743FD7EC7F6659575BCA62E /* HealthKitManager.swift */; };
+		54A8568CE57F7864C7E0F91E /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E99262544FD3E1CD60D644AD /* APIClient.swift */; };
+		B8E25E348B2E188852DC36A7 /* ScannedPatient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C561517DF980BFC64138231A /* ScannedPatient.swift */; };
+		E74FEBF3FC9831A1D9D2BBF6 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC346960EED03745451B7C2E /* Models.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		5711CEE6B61C5B5F1BDB5FC9 /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
+		5DF0AB64F2F9716F7D0D6900 /* HealthKitSync.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HealthKitSync.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6CE840808A3E02A39118BBC1 /* HealthKitSyncApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitSyncApp.swift; sourceTree = "<group>"; };
+		C561517DF980BFC64138231A /* ScannedPatient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannedPatient.swift; sourceTree = "<group>"; };
+		D743FD7EC7F6659575BCA62E /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
+		DBB3347BE6C264E793CBDD11 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
+		E99262544FD3E1CD60D644AD /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		EC346960EED03745451B7C2E /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		FFA7F0619D212BF7D295F3A1 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		18D4F7B93FF95BF45D166360 /* HealthKitSync */ = {
+			isa = PBXGroup;
+			children = (
+				E99262544FD3E1CD60D644AD /* APIClient.swift */,
+				DBB3347BE6C264E793CBDD11 /* Config.swift */,
+				FFA7F0619D212BF7D295F3A1 /* ContentView.swift */,
+				D743FD7EC7F6659575BCA62E /* HealthKitManager.swift */,
+				6CE840808A3E02A39118BBC1 /* HealthKitSyncApp.swift */,
+				EC346960EED03745451B7C2E /* Models.swift */,
+				5711CEE6B61C5B5F1BDB5FC9 /* QRScannerView.swift */,
+				C561517DF980BFC64138231A /* ScannedPatient.swift */,
+			);
+			path = HealthKitSync;
+			sourceTree = "<group>";
+		};
+		484382ED62D5B96A2454520E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5DF0AB64F2F9716F7D0D6900 /* HealthKitSync.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BAB4AC58C3B51E406D9DADCE = {
+			isa = PBXGroup;
+			children = (
+				18D4F7B93FF95BF45D166360 /* HealthKitSync */,
+				484382ED62D5B96A2454520E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		61C52CE79AAC66BA41A7EABD /* HealthKitSync */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1D43813990486A40B0E02A05 /* Build configuration list for PBXNativeTarget "HealthKitSync" */;
+			buildPhases = (
+				085B6D0FBB4ADBAF0E2CA152 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = HealthKitSync;
+			packageProductDependencies = (
+			);
+			productName = HealthKitSync;
+			productReference = 5DF0AB64F2F9716F7D0D6900 /* HealthKitSync.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0037EFFD8DD2D85E994384BD /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					61C52CE79AAC66BA41A7EABD = {
+						DevelopmentTeam = 7T2269T9TK;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = A8ECF555DEFE487C185F84E3 /* Build configuration list for PBXProject "HealthKitSync" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = BAB4AC58C3B51E406D9DADCE;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				61C52CE79AAC66BA41A7EABD /* HealthKitSync */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		085B6D0FBB4ADBAF0E2CA152 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				54A8568CE57F7864C7E0F91E /* APIClient.swift in Sources */,
+				254AB60E22BB28402EFEB448 /* Config.swift in Sources */,
+				07513E1AA014CEC743690CCC /* ContentView.swift in Sources */,
+				3A79C61A781040A4A0E20D01 /* HealthKitManager.swift in Sources */,
+				345AEEC8E7F94A16B2C214DC /* HealthKitSyncApp.swift in Sources */,
+				E74FEBF3FC9831A1D9D2BBF6 /* Models.swift in Sources */,
+				30A91EC2757ABA52AEF7B025 /* QRScannerView.swift in Sources */,
+				B8E25E348B2E188852DC36A7 /* ScannedPatient.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1D933AF9536E74CA38909F7C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		6207F87C3907BF2B50D678BD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = HealthKitSync/HealthKitSync.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7T2269T9TK;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Epic Scribe uses your camera to scan QR codes for patient pairing.";
+				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Epic Scribe reads your clinical records (medications, conditions, labs) to enrich generated psychiatry notes.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Epic Scribe needs access to your health records to include clinical data in generated notes.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.epicscribe.HealthKitSync;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		7060B9600301F60C0B2AF9D4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = HealthKitSync/HealthKitSync.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 7T2269T9TK;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Epic Scribe uses your camera to scan QR codes for patient pairing.";
+				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Epic Scribe reads your clinical records (medications, conditions, labs) to enrich generated psychiatry notes.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Epic Scribe needs access to your health records to include clinical data in generated notes.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.epicscribe.HealthKitSync;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F6AF48DCD70679DF73106F79 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1D43813990486A40B0E02A05 /* Build configuration list for PBXNativeTarget "HealthKitSync" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7060B9600301F60C0B2AF9D4 /* Debug */,
+				6207F87C3907BF2B50D678BD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A8ECF555DEFE487C185F84E3 /* Build configuration list for PBXProject "HealthKitSync" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1D933AF9536E74CA38909F7C /* Debug */,
+				F6AF48DCD70679DF73106F79 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0037EFFD8DD2D85E994384BD /* Project object */;
+}

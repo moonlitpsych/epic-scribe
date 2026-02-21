@@ -1,0 +1,38 @@
+name: HealthKitSync
+options:
+  bundleIdPrefix: com.epicscribe
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "16.2"
+settings:
+  SWIFT_VERSION: "5.0"
+  MARKETING_VERSION: "1.0.0"
+  CURRENT_PROJECT_VERSION: "1"
+
+targets:
+  HealthKitSync:
+    type: application
+    platform: iOS
+    sources:
+      - path: HealthKitSync
+        excludes:
+          - "*.entitlements"
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.epicscribe.HealthKitSync
+      DEVELOPMENT_TEAM: "7T2269T9TK"
+      CODE_SIGN_STYLE: Automatic
+      INFOPLIST_KEY_NSHealthShareUsageDescription: "Epic Scribe needs access to your health records to include clinical data in generated notes."
+      INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription: "Epic Scribe reads your clinical records (medications, conditions, labs) to enrich generated psychiatry notes."
+      INFOPLIST_KEY_NSCameraUsageDescription: "Epic Scribe uses your camera to scan QR codes for patient pairing."
+      GENERATE_INFOPLIST_FILE: true
+      INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
+      INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true
+      INFOPLIST_KEY_UILaunchScreen_Generation: true
+      INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+    entitlements:
+      path: HealthKitSync/HealthKitSync.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access:
+          - health-records
+    dependencies: []

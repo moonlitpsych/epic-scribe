@@ -2,7 +2,11 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var healthKit = HealthKitManager()
-    @State private var patientId = ""
+    @State private var scannedPatient: ScannedPatient?
+    @State private var scannedCode: String?
+    @State private var showScanner = false
+    @State private var showManualEntry = false
+    @State private var manualPatientId = ""
     @State private var syncResult: String?
     @State private var isSyncing = false
 
@@ -111,26 +115,79 @@ struct ContentView: View {
                         }
                     }
 
-                    // Step 3: Sync to Epic Scribe
-                    GroupBox("Step 3: Sync to Epic Scribe") {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Enter the patient UUID from Epic Scribe, then sync.")
+                    // Step 3: Link Patient
+                    GroupBox("Step 3: Link Patient") {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Scan the QR code shown on your provider's screen.")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
 
-                            TextField("Patient UUID", text: $patientId)
-                                .textFieldStyle(.roundedBorder)
-                                .font(.system(.body, design: .monospaced))
-                                .autocapitalization(.none)
-                                .disableAutocorrection(true)
+                            if let patient = scannedPatient {
+                                // Confirmed patient card
+                                HStack(spacing: 12) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.title2)
+                                        .foregroundColor(.green)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(patient.name)
+                                            .font(.headline)
+                                        Text("Patient linked")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                    Button(action: {
+                                        scannedPatient = nil
+                                        scannedCode = nil
+                                        syncResult = nil
+                                    }) {
+                                        Text("Change")
+                                            .font(.caption)
+                                    }
+                                }
+                                .padding()
+                                .background(Color.green.opacity(0.1))
+                                .cornerRadius(10)
 
-                            Button(action: { Task { await syncToEpicScribe() } }) {
-                                Label(isSyncing ? "Syncing..." : "Sync to Epic Scribe",
-                                      systemImage: "arrow.up.circle")
+                                Button(action: { Task { await syncToEpicScribe() } }) {
+                                    Label(isSyncing ? "Syncing..." : "Sync to Epic Scribe",
+                                          systemImage: "arrow.up.circle")
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .tint(.orange)
+                                .disabled(healthKit.clinicalData == nil || isSyncing)
+                            } else {
+                                Button(action: { showScanner = true }) {
+                                    Label("Scan QR Code", systemImage: "qrcode.viewfinder")
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .disabled(healthKit.clinicalData == nil)
+
+                                // Manual entry fallback
+                                if showManualEntry {
+                                    TextField("Patient UUID", text: $manualPatientId)
+                                        .textFieldStyle(.roundedBorder)
+                                        .font(.system(.caption, design: .monospaced))
+                                        .autocapitalization(.none)
+                                        .disableAutocorrection(true)
+
+                                    Button(action: {
+                                        let id = manualPatientId.trimmingCharacters(in: .whitespacesAndNewlines)
+                                        guard !id.isEmpty else { return }
+                                        scannedPatient = ScannedPatient(id: id, name: "Manual Entry")
+                                    }) {
+                                        Text("Use UUID")
+                                            .font(.caption)
+                                    }
+                                    .disabled(manualPatientId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                                } else {
+                                    Button(action: { showManualEntry = true }) {
+                                        Text("Enter UUID manually")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
                             }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.orange)
-                            .disabled(healthKit.clinicalData == nil || patientId.isEmpty || isSyncing)
 
                             if let result = syncResult {
                                 Text(result)
@@ -139,6 +196,18 @@ struct ContentView: View {
                             }
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .sheet(isPresented: $showScanner) {
+                        QRScannerView(scannedCode: $scannedCode)
+                    }
+                    .onChange(of: scannedCode) { newValue in
+                        guard let code = newValue else { return }
+                        if let patient = ScannedPatient.from(qrString: code) {
+                            scannedPatient = patient
+                        } else {
+                            // Treat raw string as a UUID
+                            scannedPatient = ScannedPatient(id: code, name: "Scanned Patient")
+                        }
                     }
 
                     Spacer(minLength: 40)
@@ -150,8 +219,9 @@ struct ContentView: View {
     }
 
     private func syncToEpicScribe() async {
-        guard var payload = healthKit.clinicalData else { return }
-        payload.patientId = patientId
+        guard var payload = healthKit.clinicalData,
+              let patient = scannedPatient else { return }
+        payload.patientId = patient.id
 
         isSyncing = true
         syncResult = nil

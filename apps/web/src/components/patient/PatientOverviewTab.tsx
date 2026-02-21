@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { Save, User, FileText, Calendar, Activity, Pencil, X, Check } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { Save, User, FileText, Calendar, Activity, Pencil, X, Check, QrCode, Smartphone } from 'lucide-react';
+import QRCode from 'qrcode';
 
 interface Patient {
   id: string;
@@ -41,6 +42,24 @@ export default function PatientOverviewTab({
   const [editMrn, setEditMrn] = useState(patient.mrn || '');
   const [editEmail, setEditEmail] = useState(patient.email || '');
   const [savingDemographics, setSavingDemographics] = useState(false);
+
+  // QR code state
+  const [showQr, setShowQr] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+
+  const generateQrCode = useCallback(async () => {
+    const payload = JSON.stringify({
+      id: patient.id,
+      name: `${patient.first_name} ${patient.last_name}`,
+    });
+    const url = await QRCode.toDataURL(payload, {
+      width: 256,
+      margin: 2,
+      color: { dark: '#0A1F3D', light: '#FFFFFF' },
+    });
+    setQrDataUrl(url);
+    setShowQr(true);
+  }, [patient.id, patient.first_name, patient.last_name]);
 
   const calculateAge = (dob: string) => {
     const birthDate = new Date(dob);
@@ -320,6 +339,47 @@ export default function PatientOverviewTab({
             </>
           )}
         </div>
+      </div>
+
+      {/* HealthKit Sync */}
+      <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-green-100">
+              <Smartphone className="text-green-600" size={20} />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-[#0A1F3D]">HealthKit Sync</h3>
+              <p className="text-sm text-[#5A6B7D]">
+                Scan this QR code with the Epic Scribe iOS app to link health records
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {showQr && qrDataUrl ? (
+          <div className="flex flex-col items-center gap-3">
+            <img src={qrDataUrl} alt="Patient QR Code" width={256} height={256} />
+            <p className="text-sm font-medium text-[#0A1F3D]">
+              {patient.first_name} {patient.last_name}
+            </p>
+            <button
+              onClick={() => setShowQr(false)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-[#5A6B7D] hover:bg-[#F5F1ED] transition-colors"
+            >
+              <X size={14} />
+              Hide QR Code
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={generateQrCode}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#0A1F3D] text-white hover:bg-[#0A1F3D]/90 transition-colors"
+          >
+            <QrCode size={16} />
+            Show QR Code
+          </button>
+        )}
       </div>
 
       {/* Clinical Context */}
