@@ -476,14 +476,17 @@ export class PromptBuilder {
       const { buildHealthKitContext } = require('../fhir/fhir-to-context');
       const healthKitContext = buildHealthKitContext(healthKitData);
       if (healthKitContext) {
-        prompt += `CLINICAL DATA FROM PATIENT HEALTH RECORDS:\n`;
+        prompt += `CLINICAL DATA FROM PATIENT HEALTH RECORDS (auto-synced from Apple Health / Epic MyChart):\n`;
+        prompt += `This is structured clinical data pulled directly from the patient's connected health records. It includes their verified medication list, diagnoses, lab results, vitals, and allergies from their EHR — NOT a previous note.\n\n`;
         prompt += `${healthKitContext}\n\n`;
-        prompt += `INSTRUCTIONS FOR HEALTH RECORDS DATA:\n`;
-        prompt += `- Use verified medications to populate the Current Medications section\n`;
-        prompt += `- Reference active diagnoses with ICD-10 codes in the Assessment/Formulation\n`;
-        prompt += `- Incorporate abnormal lab values into the clinical reasoning\n`;
-        prompt += `- Note any allergies in the appropriate section\n`;
-        prompt += `- The transcript remains the primary source for the clinical narrative\n\n`;
+        prompt += `INSTRUCTIONS FOR USING HEALTH RECORDS DATA:\n`;
+        prompt += `- MEDICATIONS: The "Current Medications" list above is authoritative. Use it to populate the Current Medications section of the note. If the transcript mentions a medication change (starting, stopping, dose adjustment), document both the change AND the baseline from this list. Psychiatric medications are labeled with their drug class.\n`;
+        prompt += `- DIAGNOSES: Reference active diagnoses with their ICD-10 codes in the Assessment/Formulation. These are the patient's documented problem list.\n`;
+        prompt += `- LABS: If recent lab values are provided, incorporate clinically relevant results into your reasoning (e.g., lithium levels, metabolic panels for antipsychotic monitoring, thyroid function). Flag any abnormal values.\n`;
+        prompt += `- VITALS: Note any clinically significant vital signs (e.g., elevated BP in a patient on stimulants, weight changes relevant to medication side effects).\n`;
+        prompt += `- ALLERGIES: Include in the appropriate section.\n`;
+        prompt += `- PREVIOUS NOTE: If a previous clinical note is included, use it for continuity — carrying forward relevant history, tracking symptom trajectory, and noting changes since last visit.\n`;
+        prompt += `- PRIORITY: The visit transcript remains the PRIMARY source for the clinical narrative. Health records data provides supporting context and should be woven into the note where clinically relevant, not listed as a separate data dump.\n\n`;
       }
     }
 
