@@ -1,9 +1,10 @@
 // apps/web/src/components/workflow/GenerateInputStep.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Template, Setting } from '@epic-scribe/types';
-import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle, CloudDownload, Mail, Save, Link2, Heart } from 'lucide-react';
+import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle, CloudDownload, Mail, Save, Link2, Heart, QrCode, X } from 'lucide-react';
+import QRCode from 'qrcode';
 import PatientSelector from './PatientSelector';
 import EncountersList from './EncountersList';
 import ManualNotePanel from './ManualNotePanel';
@@ -92,6 +93,25 @@ export default function GenerateInputStep({
     lastSyncedAt: string | null;
     counts: Record<string, number>;
   } | null>(null);
+
+  // QR code state
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+
+  const generateQrCode = useCallback(async () => {
+    if (!selectedPatient) return;
+    const payload = JSON.stringify({
+      id: selectedPatient.id,
+      name: `${selectedPatient.first_name} ${selectedPatient.last_name}`,
+    });
+    const url = await QRCode.toDataURL(payload, {
+      width: 256,
+      margin: 2,
+      color: { dark: '#0A1F3D', light: '#FFFFFF' },
+    });
+    setQrDataUrl(url);
+    setShowQrModal(true);
+  }, [selectedPatient]);
 
   // Epic chart data - only needed for Intake/Consultation (no copied-forward note)
   const [epicChartData, setEpicChartData] = useState('');
@@ -466,27 +486,39 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
           </div>
         )}
 
-        {/* HealthKit Clinical Data Badge */}
-        {selectedPatient && clinicalDataSummary?.hasClinicalData && (
-          <div className="mt-3 flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-lg">
-            <Heart className="text-green-600 flex-shrink-0" size={16} />
-            <span className="text-sm text-green-700">
-              Health Records synced
-              {clinicalDataSummary.lastSyncedAt && (
-                <> ({new Date(clinicalDataSummary.lastSyncedAt).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric'
-                })})</>
-              )}
-              {Object.keys(clinicalDataSummary.counts).length > 0 && (
-                <span className="text-green-600">
-                  {' '}&mdash; {Object.entries(clinicalDataSummary.counts)
-                    .map(([type, count]) => `${count} ${type}`)
-                    .join(', ')}
+        {/* HealthKit Clinical Data Badge + QR Button */}
+        {selectedPatient && (
+          <div className="mt-3 flex items-center gap-2">
+            {clinicalDataSummary?.hasClinicalData && (
+              <div className="flex-1 flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                <Heart className="text-green-600 flex-shrink-0" size={16} />
+                <span className="text-sm text-green-700">
+                  Health Records synced
+                  {clinicalDataSummary.lastSyncedAt && (
+                    <> ({new Date(clinicalDataSummary.lastSyncedAt).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })})</>
+                  )}
+                  {Object.keys(clinicalDataSummary.counts).length > 0 && (
+                    <span className="text-green-600">
+                      {' '}&mdash; {Object.entries(clinicalDataSummary.counts)
+                        .map(([type, count]) => `${count} ${type}`)
+                        .join(', ')}
+                    </span>
+                  )}
                 </span>
-              )}
-            </span>
+              </div>
+            )}
+            <button
+              onClick={generateQrCode}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-[#0A1F3D] bg-white border border-[#C5A882]/30 rounded-lg hover:bg-[#F5F1ED] transition-colors"
+              title="Show QR code for HealthKit pairing"
+            >
+              <QrCode size={16} />
+              QR
+            </button>
           </div>
         )}
       </div>
@@ -881,6 +913,32 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
             <pre className="whitespace-pre-wrap font-mono text-sm bg-gray-50 p-4 rounded-lg">
               {promptPreview}
             </pre>
+          </div>
+        </div>
+      )}
+
+      {/* QR Code Modal */}
+      {showQrModal && qrDataUrl && selectedPatient && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-xl shadow-xl p-6 mx-4 max-w-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-[#0A1F3D]">HealthKit Pairing</h3>
+              <button
+                onClick={() => setShowQrModal(false)}
+                className="text-[#5A6B7D] hover:text-[#0A1F3D]"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex flex-col items-center gap-3">
+              <img src={qrDataUrl} alt="Patient QR Code" width={256} height={256} />
+              <p className="text-base font-medium text-[#0A1F3D]">
+                {selectedPatient.first_name} {selectedPatient.last_name}
+              </p>
+              <p className="text-sm text-[#5A6B7D] text-center">
+                Patient scans this with the Epic Scribe iOS app
+              </p>
+            </div>
           </div>
         </div>
       )}
