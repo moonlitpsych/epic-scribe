@@ -7,7 +7,7 @@
 
 ---
 
-## Current Status (2026-02-05)
+## Current Status (2026-02-21)
 
 ### Working Features
 - **Note Generation**: Full workflow with Gemini 2.5 Pro API + automatic failover to backup API key
@@ -23,6 +23,7 @@
 - **IntakeQ Integration (Write Path)**: Push generated notes to IntakeQ via Playwright automation (Browserbase on Vercel, local Chromium in dev)
 - **Prior Notes Import**: Clipboard-based Epic note import with auto-population in workflow UI
 - **Multi-Provider Support**: Per-provider IntakeQ credentials and template configurations via Admin UI
+- **HealthKit Clinical Data Integration (Backend COMPLETE)**: Receives FHIR R4 clinical data from Apple Health, enriches note generation with structured medications, labs, conditions, vitals, allergies, clinical notes
 
 ### Known Issues
 1. **Google OAuth Token Expiration** - Workaround: Sign out/in to refresh (~1 hour expiry)
@@ -65,6 +66,9 @@ INTAKEQ_NOTE_TEMPLATE_NAME=  # Optional, defaults to "Kyle Roller Intake Note"
 # Browserbase (remote browser for serverless IntakeQ push)
 BROWSERBASE_API_KEY=      # Enables remote browser on Vercel; omit for local Chromium
 BROWSERBASE_PROJECT_ID=   # Browserbase project ID
+
+# HealthKit Clinical Data Sync
+HEALTHKIT_SYNC_API_KEY=   # Bearer token for iOS app → backend sync (shared secret)
 ```
 
 **Note:** When changing domains, update both:
@@ -129,7 +133,76 @@ pnpm lint             # Check for issues
 
 ---
 
-## Recent Updates (2026-02-09)
+## Recent Updates (2026-02-21)
+
+### HealthKit Clinical Data Integration (Backend COMPLETE, iOS App Ready to Build)
+
+Patient-authorized Apple Health data enriches note generation with structured FHIR R4 clinical records. Replaces/supplements clipboard-based Epic note import with typed, structured data from any health system the patient has connected to Apple Health (Epic MyChart, etc.).
+
+**Architecture:**
+```
+Apple Health (Epic/MyChart) → iOS App (HealthKit API) → POST /api/clinical-data/healthkit → Supabase → prompt-builder → richer notes
+```
+
+**What's built (backend — deployed to production):**
+- Shared types: `HealthKitClinicalData`, enriched `MedicationSummary` with structured fields (route, frequency, PRN) + rich context (sig, instructions, dispensing)
+- DB: `patient_clinical_data` table (migration 023) — one row per data type per patient, upserted on sync
+- API: `POST /api/clinical-data/healthkit` (bearer token auth) + `GET /api/clinical-data/summary`
+- FHIR transforms: `psych-med-classifier.ts` (psychiatric med classification), `lab-panel-grouper.ts` (LOINC-based lab grouping), `fhir-to-context.ts` (clinically organized prompt text)
+- Prompt builder: auto-injects "CLINICAL DATA FROM PATIENT HEALTH RECORDS" section when HealthKit data exists
+- Generate route: auto-fetches HealthKit data for any patient that has it
+- UI: green "Health Records synced" badge in workflow when patient has data
+- Apple Health Export parser: `scripts/parse-health-export.ts` — parses unzipped iPhone health export, transforms FHIR JSON, POSTs to API
+
+**What's built (iOS app — code complete, needs Xcode build):**
+- `apps/healthkit-sync/HealthKitSync/` — 6 Swift files (SwiftUI app)
+- Reads all clinical record types from HealthKit (meds, conditions, labs, vitals, allergies, procedures, clinical notes)
+- Parses FHIR R4 JSON with enriched medication extraction
+- POSTs `ClinicalDataPayload` to production endpoint
+- See `apps/healthkit-sync/README.md` for Xcode setup (5 minutes)
+
+**iOS App Xcode Setup (on Mac Mini with Xcode):**
+1. File > New > Project → iOS App, SwiftUI, name: `HealthKitSync`, org: `com.epicscribe`
+2. Delete generated `ContentView.swift` and `HealthKitSyncApp.swift`
+3. Drag all `.swift` files from `apps/healthkit-sync/HealthKitSync/` into project
+4. Signing & Capabilities → add **HealthKit** → check **Clinical Health Records**
+5. Info tab → add keys:
+   - `NSHealthShareUsageDescription` = "Epic Scribe needs access to your health records to include clinical data in generated notes."
+   - `NSHealthClinicalHealthRecordsShareUsageDescription` = "Epic Scribe reads your clinical records (medications, conditions, labs) to enrich generated psychiatry notes."
+6. Run on iPhone (Cmd+R)
+
+**Test patient (seeded with real Apple Health data):**
+- Name: Rufus Sweeney
+- Patient ID: `75168b31-c6eb-4b87-a13a-8e013d87a00d`
+- Data: 132 meds, 66 labs, 139 vitals, 126 clinical notes, 1 condition, 2 allergies, 3 procedures
+- Mock transcript: `scripts/test-healthkit-transcript.txt` (HMHI Downtown RCC Follow-up)
+- Test in web UI: /workflow → select "Rufus Sweeney" → HMHI Downtown RCC → Follow-up → paste transcript → Generate
+
+**Key files:**
+| File | Purpose |
+|------|---------|
+| `packages/types/src/index.ts` | HealthKit types + enriched MedicationSummary |
+| `supabase/migrations/023_patient_clinical_data.sql` | DB table |
+| `apps/web/src/lib/db/clinical-data.ts` | DB operations (upsert, get, summary, delete) |
+| `apps/web/app/api/clinical-data/healthkit/route.ts` | POST endpoint (bearer auth) |
+| `apps/web/app/api/clinical-data/summary/route.ts` | GET summary endpoint |
+| `services/note/src/fhir/psych-med-classifier.ts` | Psychiatric med classification |
+| `services/note/src/fhir/lab-panel-grouper.ts` | Lab panel grouping by LOINC |
+| `services/note/src/fhir/fhir-to-context.ts` | FHIR → prompt text transform |
+| `services/note/src/prompts/prompt-builder.ts` | Injects HealthKit context into prompt |
+| `apps/web/app/api/generate/route.ts` | Auto-fetches HealthKit data per patient |
+| `apps/web/src/components/workflow/GenerateInputStep.tsx` | Green badge UI |
+| `scripts/parse-health-export.ts` | Apple Health Export → API parser |
+| `apps/healthkit-sync/` | iOS app (SwiftUI, 6 files) |
+| `HEALTHKIT_EPIC_SCRIBE_ROADMAP.md` | Full roadmap document |
+
+**Next steps:**
+1. ~~Test web UI with seeded data~~ → Try now: /workflow → "Rufus Sweeney" → HMHI Follow-up
+2. Build iOS app in Xcode on Mac Mini → test HealthKit → API flow on iPhone
+3. Phase 4: UX polish (data preview, background sync)
+4. Phase 5: Apple review preparation (privacy policy)
+
+---
 
 ### Serverless IntakeQ Push via Browserbase (COMPLETE)
 IntakeQ write path now works on Vercel via Browserbase remote browser-as-a-service.
