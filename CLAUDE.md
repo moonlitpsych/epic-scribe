@@ -7,7 +7,7 @@
 
 ---
 
-## Current Status (2026-02-21)
+## Current Status (2026-02-20)
 
 ### Working Features
 - **Note Generation**: Full workflow with Gemini 2.5 Pro API + automatic failover to backup API key
@@ -23,7 +23,8 @@
 - **IntakeQ Integration (Write Path)**: Push generated notes to IntakeQ via Playwright automation (Browserbase on Vercel, local Chromium in dev)
 - **Prior Notes Import**: Clipboard-based Epic note import with auto-population in workflow UI
 - **Multi-Provider Support**: Per-provider IntakeQ credentials and template configurations via Admin UI
-- **HealthKit Clinical Data Integration (Backend COMPLETE)**: Receives FHIR R4 clinical data from Apple Health, enriches note generation with structured medications, labs, conditions, vitals, allergies, clinical notes
+- **HealthKit Clinical Data Integration (COMPLETE)**: Receives FHIR R4 clinical data from Apple Health, enriches note generation with structured medications, labs, conditions, vitals, allergies, clinical notes. iOS app built, installed, and tested on iPhone.
+- **QR Code Patient Pairing**: Provider shows QR code on screen (patient page or workflow), patient scans with iOS app camera to link health records — zero typing
 
 ### Known Issues
 1. **Google OAuth Token Expiration** - Workaround: Sign out/in to refresh (~1 hour expiry)
@@ -133,9 +134,41 @@ pnpm lint             # Check for issues
 
 ---
 
-## Recent Updates (2026-02-21)
+## Recent Updates (2026-02-20)
 
-### HealthKit Clinical Data Integration (Backend COMPLETE, iOS App Ready to Build)
+### QR Code Patient Pairing (COMPLETE)
+
+Replaced manual UUID text entry in the iOS app with QR code scanning. Provider shows QR on screen, patient scans with in-app camera — ~10 seconds, zero typing.
+
+**QR payload:** `{"id":"<patient-uuid>","name":"Rufus Sweeney"}`
+
+**Web (provider side):**
+- Patient Overview tab → "HealthKit Sync" card → "Show QR Code" button (inline QR + patient name)
+- Workflow page → QR button appears next to HealthKit badge when patient is selected → opens modal with QR
+- Uses `qrcode` npm package (client-side `QRCode.toDataURL`)
+
+**iOS (patient side):**
+- `QRScannerView.swift` — AVFoundation camera wrapper (`UIViewControllerRepresentable`), scans `.qr` only, vibrates on detection
+- `ScannedPatient.swift` — `Codable` struct with `from(qrString:)` factory method
+- `ContentView.swift` Step 3 → "Scan QR Code" button → camera sheet → green confirmation card with patient name → "Sync to Epic Scribe"
+- "Enter UUID manually" fallback link (hidden by default)
+- Camera permission added to `project.yml` (`NSCameraUsageDescription`)
+
+**Files:**
+| File | Purpose |
+|------|---------|
+| `apps/web/src/components/patient/PatientOverviewTab.tsx` | QR code card on patient page |
+| `apps/web/src/components/workflow/GenerateInputStep.tsx` | QR button + modal in workflow |
+| `apps/healthkit-sync/HealthKitSync/QRScannerView.swift` | AVFoundation QR scanner |
+| `apps/healthkit-sync/HealthKitSync/ScannedPatient.swift` | QR payload model |
+| `apps/healthkit-sync/HealthKitSync/ContentView.swift` | Updated Step 3 UI |
+| `apps/healthkit-sync/project.yml` | Camera permission + xcodegen config |
+
+**Tested:** Full end-to-end flow verified — web QR → iOS scan → sync succeeded (2026-02-20)
+
+---
+
+### HealthKit Clinical Data Integration (COMPLETE — Backend + iOS App)
 
 Patient-authorized Apple Health data enriches note generation with structured FHIR R4 clinical records. Replaces/supplements clipboard-based Epic note import with typed, structured data from any health system the patient has connected to Apple Health (Epic MyChart, etc.).
 
@@ -157,22 +190,25 @@ Apple Health (Epic/MyChart) → iOS App (HealthKit API) → POST /api/clinical-d
 - UI: green "Health Records synced" badge in workflow when patient has data
 - Apple Health Export parser: `scripts/parse-health-export.ts` — parses unzipped iPhone health export, transforms FHIR JSON, POSTs to API
 
-**What's built (iOS app — code complete, needs Xcode build):**
-- `apps/healthkit-sync/HealthKitSync/` — 6 Swift files (SwiftUI app)
+**What's built (iOS app — built, installed, tested on iPhone):**
+- `apps/healthkit-sync/HealthKitSync/` — 8 Swift files (SwiftUI app)
 - Reads all clinical record types from HealthKit (meds, conditions, labs, vitals, allergies, procedures, clinical notes)
 - Parses FHIR R4 JSON with enriched medication extraction
+- QR code scanner for patient pairing (AVFoundation camera)
 - POSTs `ClinicalDataPayload` to production endpoint
-- See `apps/healthkit-sync/README.md` for Xcode setup (5 minutes)
+- Xcode project managed via `project.yml` (xcodegen)
 
-**iOS App Xcode Setup (on Mac Mini with Xcode):**
-1. File > New > Project → iOS App, SwiftUI, name: `HealthKitSync`, org: `com.epicscribe`
-2. Delete generated `ContentView.swift` and `HealthKitSyncApp.swift`
-3. Drag all `.swift` files from `apps/healthkit-sync/HealthKitSync/` into project
-4. Signing & Capabilities → add **HealthKit** → check **Clinical Health Records**
-5. Info tab → add keys:
-   - `NSHealthShareUsageDescription` = "Epic Scribe needs access to your health records to include clinical data in generated notes."
-   - `NSHealthClinicalHealthRecordsShareUsageDescription` = "Epic Scribe reads your clinical records (medications, conditions, labs) to enrich generated psychiatry notes."
-6. Run on iPhone (Cmd+R)
+**iOS App Build (on Mac Mini with Xcode):**
+```bash
+cd apps/healthkit-sync
+xcodegen generate                    # Regenerate .xcodeproj from project.yml
+xcodebuild -project HealthKitSync.xcodeproj -scheme HealthKitSync \
+  -destination 'generic/platform=iOS' -sdk iphoneos -allowProvisioningUpdates build
+devicectl device install app --device <DEVICE_UDID> \
+  ~/Library/Developer/Xcode/DerivedData/HealthKitSync-*/Build/Products/Debug-iphoneos/HealthKitSync.app
+```
+- Device UDID for Rufus' iPhone: `00008140-001170D01E33001C`
+- Signing: Apple Development: Christopher Sweeney (J6YNYCXUUZ), Team 7T2269T9TK
 
 **Test patient (seeded with real Apple Health data):**
 - Name: Rufus Sweeney
@@ -194,16 +230,19 @@ Apple Health (Epic/MyChart) → iOS App (HealthKit API) → POST /api/clinical-d
 | `services/note/src/fhir/fhir-to-context.ts` | FHIR → prompt text transform |
 | `services/note/src/prompts/prompt-builder.ts` | Injects HealthKit context into prompt |
 | `apps/web/app/api/generate/route.ts` | Auto-fetches HealthKit data per patient |
-| `apps/web/src/components/workflow/GenerateInputStep.tsx` | Green badge UI |
+| `apps/web/src/components/workflow/GenerateInputStep.tsx` | Green badge UI + QR button in workflow |
+| `apps/web/src/components/patient/PatientOverviewTab.tsx` | QR code card on patient page |
 | `scripts/parse-health-export.ts` | Apple Health Export → API parser |
-| `apps/healthkit-sync/` | iOS app (SwiftUI, 6 files) |
+| `apps/healthkit-sync/` | iOS app (SwiftUI, 8 files) |
+| `apps/healthkit-sync/project.yml` | Xcode project config (xcodegen) |
 | `HEALTHKIT_EPIC_SCRIBE_ROADMAP.md` | Full roadmap document |
 
 **Next steps:**
-1. ~~Test web UI with seeded data~~ → Try now: /workflow → "Rufus Sweeney" → HMHI Follow-up
-2. Build iOS app in Xcode on Mac Mini → test HealthKit → API flow on iPhone
-3. Phase 4: UX polish (data preview, background sync)
-4. Phase 5: Apple review preparation (privacy policy)
+1. ~~Test web UI with seeded data~~ ✅ Done
+2. ~~Build iOS app in Xcode~~ ✅ Done — installed and tested on iPhone
+3. ~~QR code patient pairing~~ ✅ Done — full end-to-end tested (2026-02-20)
+4. Phase 4: UX polish (data preview, background sync)
+5. Phase 5: Apple review preparation (privacy policy)
 
 ---
 
