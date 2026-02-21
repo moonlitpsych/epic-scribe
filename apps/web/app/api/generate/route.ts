@@ -224,8 +224,8 @@ export async function POST(request: NextRequest) {
     });
     const smartListService = await getSmartListService();
 
-    // Check visit type requirements
-    const validation = promptBuilder.validateRequirements(visitType, priorNote);
+    // Check visit type requirements (HealthKit data can substitute for prior note)
+    const validation = promptBuilder.validateRequirements(visitType, priorNote, !!healthKitData);
     if (!validation.valid) {
       return NextResponse.json(
         { error: validation.message },

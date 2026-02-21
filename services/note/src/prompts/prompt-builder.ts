@@ -698,15 +698,15 @@ export class PromptBuilder {
   /**
    * Validate that required fields are present based on visit type
    */
-  validateRequirements(visitType: VisitType | string, previousNote?: string): {
+  validateRequirements(visitType: VisitType | string, previousNote?: string, hasHealthKitData?: boolean): {
     valid: boolean;
     message?: string;
   } {
-    // TOC and Follow-up require previous note
-    if ((visitType === 'Transfer of Care' || visitType === 'Follow-up') && !previousNote) {
+    // TOC and Follow-up require previous note OR HealthKit clinical data
+    if ((visitType === 'Transfer of Care' || visitType === 'Follow-up') && !previousNote && !hasHealthKitData) {
       return {
         valid: false,
-        message: `${visitType} visits require a previous note for context`
+        message: `${visitType} visits require a previous note or synced Health Records for context`
       };
     }
 

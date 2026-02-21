@@ -117,8 +117,10 @@ export default function GenerateInputStep({
   const [epicChartData, setEpicChartData] = useState('');
   const showEpicChartInput = visitType === 'Intake' || visitType === 'Consultation Visit';
 
-  // Check if previous note is required
-  const requiresPreviousNote = visitType === 'Transfer of Care' || visitType === 'Follow-up';
+  // Show prior note section for Follow-up/TOC, but HealthKit data can substitute
+  const hasClinicalData = clinicalDataSummary?.hasClinicalData ?? false;
+  const showPreviousNote = visitType === 'Transfer of Care' || visitType === 'Follow-up';
+  const requiresPreviousNote = showPreviousNote && !hasClinicalData;
 
   // Word count for display
   const activeTranscript = isSpanishTranscript ? spanishTranscript : transcript;
@@ -163,12 +165,12 @@ export default function GenerateInputStep({
 
   // Check for auto-imported prior notes when patient is selected (for Follow-up/TOC)
   useEffect(() => {
-    if (selectedPatient && requiresPreviousNote && !previousNote) {
+    if (selectedPatient && showPreviousNote && !previousNote) {
       checkForPriorNotes();
     } else if (!selectedPatient) {
       setAutoImportedNote(null);
     }
-  }, [selectedPatient, requiresPreviousNote]);
+  }, [selectedPatient, showPreviousNote]);
 
   const checkForPriorNotes = async () => {
     if (!selectedPatient) return;
@@ -217,17 +219,17 @@ export default function GenerateInputStep({
 
     // Check if patient has email
     if (!selectedPatient?.email) {
-      if (selectedPatient && requiresPreviousNote && intakeQEnabled) {
+      if (selectedPatient && showPreviousNote && intakeQEnabled) {
         setShowEmailPrompt(true);
       }
       return;
     }
 
-    // Fetch if enabled and visit requires previous note
-    if (intakeQEnabled && requiresPreviousNote && selectedPatient.email) {
+    // Fetch if enabled and visit type supports previous note
+    if (intakeQEnabled && showPreviousNote && selectedPatient.email) {
       fetchIntakeQPriorNote(selectedPatient.email);
     }
-  }, [selectedPatient, setting, intakeQEnabled, requiresPreviousNote]);
+  }, [selectedPatient, setting, intakeQEnabled, showPreviousNote]);
 
   // Auto-populate from Companion Portal prior note
   useEffect(() => {
@@ -656,11 +658,15 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
         )}
 
         {/* Previous Note / Copied-forward Last Note Input (conditional) */}
-        {requiresPreviousNote && (!isSpanishTranscript || hasTranslated) && (
+        {showPreviousNote && (!isSpanishTranscript || hasTranslated) && (
           <div className="mb-6">
             <label className="block text-sm font-medium text-[#0A1F3D] mb-2">
               {setting === 'Moonlit Psychiatry' ? 'Prior Note' : 'Copied-forward Last Note'}{' '}
-              <span className="text-red-500">*</span>
+              {requiresPreviousNote ? (
+                <span className="text-red-500">*</span>
+              ) : (
+                <span className="text-[#5A6B7D] font-normal">(optional — Health Records synced)</span>
+              )}
             </label>
 
             {/* IntakeQ Integration UI (Moonlit Psychiatry only) */}
@@ -825,7 +831,7 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
               rows={10}
               className="w-full px-4 py-3 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm"
             />
-            {previousNote.trim().length === 0 && (
+            {requiresPreviousNote && previousNote.trim().length === 0 && (
               <p className="text-sm text-red-500 mt-2">
                 {setting === 'Moonlit Psychiatry' ? 'Prior note' : 'Copied-forward note'} is required for {visitType}
               </p>
