@@ -93,8 +93,12 @@ function buildMedicationsSection(meds: MedicationSummary[]): string {
 function formatMed(med: MedicationSummary): string {
   let str = med.name;
   if (med.dose) str += ` ${med.dose}`;
-  if (med.frequency) str += ` ${med.frequency}`;
+  if (med.route) str += `, ${med.route}`;
+  if (med.frequency) str += `, ${med.frequency}`;
+  if (med.prn) str += ' PRN';
   if (med.status && med.status !== 'active') str += ` (${med.status})`;
+  if (med.startDate) str += ` — started ${med.startDate}`;
+  if (med.instructions) str += `\n      Note: ${med.instructions.split('\n')[0]}`;
   return str;
 }
 

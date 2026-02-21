@@ -276,12 +276,19 @@ export interface HealthKitClinicalData {
 }
 
 export interface MedicationSummary {
-  name: string;
-  dose?: string;
-  frequency?: string;
-  rxNormCode?: string;
+  // Structured fields (FHIR R4 sources — repeatable, comparable across meds)
+  name: string;                          // medicationReference.display or contained Medication.code.text
+  dose?: string;                         // dosageInstruction.doseAndRate.doseQuantity/doseRange
+  route?: string;                        // dosageInstruction.route.text (e.g., "oral", "intravenous")
+  frequency?: string;                    // dosageInstruction.timing normalized (e.g., "once daily", "BID")
+  prn?: boolean;                         // dosageInstruction.asNeededBoolean
+  rxNormCode?: string;                   // contained Medication.code.coding[rxnorm]
   status?: 'active' | 'stopped' | 'on-hold';
-  startDate?: string;
+  startDate?: string;                    // authoredOn
+  // Rich context (normalized from sig — preserves clinical intent)
+  sig?: string;                          // dosageInstruction.text (full prescriber sig, verbatim)
+  instructions?: string;                 // Clinical notes extracted from sig (taper plans, titration, special guidance)
+  dispensing?: string;                   // dispenseRequest structured data or parsed from sig
 }
 
 export interface ConditionSummary {
