@@ -24,6 +24,7 @@ targets:
       INFOPLIST_KEY_NSHealthShareUsageDescription: "Epic Scribe needs access to your health records to include clinical data in generated notes."
       INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription: "Epic Scribe reads your clinical records (medications, conditions, labs) to enrich generated psychiatry notes."
       INFOPLIST_KEY_NSCameraUsageDescription: "Epic Scribe uses your camera to scan QR codes for patient pairing."
+      INFOPLIST_KEY_UIBackgroundModes: "fetch"
       GENERATE_INFOPLIST_FILE: true
       INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
       INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true

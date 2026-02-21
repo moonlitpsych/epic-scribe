@@ -11,6 +11,16 @@ class HealthKitManager: ObservableObject {
     @Published var clinicalData: ClinicalDataPayload?
     @Published var isSyncing = false
 
+    /// Called when observer queries detect new clinical data in HealthKit.
+    var onClinicalDataChanged: (() -> Void)?
+
+    private static let hasAuthorizedKey = "hasAuthorizedBefore"
+
+    /// Whether the user has previously authorized HealthKit access.
+    var hasAuthorizedBefore: Bool {
+        UserDefaults.standard.bool(forKey: Self.hasAuthorizedKey)
+    }
+
     // All clinical record types we want to read
     private let clinicalTypes: [(HKClinicalTypeIdentifier, String)] = [
         (.allergyRecord, "Allergies"),
@@ -20,6 +30,14 @@ class HealthKitManager: ObservableObject {
         (.vitalSignRecord, "Vital Signs"),
         (.procedureRecord, "Procedures"),
     ]
+
+    init() {
+        // Restore authorization state from UserDefaults
+        if UserDefaults.standard.bool(forKey: Self.hasAuthorizedKey) {
+            isAuthorized = true
+            statusMessage = "Authorized"
+        }
+    }
 
     // MARK: - Authorization
 
@@ -47,10 +65,52 @@ class HealthKitManager: ObservableObject {
             DispatchQueue.main.async {
                 if success {
                     self?.isAuthorized = true
-                    self?.statusMessage = "Authorized! Tap 'Read Records' to fetch clinical data."
+                    UserDefaults.standard.set(true, forKey: Self.hasAuthorizedKey)
+                    self?.statusMessage = "Authorized"
                 } else {
                     self?.statusMessage = "Authorization denied: \(error?.localizedDescription ?? "unknown error")"
                 }
+            }
+        }
+    }
+
+    // MARK: - Background Delivery
+
+    /// Registers observer queries and enables background delivery for each clinical type.
+    /// Must be called on every app launch (registrations don't persist across termination).
+    func enableBackgroundDelivery() {
+        guard HKHealthStore.isHealthDataAvailable() else { return }
+
+        for (identifier, label) in clinicalTypes {
+            guard let clinicalType = HKObjectType.clinicalType(forIdentifier: identifier) else { continue }
+            registerObserver(for: clinicalType, label: label)
+        }
+
+        if #available(iOS 16.4, *) {
+            if let noteType = HKObjectType.clinicalType(forIdentifier: .clinicalNoteRecord) {
+                registerObserver(for: noteType, label: "Clinical Notes")
+            }
+        }
+    }
+
+    private func registerObserver(for sampleType: HKSampleType, label: String) {
+        let query = HKObserverQuery(sampleType: sampleType, predicate: nil) { [weak self] _, completionHandler, error in
+            if let error = error {
+                print("Observer error for \(label): \(error)")
+                completionHandler()
+                return
+            }
+            print("HealthKit data changed: \(label)")
+            self?.onClinicalDataChanged?()
+            completionHandler()
+        }
+        healthStore.execute(query)
+
+        healthStore.enableBackgroundDelivery(for: sampleType, frequency: .immediate) { success, error in
+            if let error = error {
+                print("Background delivery error for \(label): \(error)")
+            } else if success {
+                print("Background delivery enabled for \(label)")
             }
         }
     }
