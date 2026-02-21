@@ -147,6 +147,9 @@ Apple Health (Epic/MyChart) → iOS App (HealthKit API) → POST /api/clinical-d
 **What's built (backend — deployed to production):**
 - Shared types: `HealthKitClinicalData`, enriched `MedicationSummary` with structured fields (route, frequency, PRN) + rich context (sig, instructions, dispensing)
 - DB: `patient_clinical_data` table (migration 023) — one row per data type per patient, upserted on sync
+- Smart filtering in `fhir-to-context.ts`: deduplicates meds by name (keeps most recent), shows active only + recently stopped psych meds (<6mo), deduplicates vitals/labs to most recent per type
+- Robust prompt instructions in `prompt-builder.ts`: explains to the model that HealthKit data is structured EHR data (not a prior note), gives specific clinical guidance per data type (medication reconciliation, BP on stimulants, metabolic monitoring, etc.)
+- **Coexists with prior note path**: HealthKit data and traditional prior notes (clipboard/IntakeQ) work independently or together. If both present, model gets structured data AND prior note. HealthKit fills the gap when no prior note exists.
 - API: `POST /api/clinical-data/healthkit` (bearer token auth) + `GET /api/clinical-data/summary`
 - FHIR transforms: `psych-med-classifier.ts` (psychiatric med classification), `lab-panel-grouper.ts` (LOINC-based lab grouping), `fhir-to-context.ts` (clinically organized prompt text)
 - Prompt builder: auto-injects "CLINICAL DATA FROM PATIENT HEALTH RECORDS" section when HealthKit data exists
