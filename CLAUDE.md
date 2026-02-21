@@ -172,6 +172,26 @@ After one-time setup (authorize HealthKit + scan QR code), the app auto-syncs cl
 
 ---
 
+### HealthKit Data as Prior Note Substitute (COMPLETE)
+
+For Follow-up and Transfer of Care visits, synced HealthKit clinical data now substitutes for a prior note. Previously, these visit types required a pasted prior note to generate — blocking generation for patients who only had Apple Health data.
+
+**What changed:**
+- Frontend: Split `requiresPreviousNote` into `showPreviousNote` (controls section visibility) and `requiresPreviousNote` (controls validation). When HealthKit data is synced, the prior note field shows as "(optional — Health Records synced)" instead of required.
+- Backend: `validateRequirements()` accepts `hasHealthKitData` param — passes validation when HealthKit data is present even without a prior note.
+- Generate route: Passes `!!healthKitData` to the validator.
+
+**Result:** Notes generated with HealthKit data alone are comparable in quality to notes with a pasted prior note. Structured medication data (doses, routes, frequencies) is often more accurate than copy-forward text. The `***` placeholders in psychiatric/social history sections are expected when no prior note is available — the model correctly avoids fabricating history.
+
+**Files:**
+| File | Change |
+|------|--------|
+| `apps/web/src/components/workflow/GenerateInputStep.tsx` | Optional prior note when HealthKit synced |
+| `services/note/src/prompts/prompt-builder.ts` | `validateRequirements()` accepts HealthKit flag |
+| `apps/web/app/api/generate/route.ts` | Passes HealthKit presence to validator |
+
+---
+
 ## Previous Updates (2026-02-20)
 
 ### QR Code Patient Pairing (COMPLETE)
