@@ -10,6 +10,7 @@
 		07513E1AA014CEC743690CCC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFA7F0619D212BF7D295F3A1 /* ContentView.swift */; };
 		254AB60E22BB28402EFEB448 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBB3347BE6C264E793CBDD11 /* Config.swift */; };
 		30A91EC2757ABA52AEF7B025 /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5711CEE6B61C5B5F1BDB5FC9 /* QRScannerView.swift */; };
+		317CA839A3497AA3CDA17B60 /* SyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5B98F1237EA9DEB14AF7230 /* SyncManager.swift */; };
 		345AEEC8E7F94A16B2C214DC /* HealthKitSyncApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CE840808A3E02A39118BBC1 /* HealthKitSyncApp.swift */; };
 		3A79C61A781040A4A0E20D01 /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D743FD7EC7F6659575BCA62E /* HealthKitManager.swift */; };
 		54A8568CE57F7864C7E0F91E /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E99262544FD3E1CD60D644AD /* APIClient.swift */; };
@@ -26,6 +27,7 @@
 		DBB3347BE6C264E793CBDD11 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		E99262544FD3E1CD60D644AD /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		EC346960EED03745451B7C2E /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		F5B98F1237EA9DEB14AF7230 /* SyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncManager.swift; sourceTree = "<group>"; };
 		FFA7F0619D212BF7D295F3A1 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -41,6 +43,7 @@
 				EC346960EED03745451B7C2E /* Models.swift */,
 				5711CEE6B61C5B5F1BDB5FC9 /* QRScannerView.swift */,
 				C561517DF980BFC64138231A /* ScannedPatient.swift */,
+				F5B98F1237EA9DEB14AF7230 /* SyncManager.swift */,
 			);
 			path = HealthKitSync;
 			sourceTree = "<group>";
@@ -128,6 +131,7 @@
 				E74FEBF3FC9831A1D9D2BBF6 /* Models.swift in Sources */,
 				30A91EC2757ABA52AEF7B025 /* QRScannerView.swift in Sources */,
 				B8E25E348B2E188852DC36A7 /* ScannedPatient.swift in Sources */,
+				317CA839A3497AA3CDA17B60 /* SyncManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -213,6 +217,7 @@
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Epic Scribe needs access to your health records to include clinical data in generated notes.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIBackgroundModes = fetch;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -239,6 +244,7 @@
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Epic Scribe needs access to your health records to include clinical data in generated notes.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIBackgroundModes = fetch;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (

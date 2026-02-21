@@ -7,7 +7,7 @@
 
 ---
 
-## Current Status (2026-02-20)
+## Current Status (2026-02-21)
 
 ### Working Features
 - **Note Generation**: Full workflow with Gemini 2.5 Pro API + automatic failover to backup API key
@@ -25,6 +25,7 @@
 - **Multi-Provider Support**: Per-provider IntakeQ credentials and template configurations via Admin UI
 - **HealthKit Clinical Data Integration (COMPLETE)**: Receives FHIR R4 clinical data from Apple Health, enriches note generation with structured medications, labs, conditions, vitals, allergies, clinical notes. iOS app built, installed, and tested on iPhone.
 - **QR Code Patient Pairing**: Provider shows QR code on screen (patient page or workflow), patient scans with iOS app camera to link health records — zero typing
+- **Background Sync (iOS)**: After one-time setup (authorize + QR scan), app auto-syncs on foreground, on background HealthKit data changes, and immediately after pairing. Patient pairing and auth state persist across launches.
 
 ### Known Issues
 1. **Google OAuth Token Expiration** - Workaround: Sign out/in to refresh (~1 hour expiry)
@@ -134,7 +135,44 @@ pnpm lint             # Check for issues
 
 ---
 
-## Recent Updates (2026-02-20)
+## Recent Updates (2026-02-21)
+
+### Background Sync for iOS App (COMPLETE)
+
+After one-time setup (authorize HealthKit + scan QR code), the app auto-syncs clinical data without manual taps. Returning users go straight to a dashboard instead of the setup wizard.
+
+**Auto-sync triggers:**
+- App comes to foreground (`.onChange(of: scenePhase)`)
+- Immediately after QR scan pairing
+- Background delivery via `HKObserverQuery` when Apple Health data changes
+
+**Persistence (UserDefaults):**
+- Patient pairing: `ScannedPatient.save()` / `loadSaved()` / `clearSaved()` — scan QR once, persisted across launches
+- Auth state: `hasAuthorizedBefore` flag — HealthKit doesn't reliably expose read-only auth status, so we track it ourselves
+- Last sync date: persisted by `SyncManager`, displayed as relative time on dashboard
+
+**Architecture:**
+- `SyncManager.swift` (new) — `ObservableObject` coordinator with `performSync() async -> Bool`. Reads HealthKit → POSTs to backend. Guards against concurrent syncs. Tracks `lastSyncDate` and `lastSyncResult`.
+- `HealthKitManager.swift` — Added `enableBackgroundDelivery()` which registers `HKObserverQuery` + `healthStore.enableBackgroundDelivery(for:frequency:.immediate)` for each clinical type. Must be called on every app launch (registrations don't persist across termination). Added `onClinicalDataChanged` callback fired by observer queries.
+- `HealthKitSyncApp.swift` — Creates both managers as `@StateObject`, wires `onClinicalDataChanged` → `performSync()`, calls `enableBackgroundDelivery()` on init, injects via `.environmentObject()`.
+- `ContentView.swift` — Three-mode conditional UI: (1) not authorized → authorize button, (2) authorized but not paired → QR scan + manual fallback, (3) paired → dashboard with patient card, sync status, "Sync Now" button, "Unpair" button, clinical data preview.
+- `project.yml` — Added `INFOPLIST_KEY_UIBackgroundModes: "fetch"` for HealthKit background delivery.
+
+**Files:**
+| File | Change |
+|------|--------|
+| `apps/healthkit-sync/HealthKitSync/ScannedPatient.swift` | Added UserDefaults persistence |
+| `apps/healthkit-sync/HealthKitSync/SyncManager.swift` | **New** — sync coordinator |
+| `apps/healthkit-sync/HealthKitSync/HealthKitManager.swift` | Background delivery + auth persistence |
+| `apps/healthkit-sync/HealthKitSync/HealthKitSyncApp.swift` | Rewritten — init managers, wire callback |
+| `apps/healthkit-sync/HealthKitSync/ContentView.swift` | Rewritten — setup wizard → dashboard |
+| `apps/healthkit-sync/project.yml` | Added UIBackgroundModes |
+
+**Unchanged:** `Config.swift`, `Models.swift`, `APIClient.swift`, `QRScannerView.swift`
+
+---
+
+## Previous Updates (2026-02-20)
 
 ### QR Code Patient Pairing (COMPLETE)
 
@@ -191,7 +229,7 @@ Apple Health (Epic/MyChart) → iOS App (HealthKit API) → POST /api/clinical-d
 - Apple Health Export parser: `scripts/parse-health-export.ts` — parses unzipped iPhone health export, transforms FHIR JSON, POSTs to API
 
 **What's built (iOS app — built, installed, tested on iPhone):**
-- `apps/healthkit-sync/HealthKitSync/` — 8 Swift files (SwiftUI app)
+- `apps/healthkit-sync/HealthKitSync/` — 9 Swift files (SwiftUI app)
 - Reads all clinical record types from HealthKit (meds, conditions, labs, vitals, allergies, procedures, clinical notes)
 - Parses FHIR R4 JSON with enriched medication extraction
 - QR code scanner for patient pairing (AVFoundation camera)
@@ -233,7 +271,8 @@ devicectl device install app --device <DEVICE_UDID> \
 | `apps/web/src/components/workflow/GenerateInputStep.tsx` | Green badge UI + QR button in workflow |
 | `apps/web/src/components/patient/PatientOverviewTab.tsx` | QR code card on patient page |
 | `scripts/parse-health-export.ts` | Apple Health Export → API parser |
-| `apps/healthkit-sync/` | iOS app (SwiftUI, 8 files) |
+| `apps/healthkit-sync/HealthKitSync/SyncManager.swift` | Background sync coordinator |
+| `apps/healthkit-sync/` | iOS app (SwiftUI, 9 files) |
 | `apps/healthkit-sync/project.yml` | Xcode project config (xcodegen) |
 | `HEALTHKIT_EPIC_SCRIBE_ROADMAP.md` | Full roadmap document |
 
@@ -241,8 +280,9 @@ devicectl device install app --device <DEVICE_UDID> \
 1. ~~Test web UI with seeded data~~ ✅ Done
 2. ~~Build iOS app in Xcode~~ ✅ Done — installed and tested on iPhone
 3. ~~QR code patient pairing~~ ✅ Done — full end-to-end tested (2026-02-20)
-4. Phase 4: UX polish (data preview, background sync)
-5. Phase 5: Apple review preparation (privacy policy)
+4. ~~Background sync~~ ✅ Done — auto-sync on foreground, background delivery, post-pairing (2026-02-21)
+5. Phase 4: UX polish (data preview in dashboard)
+6. Phase 5: Apple review preparation (privacy policy)
 
 ---
 
