@@ -3,7 +3,7 @@
 **Owner:** Dr. Rufus Sweeney (PGY‑3 Psychiatry)
 **Stack:** Next.js 14, pnpm monorepo, Supabase, Gemini API
 **Production URL:** https://epic-scribe.vercel.app
-**North Star:** Generate Epic-ready psychiatry notes with SmartTools that require <5 minutes of edits
+**North Star:** Generate Epic-ready psychiatry notes with SmartTools that require <5 minutes of edits — and, beyond documentation, become the agentic backbone for non-clinical operations (billing intelligence, payer management, revenue cycle)
 
 ---
 
@@ -26,11 +26,69 @@
 - **HealthKit Clinical Data Integration (COMPLETE)**: Receives FHIR R4 clinical data from Apple Health, enriches note generation with structured medications, labs, conditions, vitals, allergies, clinical notes. iOS app built, installed, and tested on iPhone.
 - **QR Code Patient Pairing**: Provider shows QR code on screen (patient page or workflow), patient scans with iOS app camera to link health records — zero typing
 - **Background Sync (iOS)**: After one-time setup (authorize + QR scan), app auto-syncs on foreground, on background HealthKit data changes, and immediately after pairing. Patient pairing and auth state persist across launches.
+- **Listening Coder (v0)**: Appends CPT code suggestions after note signature. Currently uses static prompt rules — needs payer-aware intelligence (see Product Vision below).
 
 ### Known Issues
 1. **Google OAuth Token Expiration** - Workaround: Sign out/in to refresh (~1 hour expiry)
 2. **Vercel 404 Deployment** - Build succeeds but routes return 404 (see `HANDOFF_VERCEL_404.md`)
 3. **ESLint Warnings** - `ignoreDuringBuilds: true` masks ~40 errors (mostly unescaped apostrophes)
+4. **Listening Coder suggests 90792 for intakes** - In Utah, 90792 reimburses ~50% of E/M codes (992X4/992X5) for FFS Medicaid and MCOs. Should default to E/M codes for intakes. Exception: Optum may require 90792 (unconfirmed — pending contract signing).
+
+---
+
+## Product Vision: Agentic Non-Clinical Operations
+
+Epic Scribe started as a documentation tool, but the long-term vision is a fully integrated, agentic platform for non-clinical operations at Moonlit Psychiatry — starting with billing intelligence and expanding to revenue cycle management.
+
+### Listening Coder — Payer-Aware CPT Suggestions
+
+The Listening Coder (v0) appends CPT code suggestions after the note signature. Currently it uses static prompt rules that don't account for payer-specific reimbursement realities. The goal is intelligent, payer-aware code selection.
+
+**Current problem (v0):**
+- Suggests 90792 (psychiatric diagnostic eval) for intakes, which reimburses ~50% of E/M codes in Utah
+- E/M codes (99204/99205 for new patients, 99214/99215 for established) are universally accepted by Utah FFS Medicaid and MCOs
+- No awareness of which payer the patient has or what that payer actually reimburses
+- Exception to track: Optum (contract pending) may require 90792 for intakes — needs confirmation
+
+**Phase 1 — Fee schedule awareness (near-term):**
+- Store payer fee schedules in Supabase (CPT code → allowed amount per payer)
+- Listening Coder queries patient's payer and compares reimbursement rates across valid codes
+- Suggests the highest-reimbursing code that is clinically defensible for the encounter
+- Flags when a payer is known to reject certain codes (e.g., if Optum rejects 99205 for intakes)
+
+**Phase 2 — EOB/ERA-driven intelligence (medium-term):**
+- Ingest real Explanation of Benefits (EOBs) and Electronic Remittance Advice (ERAs) to learn which codes are actually paid, denied, or down-coded by each payer
+- This is the gold standard: hard data on what gets reimbursed, not just fee schedule theory
+- **Challenge: data sources vary by payer:**
+  - Some payers → Office Ally (Moonlit's primary clearinghouse)
+  - Some payers → Availity
+  - Some payers → proprietary portals or mailed paper EOBs/remittance
+- **Challenge: format variability:**
+  - ERAs (835 files) are structured EDI — parseable but need per-payer mapping
+  - EOBs are often PDFs or paper — may need OCR or manual entry initially
+- Build a `claim_outcomes` table: payer, CPT code, billed amount, allowed amount, paid amount, denial reason, date
+- Over time, the Listening Coder learns from real outcomes: "Optum has paid 99205 for intakes 12/12 times" or "Molina denied 90792 3 times in Q4"
+
+**Phase 3 — Proactive billing agent (long-term):**
+- Pre-submission claim review: flag likely denials before the claim goes out
+- Denial pattern detection: alert when a payer starts denying a code it previously accepted
+- Authorization tracking: know which payers require prior auth for which codes
+- Appeal automation: generate appeal letters using the clinical note + payer denial reason
+- Revenue dashboard: real-time view of expected vs. actual reimbursement by payer
+
+**Moonlit's current payer landscape (Utah):**
+- FFS Medicaid (Utah DHHS)
+- Medicaid MCOs: Molina, SelectHealth, Healthy U (UofU Health Plans)
+- Commercial: pending (Optum contract in progress)
+- Clearinghouses: Office Ally (primary), Availity (some payers)
+
+### Beyond Billing — Agentic Operations Platform
+
+The billing intelligence system is the first module. The broader vision is Epic Scribe as the operational brain for Moonlit Psychiatry:
+- **Scheduling intelligence**: Optimize provider schedules based on no-show patterns, visit type durations, payer mix
+- **Patient outreach**: Automated appointment reminders, intake form follow-ups, prescription refill coordination
+- **Credentialing**: Track provider-payer credentialing status, alert on expirations
+- **Compliance monitoring**: Ensure documentation meets payer-specific requirements before submission
 
 ---
 
