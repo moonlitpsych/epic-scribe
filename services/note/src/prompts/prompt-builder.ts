@@ -633,12 +633,51 @@ export class PromptBuilder {
     prompt += `If patient denies all symptoms in a system, write: "[System]: Denies symptoms"\n\n`;
 
     // Risk Assessment section
-    prompt += `RISK ASSESSMENT (place this section immediately before FORMULATION):\n`;
-    prompt += `Include a Risk Assessment section with this exact format:\n`;
-    prompt += `  "RISK ASSESSMENT\n`;
-    prompt += `  Risk factors: [list risk factors from transcript, e.g., history of suicide attempts, access to means, substance use, recent losses]\n`;
-    prompt += `  Protective factors: [list protective factors, e.g., social support, engagement in treatment, future orientation, reasons for living]\n`;
-    prompt += `  In light of these risk factors and protective factors, patient's overall suicide risk is considered [low/medium/high]. Their risk factors will be addressed through continued outpatient psychiatric management and care coordination, as needed. They are appropriate for outpatient care."\n\n`;
+    prompt += `RISK ASSESSMENT (REQUIRED — place this section immediately before FORMULATION):\n`;
+    if (!isFollowUp) {
+      prompt += `⚠️ THIS IS AN INTAKE VISIT — A THOROUGH RISK ASSESSMENT IS MANDATORY. DO NOT OMIT THIS SECTION.\n`;
+      prompt += `The risk assessment is one of the most clinically important parts of an intake note. It must be comprehensive and thoughtful.\n\n`;
+    }
+    prompt += `Use this EXACT format:\n\n`;
+    prompt += `Risk factors: [risk factor 1], [risk factor 2], [risk factor 3], ...\n`;
+    prompt += `Protective factors: [protective factor 1], [protective factor 2], [protective factor 3], ...\n`;
+    prompt += `\n`;
+    prompt += `[Two blank lines, then a narrative statement]\n\n`;
+    prompt += `RISK FACTORS — scan the transcript, prior notes, and clinical data for:\n`;
+    prompt += `- Suicidal ideation (current or historical), prior suicide attempts, self-harm / NSSIB\n`;
+    prompt += `- Access to lethal means (firearms, stockpiled medications)\n`;
+    prompt += `- Active substance use, intoxication, or withdrawal\n`;
+    prompt += `- Recent losses (death, divorce, job loss, financial crisis, housing instability)\n`;
+    prompt += `- Social isolation, limited support system\n`;
+    prompt += `- Hopelessness, agitation, impulsivity, insomnia\n`;
+    prompt += `- Family history of suicide or serious mental illness\n`;
+    prompt += `- History of trauma, abuse, or adverse childhood experiences\n`;
+    prompt += `- Chronic pain or serious medical comorbidities\n`;
+    prompt += `- Severity of current psychiatric presentation (psychosis, mania, severe depression, mixed states)\n`;
+    prompt += `- Recent psychiatric hospitalization or ED visits\n`;
+    prompt += `- Command hallucinations, paranoid ideation\n`;
+    prompt += `- Demographic risk factors (age, gender) when clinically relevant\n\n`;
+    prompt += `PROTECTIVE FACTORS — identify from transcript and clinical data:\n`;
+    prompt += `- Reasons for living (children, family, pets, faith, future goals)\n`;
+    prompt += `- Social connectedness and support system\n`;
+    prompt += `- Engagement in treatment (presenting for care, motivated, adherent)\n`;
+    prompt += `- Future orientation (upcoming plans, goals, scheduled appointments)\n`;
+    prompt += `- Religious or cultural beliefs against self-harm\n`;
+    prompt += `- Problem-solving skills, adaptive coping strategies\n`;
+    prompt += `- Therapeutic alliance\n`;
+    prompt += `- Stable housing, employment, or financial resources\n`;
+    prompt += `- Absence of active substance use\n`;
+    prompt += `- Awareness of crisis resources (988, safety plan)\n\n`;
+    prompt += `OUTPATIENT APPROPRIATENESS STATEMENT (after two blank lines):\n`;
+    prompt += `Write a clinical narrative that:\n`;
+    prompt += `1. Weighs the identified risk factors against protective factors\n`;
+    prompt += `2. States the overall suicide risk level (low, low-moderate, moderate, etc.)\n`;
+    prompt += `3. Explains why outpatient care is appropriate for this patient\n`;
+    prompt += `4. Describes how identified risk factors will be mitigated through the treatment plan\n\n`;
+    prompt += `EXAMPLE OUTPUT:\n`;
+    prompt += `"Risk factors: history of one prior suicide attempt by overdose (2019), active major depressive episode with passive suicidal ideation, recent divorce, heavy alcohol use, insomnia, family history of completed suicide (father)\n`;
+    prompt += `Protective factors: strong relationship with two children ages 8 and 11, engaged and motivated for treatment, future-oriented with new job starting next month, denies current intent or plan, willing to participate in safety planning, no access to firearms\n\n\n`;
+    prompt += `In light of the above risk and protective factors, this patient's overall suicide risk is considered low-moderate at this time. The history of a prior attempt and active substance use are notable risk factors; however, these are substantially mitigated by the patient's strong connection to their children, active engagement in psychiatric care, future orientation, and absence of current suicidal intent or plan. Risk factors will be addressed through outpatient psychiatric management including medication optimization for depression and insomnia, referral to substance use treatment, and collaborative safety planning. The patient is appropriate for outpatient care at this time and has been instructed to present to the nearest emergency department or call 988 if experiencing worsening suicidal ideation or urges to act on thoughts of self-harm."\n\n`;
 
     // Plan - Counseling section
     prompt += `PLAN - COUNSELING SECTION:\n`;
@@ -663,6 +702,43 @@ export class PromptBuilder {
     prompt += `  - DO NOT use .FNAME, .LNAME, or .age dotphrases in the Assessment section\n`;
     prompt += `  - The Assessment should read like a natural clinical summary with the actual patient's identifying information\n\n`;
 
+    // Listening Coder section
+    prompt += `LISTENING CODER (append AFTER the signature at the very end of the note):\n`;
+    prompt += `After the complete note and signature line, add a separator and coding analysis section.\n`;
+    prompt += `Format as follows:\n\n`;
+    prompt += `---\n`;
+    prompt += `LISTENING CODER — Suggested CPT Codes\n\n`;
+    prompt += `Analyze the encounter and suggest appropriate CPT codes with brief reasoning.\n\n`;
+    prompt += `EVALUATION & MANAGEMENT CODE:\n`;
+    if (!isFollowUp) {
+      prompt += `For intake/new patient visits, consider:\n`;
+      prompt += `- 90792: Psychiatric diagnostic evaluation with medical services (typical for psychiatrist intakes — includes history, exam, medical decision-making, and diagnosis)\n`;
+      prompt += `- 99205: New patient E/M, high complexity (60-74 min) — alternative if billing E/M instead of 90792\n`;
+      prompt += `- 99204: New patient E/M, moderate complexity (45-59 min)\n`;
+    } else {
+      prompt += `For follow-up/established patient visits, determine based on TOTAL TIME (including face-to-face, documentation, review, and care coordination on date of service) OR medical decision-making (MDM) complexity — use whichever supports the higher level:\n`;
+      prompt += `- 99213: Low MDM complexity / 20-29 minutes total time\n`;
+      prompt += `- 99214: Moderate MDM complexity / 30-39 minutes total time\n`;
+      prompt += `- 99215: High MDM complexity / 40-54 minutes total time\n`;
+    }
+    prompt += `\nPSYCHOTHERAPY ADD-ON CODE (if applicable):\n`;
+    prompt += `If psychotherapy was provided during the visit (supportive therapy, CBT techniques, motivational interviewing, crisis intervention, psychoeducation, etc.), add the appropriate code based on therapy duration:\n`;
+    prompt += `- +90833: 16-37 minutes of psychotherapy\n`;
+    prompt += `- +90836: 38-52 minutes of psychotherapy\n`;
+    prompt += `- +90838: 53+ minutes of psychotherapy\n`;
+    prompt += `These are ADD-ON codes billed alongside the E/M or 90792 code.\n\n`;
+    prompt += `INSTRUCTIONS FOR THE LISTENING CODER OUTPUT:\n`;
+    prompt += `1. State the suggested E/M or evaluation code with reasoning (reference time from transcript timestamps if available, or MDM complexity based on number/severity of problems addressed, data reviewed, and risk of management)\n`;
+    prompt += `2. If psychotherapy was detected, state the add-on code with estimated therapy duration and what therapeutic modality was used\n`;
+    prompt += `3. State the total encounter time if discernible from transcript timestamps\n`;
+    prompt += `4. Keep reasoning concise — 1-2 sentences per code\n`;
+    prompt += `5. If uncertain between two levels, state both with reasoning and let the provider decide\n\n`;
+    prompt += `EXAMPLE OUTPUT:\n`;
+    prompt += `"---\nLISTENING CODER — Suggested CPT Codes\n\n`;
+    prompt += `90792 — Psychiatric diagnostic evaluation with medical services. This is a new patient intake with comprehensive psychiatric history, mental status examination, diagnostic formulation, and treatment planning.\n\n`;
+    prompt += `+90836 — Psychotherapy add-on, 38-52 minutes. Approximately 40 minutes of supportive psychotherapy and psychoeducation were provided, focusing on diagnosis explanation, treatment expectations, and coping strategies for acute symptoms.\n\n`;
+    prompt += `Total encounter time: ~75 minutes (based on transcript timestamps 00:00:00 to 01:14:32)."\n\n`;
+
     // Final instruction
     prompt += `OUTPUT INSTRUCTIONS:\n`;
     prompt += `Generate the complete note following the template structure above. `;
@@ -676,7 +752,9 @@ export class PromptBuilder {
 
     prompt += `Apply all SmartTools transformations. `;
     prompt += `Maintain clinical prose style matching the exemplars. `;
-    prompt += `Do not include any meta-commentary or explanations - output only the final note.`;
+    prompt += `Include the Risk Assessment section before Formulation. `;
+    prompt += `After the signature, append the Listening Coder section with CPT code analysis. `;
+    prompt += `Do not include any other meta-commentary or explanations.`;
 
     return prompt;
   }

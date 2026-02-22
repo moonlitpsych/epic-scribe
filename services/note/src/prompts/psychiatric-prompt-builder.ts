@@ -664,25 +664,94 @@ ${transcript}
 
   const isFollowUp = visitType === 'Follow-up' || visitType === 'Transfer of Care';
 
-  prompt += `
+  // Risk Assessment instructions (especially critical for intake visits)
+  prompt += `\n\nRISK ASSESSMENT (REQUIRED — place immediately before FORMULATION/ASSESSMENT section):\n`;
+  if (!isFollowUp) {
+    prompt += `⚠️ THIS IS AN INTAKE VISIT — A THOROUGH RISK ASSESSMENT IS MANDATORY. DO NOT OMIT THIS SECTION.\n`;
+    prompt += `The risk assessment is one of the most clinically important parts of an intake note.\n\n`;
+  }
+  prompt += `Use this EXACT format:
 
+Risk factors: [risk factor 1], [risk factor 2], [risk factor 3], ...
+Protective factors: [protective factor 1], [protective factor 2], [protective factor 3], ...
+
+
+[Two blank lines above, then a narrative statement about outpatient appropriateness]
+
+RISK FACTORS — scan the transcript, prior notes, and clinical data for:
+- Suicidal ideation (current or historical), prior suicide attempts, self-harm / NSSIB
+- Access to lethal means (firearms, stockpiled medications)
+- Active substance use, intoxication, or withdrawal
+- Recent losses (death, divorce, job loss, financial crisis, housing instability)
+- Social isolation, limited support system
+- Hopelessness, agitation, impulsivity, insomnia
+- Family history of suicide or serious mental illness
+- History of trauma, abuse, or adverse childhood experiences
+- Chronic pain or serious medical comorbidities
+- Severity of current psychiatric presentation (psychosis, mania, severe depression, mixed states)
+- Recent psychiatric hospitalization or ED visits
+
+PROTECTIVE FACTORS — identify from transcript and clinical data:
+- Reasons for living (children, family, pets, faith, future goals)
+- Social connectedness and support system
+- Engagement in treatment (presenting for care, motivated, adherent)
+- Future orientation (upcoming plans, goals, scheduled appointments)
+- Problem-solving skills, adaptive coping strategies
+- Stable housing, employment, or financial resources
+- Absence of active substance use, awareness of crisis resources
+
+OUTPATIENT APPROPRIATENESS STATEMENT (after two blank lines):
+Weigh risk vs protective factors, state overall risk level, explain why outpatient care is appropriate, and describe how risk factors will be mitigated through the treatment plan. Include instruction to present to ED or call 988 if worsening.\n`;
+
+  // Listening Coder instructions
+  prompt += `\nLISTENING CODER (append AFTER the signature at the very end of the note):
+After the complete note and "Rufus Sweeney, MD" signature, add a separator and coding analysis:
+
+---
+LISTENING CODER — Suggested CPT Codes
+
+`;
+  if (!isFollowUp) {
+    prompt += `For this intake visit, consider:
+- 90792: Psychiatric diagnostic evaluation with medical services (typical for psychiatrist intakes)
+- 99205: New patient E/M, high complexity (60-74 min) — alternative to 90792
+- 99204: New patient E/M, moderate complexity (45-59 min)
+`;
+  } else {
+    prompt += `For this follow-up visit, determine based on TOTAL TIME or MDM complexity (whichever supports higher level):
+- 99213: Low MDM / 20-29 min total time
+- 99214: Moderate MDM / 30-39 min total time
+- 99215: High MDM / 40-54 min total time
+`;
+  }
+  prompt += `
+Psychotherapy add-on (if therapy was provided during the visit):
+- +90833: 16-37 minutes of psychotherapy
+- +90836: 38-52 minutes of psychotherapy
+- +90838: 53+ minutes of psychotherapy
+
+Output: State suggested E/M code with reasoning (reference transcript timestamps for time, or MDM complexity). If psychotherapy detected, state add-on code with estimated therapy duration and modality. State total encounter time if discernible. Keep reasoning concise (1-2 sentences per code).\n`;
+
+  prompt += `
 GENERATION INSTRUCTIONS:
 1. Process each section according to its specific instructions and temperature setting
 2. For HPI: Generate detailed narrative (temperature 0.7) - do NOT over-condense
 3. For Psychiatric History: Extract facts precisely (temperature 0.3)
 4. For ROS and MSE: Select SmartList options carefully (temperature 0.2)
 5. For ${isFollowUp ? 'Assessment' : 'Formulation'}: Follow ${isFollowUp ? '2-paragraph interval update structure' : 'exact 4-paragraph structure'} (temperature 0.5)
-6. For Plan: ${isFollowUp ? 'Use "Continue" for unchanged medications, include timestamps for therapy' : 'Use exact formatting with subsections'} (temperature 0.3)`;
+6. For Plan: ${isFollowUp ? 'Use "Continue" for unchanged medications, include timestamps for therapy' : 'Use exact formatting with subsections'} (temperature 0.3)
+7. RISK ASSESSMENT: ${!isFollowUp ? 'MANDATORY for this intake — do NOT skip' : 'Include risk assessment with current status'}
+8. LISTENING CODER: Append after the signature with CPT code analysis`;
 
   if (hasSeparateStaffing) {
     prompt += `
-7. For Plan section: HEAVILY weight the staffing transcript - use attending's specific recommendations
+9. For Plan section: HEAVILY weight the staffing transcript - use attending's specific recommendations
 `;
   }
 
   prompt += `
 
-OUTPUT: Generate the complete note following the template structure. Do not include any meta-commentary or section headers beyond what's in the template.`;
+OUTPUT: Generate the complete note following the template structure, including the Risk Assessment section before Formulation/Assessment and the Listening Coder section after the signature. Do not include any other meta-commentary.`;
 
   return prompt;
 }
