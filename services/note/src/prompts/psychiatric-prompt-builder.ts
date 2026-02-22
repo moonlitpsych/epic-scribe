@@ -712,10 +712,10 @@ LISTENING CODER — Suggested CPT Codes
 
 `;
   if (!isFollowUp) {
-    prompt += `For this intake visit, consider:
-- 90792: Psychiatric diagnostic evaluation with medical services (typical for psychiatrist intakes)
-- 99205: New patient E/M, high complexity (60-74 min) — alternative to 90792
+    prompt += `For this intake/new patient visit, USE E/M CODES (not 90792). In Utah, E/M codes reimburse significantly better than 90792 across FFS Medicaid and all MCOs:
+- 99205: New patient E/M, high complexity (60-74 min) — PREFERRED for most psychiatric intakes
 - 99204: New patient E/M, moderate complexity (45-59 min)
+Do NOT suggest 90792 unless specifically instructed. E/M codes are the standard for Moonlit Psychiatry intakes.
 `;
   } else {
     prompt += `For this follow-up visit, determine based on TOTAL TIME or MDM complexity (whichever supports higher level):

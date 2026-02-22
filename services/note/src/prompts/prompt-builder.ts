@@ -711,10 +711,10 @@ export class PromptBuilder {
     prompt += `Analyze the encounter and suggest appropriate CPT codes with brief reasoning.\n\n`;
     prompt += `EVALUATION & MANAGEMENT CODE:\n`;
     if (!isFollowUp) {
-      prompt += `For intake/new patient visits, consider:\n`;
-      prompt += `- 90792: Psychiatric diagnostic evaluation with medical services (typical for psychiatrist intakes — includes history, exam, medical decision-making, and diagnosis)\n`;
-      prompt += `- 99205: New patient E/M, high complexity (60-74 min) — alternative if billing E/M instead of 90792\n`;
+      prompt += `For intake/new patient visits, USE E/M CODES (not 90792). In Utah, E/M codes reimburse significantly better than 90792 across FFS Medicaid and all MCOs:\n`;
+      prompt += `- 99205: New patient E/M, high complexity (60-74 min) — PREFERRED for most psychiatric intakes\n`;
       prompt += `- 99204: New patient E/M, moderate complexity (45-59 min)\n`;
+      prompt += `Do NOT suggest 90792 unless specifically instructed. E/M codes are the standard for Moonlit Psychiatry intakes.\n`;
     } else {
       prompt += `For follow-up/established patient visits, determine based on TOTAL TIME (including face-to-face, documentation, review, and care coordination on date of service) OR medical decision-making (MDM) complexity — use whichever supports the higher level:\n`;
       prompt += `- 99213: Low MDM complexity / 20-29 minutes total time\n`;
@@ -726,7 +726,7 @@ export class PromptBuilder {
     prompt += `- +90833: 16-37 minutes of psychotherapy\n`;
     prompt += `- +90836: 38-52 minutes of psychotherapy\n`;
     prompt += `- +90838: 53+ minutes of psychotherapy\n`;
-    prompt += `These are ADD-ON codes billed alongside the E/M or 90792 code.\n\n`;
+    prompt += `These are ADD-ON codes billed alongside the E/M code.\n\n`;
     prompt += `INSTRUCTIONS FOR THE LISTENING CODER OUTPUT:\n`;
     prompt += `1. State the suggested E/M or evaluation code with reasoning (reference time from transcript timestamps if available, or MDM complexity based on number/severity of problems addressed, data reviewed, and risk of management)\n`;
     prompt += `2. If psychotherapy was detected, state the add-on code with estimated therapy duration and what therapeutic modality was used\n`;
@@ -735,7 +735,7 @@ export class PromptBuilder {
     prompt += `5. If uncertain between two levels, state both with reasoning and let the provider decide\n\n`;
     prompt += `EXAMPLE OUTPUT:\n`;
     prompt += `"---\nLISTENING CODER — Suggested CPT Codes\n\n`;
-    prompt += `90792 — Psychiatric diagnostic evaluation with medical services. This is a new patient intake with comprehensive psychiatric history, mental status examination, diagnostic formulation, and treatment planning.\n\n`;
+    prompt += `99205 — New patient E/M, high complexity. This is a new patient psychiatric intake with comprehensive history, mental status examination, high-complexity medical decision-making (new psychiatric diagnoses, multiple medication considerations, risk assessment), and treatment planning. Total time supports high complexity level.\n\n`;
     prompt += `+90836 — Psychotherapy add-on, 38-52 minutes. Approximately 40 minutes of supportive psychotherapy and psychoeducation were provided, focusing on diagnosis explanation, treatment expectations, and coping strategies for acute symptoms.\n\n`;
     prompt += `Total encounter time: ~75 minutes (based on transcript timestamps 00:00:00 to 01:14:32)."\n\n`;
 
