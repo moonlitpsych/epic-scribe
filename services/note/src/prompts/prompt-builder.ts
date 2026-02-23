@@ -765,6 +765,17 @@ export class PromptBuilder {
       prompt += `- +90838: 53+ minutes of psychotherapy\n`;
     }
     prompt += `These are ADD-ON codes billed alongside the E/M code.\n\n`;
+    // G2211 — Complexity add-on (always bill if payer reimburses it)
+    if (feeScheduleData) {
+      const rateMap2 = new Map(feeScheduleData.rates.map(r => [r.cpt, r.allowedCents]));
+      const formatRate2 = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+      const rG2211 = rateMap2.get('G2211');
+      if (rG2211) {
+        prompt += `COMPLEXITY ADD-ON (ALWAYS BILL):\n`;
+        prompt += `- G2211: Medical visit complexity add-on (${formatRate2(rG2211)})\n`;
+        prompt += `  This code is billed on EVERY visit (intake and follow-up) for this payer. It is not conditional on time or complexity — simply include it whenever the E/M code is billed.\n\n`;
+      }
+    }
     prompt += `INSTRUCTIONS FOR THE LISTENING CODER OUTPUT:\n`;
     prompt += `1. State the suggested E/M or evaluation code with reasoning (reference time from transcript timestamps if available, or MDM complexity based on number/severity of problems addressed, data reviewed, and risk of management)\n`;
     prompt += `2. If psychotherapy was detected, state the add-on code with estimated therapy duration and what therapeutic modality was used\n`;

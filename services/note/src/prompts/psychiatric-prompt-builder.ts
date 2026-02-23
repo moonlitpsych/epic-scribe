@@ -740,6 +740,13 @@ LISTENING CODER — Suggested CPT Codes
     prompt += `- +90833: 16-37 minutes of psychotherapy${r90833 ? ` (${formatRate(r90833)})` : ''}\n`;
     prompt += `- +90836: 38-52 minutes of psychotherapy${r90836 ? ` (${formatRate(r90836)})` : ''}\n`;
     prompt += `- +90838: 53+ minutes of psychotherapy${r90838 ? ` (${formatRate(r90838)})` : ''}\n`;
+    // G2211 — Complexity add-on (always bill if payer reimburses it)
+    const rG2211 = rateMap.get('G2211');
+    if (rG2211) {
+      prompt += `\nCOMPLEXITY ADD-ON (ALWAYS BILL):\n`;
+      prompt += `- G2211: Medical visit complexity add-on (${formatRate(rG2211)})\n`;
+      prompt += `  This code is billed on EVERY visit (intake and follow-up) for this payer. It is not conditional on time or complexity — simply include it whenever the E/M code is billed.\n`;
+    }
     prompt += `\nUse these rates to recommend the highest-reimbursing clinically defensible code combination.\n`;
   } else {
     if (!isFollowUp) {
