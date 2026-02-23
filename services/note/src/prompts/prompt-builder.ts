@@ -10,7 +10,8 @@ import {
   SmartList,
   PromptManifest,
   TemplateSection,
-  HealthKitClinicalData
+  HealthKitClinicalData,
+  PayerFeeSchedule
 } from '@epic-scribe/types';
 import { getSmartListService } from '../smartlists/smartlist-service';
 import { noteParser, ExtractedNoteData } from '../parsers/note-parser';
@@ -27,6 +28,7 @@ export interface PromptBuilderOptions {
   epicChartData?: string; // Epic DotPhrase data (questionnaires, meds) for strengthening Assessment
   longitudinalChartData?: string; // Formatted longitudinal chart data (PHQ-9/GAD-7 trends, medication history)
   healthKitData?: HealthKitClinicalData; // HealthKit clinical data (meds, labs, conditions, etc.)
+  feeScheduleData?: PayerFeeSchedule; // Payer fee schedule for Listening Coder CPT suggestions
   patientContext?: string;  // Clinical context from patient record
   historicalNotes?: string;  // All previous finalized notes for this patient
   setting: Setting;
@@ -168,7 +170,7 @@ export class PromptBuilder {
    * Build a complete prompt from components
    */
   async build(options: PromptBuilderOptions): Promise<CompiledPrompt> {
-    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, epicChartData, longitudinalChartData, healthKitData, patientContext, historicalNotes, setting, visitType, patientFirstName, patientLastName, patientAge } = options;
+    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, epicChartData, longitudinalChartData, healthKitData, feeScheduleData, patientContext, historicalNotes, setting, visitType, patientFirstName, patientLastName, patientAge } = options;
 
     // Check if this is a therapy-focused template (BHIDC therapy)
     const isTherapyFocused = template.setting === 'BHIDC therapy' ||
@@ -217,7 +219,7 @@ export class PromptBuilder {
         firstName: patientFirstName,
         lastName: patientLastName,
         age: patientAge
-      });
+      }, feeScheduleData);
 
       sections = {
         system: 'Psychiatric note generator for Dr. Rufus Sweeney',
@@ -272,7 +274,7 @@ export class PromptBuilder {
         firstName: patientFirstName,
         lastName: patientLastName,
         age: patientAge
-      }, longitudinalChartData, healthKitData);
+      }, longitudinalChartData, healthKitData, feeScheduleData);
     }
 
     // Generate hash
@@ -447,7 +449,7 @@ export class PromptBuilder {
     firstName?: string;
     lastName?: string;
     age?: number | null;
-  }, longitudinalChartData?: string, healthKitData?: HealthKitClinicalData): string {
+  }, longitudinalChartData?: string, healthKitData?: HealthKitClinicalData, feeScheduleData?: PayerFeeSchedule): string {
     let prompt = '';
 
     // System prompt
@@ -710,22 +712,58 @@ export class PromptBuilder {
     prompt += `LISTENING CODER — Suggested CPT Codes\n\n`;
     prompt += `Analyze the encounter and suggest appropriate CPT codes with brief reasoning.\n\n`;
     prompt += `EVALUATION & MANAGEMENT CODE:\n`;
-    if (!isFollowUp) {
-      prompt += `For intake/new patient visits, USE E/M CODES (not 90792). In Utah, E/M codes reimburse significantly better than 90792 across FFS Medicaid and all MCOs:\n`;
-      prompt += `- 99205: New patient E/M, high complexity (60-74 min) — PREFERRED for most psychiatric intakes\n`;
-      prompt += `- 99204: New patient E/M, moderate complexity (45-59 min)\n`;
-      prompt += `Do NOT suggest 90792 unless specifically instructed. E/M codes are the standard for Moonlit Psychiatry intakes.\n`;
+    if (feeScheduleData) {
+      prompt += `PAYER: ${feeScheduleData.payerName} (${feeScheduleData.payerType})\n`;
+      prompt += `Fee schedule rates for this patient's payer:\n`;
+      const formatRate = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+      const rateMap = new Map(feeScheduleData.rates.map(r => [r.cpt, r.allowedCents]));
+      if (!isFollowUp) {
+        const r99205 = rateMap.get('99205');
+        const r99204 = rateMap.get('99204');
+        const r90792 = rateMap.get('90792');
+        if (r99205) prompt += `- 99205 (new patient, high complexity): ${formatRate(r99205)}\n`;
+        if (r99204) prompt += `- 99204 (new patient, moderate complexity): ${formatRate(r99204)}\n`;
+        if (r90792) prompt += `- 90792 (psychiatric diagnostic eval): ${formatRate(r90792)}\n`;
+        if (!r90792) prompt += `- 90792: NO fee schedule entry for this payer — do NOT suggest\n`;
+        prompt += `USE E/M CODES for intakes. They reimburse significantly better than 90792 for this payer.\n`;
+      } else {
+        const r99213 = rateMap.get('99213');
+        const r99214 = rateMap.get('99214');
+        const r99215 = rateMap.get('99215');
+        if (r99215) prompt += `- 99215 (high MDM / 40-54 min): ${formatRate(r99215)}\n`;
+        if (r99214) prompt += `- 99214 (moderate MDM / 30-39 min): ${formatRate(r99214)}\n`;
+        if (r99213) prompt += `- 99213 (low MDM / 20-29 min): ${formatRate(r99213)}\n`;
+      }
+      prompt += `\nUse these rates to recommend the highest-reimbursing clinically defensible code combination.\n`;
     } else {
-      prompt += `For follow-up/established patient visits, determine based on TOTAL TIME (including face-to-face, documentation, review, and care coordination on date of service) OR medical decision-making (MDM) complexity — use whichever supports the higher level:\n`;
-      prompt += `- 99213: Low MDM complexity / 20-29 minutes total time\n`;
-      prompt += `- 99214: Moderate MDM complexity / 30-39 minutes total time\n`;
-      prompt += `- 99215: High MDM complexity / 40-54 minutes total time\n`;
+      if (!isFollowUp) {
+        prompt += `For intake/new patient visits, USE E/M CODES (not 90792). In Utah, E/M codes reimburse significantly better than 90792 across FFS Medicaid and all MCOs:\n`;
+        prompt += `- 99205: New patient E/M, high complexity (60-74 min) — PREFERRED for most psychiatric intakes\n`;
+        prompt += `- 99204: New patient E/M, moderate complexity (45-59 min)\n`;
+        prompt += `Do NOT suggest 90792 unless specifically instructed. E/M codes are the standard for Moonlit Psychiatry intakes.\n`;
+      } else {
+        prompt += `For follow-up/established patient visits, determine based on TOTAL TIME (including face-to-face, documentation, review, and care coordination on date of service) OR medical decision-making (MDM) complexity — use whichever supports the higher level:\n`;
+        prompt += `- 99213: Low MDM complexity / 20-29 minutes total time\n`;
+        prompt += `- 99214: Moderate MDM complexity / 30-39 minutes total time\n`;
+        prompt += `- 99215: High MDM complexity / 40-54 minutes total time\n`;
+      }
     }
     prompt += `\nPSYCHOTHERAPY ADD-ON CODE (if applicable):\n`;
     prompt += `If psychotherapy was provided during the visit (supportive therapy, CBT techniques, motivational interviewing, crisis intervention, psychoeducation, etc.), add the appropriate code based on therapy duration:\n`;
-    prompt += `- +90833: 16-37 minutes of psychotherapy\n`;
-    prompt += `- +90836: 38-52 minutes of psychotherapy\n`;
-    prompt += `- +90838: 53+ minutes of psychotherapy\n`;
+    if (feeScheduleData) {
+      const rateMap = new Map(feeScheduleData.rates.map(r => [r.cpt, r.allowedCents]));
+      const formatRate = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+      const r90833 = rateMap.get('90833');
+      const r90836 = rateMap.get('90836');
+      const r90838 = rateMap.get('90838');
+      prompt += `- +90833: 16-37 minutes of psychotherapy${r90833 ? ` (${formatRate(r90833)})` : ''}\n`;
+      prompt += `- +90836: 38-52 minutes of psychotherapy${r90836 ? ` (${formatRate(r90836)})` : ''}\n`;
+      prompt += `- +90838: 53+ minutes of psychotherapy${r90838 ? ` (${formatRate(r90838)})` : ''}\n`;
+    } else {
+      prompt += `- +90833: 16-37 minutes of psychotherapy\n`;
+      prompt += `- +90836: 38-52 minutes of psychotherapy\n`;
+      prompt += `- +90838: 53+ minutes of psychotherapy\n`;
+    }
     prompt += `These are ADD-ON codes billed alongside the E/M code.\n\n`;
     prompt += `INSTRUCTIONS FOR THE LISTENING CODER OUTPUT:\n`;
     prompt += `1. State the suggested E/M or evaluation code with reasoning (reference time from transcript timestamps if available, or MDM complexity based on number/severity of problems addressed, data reviewed, and risk of management)\n`;

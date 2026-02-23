@@ -345,6 +345,14 @@ export interface ClinicalDataPayload {
   syncTimestamp: string;
 }
 
+// Payer Fee Schedule Types (for Listening Coder payer-aware CPT suggestions)
+export interface PayerFeeSchedule {
+  payerName: string;
+  payerId: string;
+  payerType: string;
+  rates: { cpt: string; allowedCents: number }[];
+}
+
 // Error Types
 export class SmartToolsError extends Error {
   constructor(

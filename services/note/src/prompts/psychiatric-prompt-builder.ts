@@ -3,7 +3,7 @@
  * Enhanced prompt building with section-specific instructions and temperature control
  */
 
-import { Template, TemplateSection } from '@epic-scribe/types';
+import { Template, TemplateSection, PayerFeeSchedule } from '@epic-scribe/types';
 
 export interface SectionPromptConfig {
   sectionName: string;
@@ -498,7 +498,8 @@ export function buildPsychiatricPrompt(
     firstName?: string;
     lastName?: string;
     age?: number | null;
-  }
+  },
+  feeScheduleData?: PayerFeeSchedule
 ): string {
   // Check for staffing configuration
   const staffingConfig = template.staffing_config;
@@ -711,26 +712,57 @@ After the complete note and "Rufus Sweeney, MD" signature, add a separator and c
 LISTENING CODER — Suggested CPT Codes
 
 `;
-  if (!isFollowUp) {
-    prompt += `For this intake/new patient visit, USE E/M CODES (not 90792). In Utah, E/M codes reimburse significantly better than 90792 across FFS Medicaid and all MCOs:
+  if (feeScheduleData) {
+    const formatRate = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+    const rateMap = new Map(feeScheduleData.rates.map(r => [r.cpt, r.allowedCents]));
+    prompt += `PAYER: ${feeScheduleData.payerName} (${feeScheduleData.payerType})\nFee schedule rates for this patient's payer:\n`;
+    if (!isFollowUp) {
+      const r99205 = rateMap.get('99205');
+      const r99204 = rateMap.get('99204');
+      const r90792 = rateMap.get('90792');
+      if (r99205) prompt += `- 99205 (new patient, high complexity): ${formatRate(r99205)}\n`;
+      if (r99204) prompt += `- 99204 (new patient, moderate complexity): ${formatRate(r99204)}\n`;
+      if (r90792) prompt += `- 90792 (psychiatric diagnostic eval): ${formatRate(r90792)}\n`;
+      if (!r90792) prompt += `- 90792: NO fee schedule entry for this payer — do NOT suggest\n`;
+      prompt += `USE E/M CODES for intakes. They reimburse significantly better than 90792 for this payer.\n`;
+    } else {
+      const r99215 = rateMap.get('99215');
+      const r99214 = rateMap.get('99214');
+      const r99213 = rateMap.get('99213');
+      if (r99215) prompt += `- 99215 (high MDM / 40-54 min): ${formatRate(r99215)}\n`;
+      if (r99214) prompt += `- 99214 (moderate MDM / 30-39 min): ${formatRate(r99214)}\n`;
+      if (r99213) prompt += `- 99213 (low MDM / 20-29 min): ${formatRate(r99213)}\n`;
+    }
+    const r90833 = rateMap.get('90833');
+    const r90836 = rateMap.get('90836');
+    const r90838 = rateMap.get('90838');
+    prompt += `\nPsychotherapy add-on (if therapy was provided during the visit):\n`;
+    prompt += `- +90833: 16-37 minutes of psychotherapy${r90833 ? ` (${formatRate(r90833)})` : ''}\n`;
+    prompt += `- +90836: 38-52 minutes of psychotherapy${r90836 ? ` (${formatRate(r90836)})` : ''}\n`;
+    prompt += `- +90838: 53+ minutes of psychotherapy${r90838 ? ` (${formatRate(r90838)})` : ''}\n`;
+    prompt += `\nUse these rates to recommend the highest-reimbursing clinically defensible code combination.\n`;
+  } else {
+    if (!isFollowUp) {
+      prompt += `For this intake/new patient visit, USE E/M CODES (not 90792). In Utah, E/M codes reimburse significantly better than 90792 across FFS Medicaid and all MCOs:
 - 99205: New patient E/M, high complexity (60-74 min) — PREFERRED for most psychiatric intakes
 - 99204: New patient E/M, moderate complexity (45-59 min)
 Do NOT suggest 90792 unless specifically instructed. E/M codes are the standard for Moonlit Psychiatry intakes.
 `;
-  } else {
-    prompt += `For this follow-up visit, determine based on TOTAL TIME or MDM complexity (whichever supports higher level):
+    } else {
+      prompt += `For this follow-up visit, determine based on TOTAL TIME or MDM complexity (whichever supports higher level):
 - 99213: Low MDM / 20-29 min total time
 - 99214: Moderate MDM / 30-39 min total time
 - 99215: High MDM / 40-54 min total time
 `;
-  }
-  prompt += `
+    }
+    prompt += `
 Psychotherapy add-on (if therapy was provided during the visit):
 - +90833: 16-37 minutes of psychotherapy
 - +90836: 38-52 minutes of psychotherapy
 - +90838: 53+ minutes of psychotherapy
-
-Output: State suggested E/M code with reasoning (reference transcript timestamps for time, or MDM complexity). If psychotherapy detected, state add-on code with estimated therapy duration and modality. State total encounter time if discernible. Keep reasoning concise (1-2 sentences per code).\n`;
+`;
+  }
+  prompt += `\nOutput: State suggested E/M code with reasoning (reference transcript timestamps for time, or MDM complexity). If psychotherapy detected, state add-on code with estimated therapy duration and modality. State total encounter time if discernible. Keep reasoning concise (1-2 sentences per code).\n`;
 
   prompt += `
 GENERATION INSTRUCTIONS:

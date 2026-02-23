@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GenerateNoteRequest, GenerateNoteResponse, Setting, PromptReceipt, EpicChartData, LongitudinalChartData, HealthKitClinicalData } from '@epic-scribe/types';
+import { GenerateNoteRequest, GenerateNoteResponse, Setting, PromptReceipt, EpicChartData, LongitudinalChartData, HealthKitClinicalData, PayerFeeSchedule } from '@epic-scribe/types';
 import { templateService } from '@epic-scribe/note-service/src/templates/template-service';
 import { getPromptBuilder } from '@epic-scribe/note-service/src/prompts/prompt-builder';
 import { getGeminiClient } from '@epic-scribe/note-service/src/llm/gemini-client';
@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
     let longitudinalChartData: LongitudinalChartData | null = null;
     let longitudinalChartDataPrompt: string | undefined;
     let healthKitData: HealthKitClinicalData | null = null;
+    let feeScheduleData: PayerFeeSchedule | null = null;
 
     // Helper function to calculate age from DOB
     const calculateAge = (dob: string | null | undefined): number | null => {
@@ -119,6 +120,19 @@ export async function POST(request: NextRequest) {
           } catch (hkError) {
             console.warn(`[Generate] Could not fetch HealthKit data:`, hkError);
           }
+
+          // Fetch payer fee schedule for Listening Coder
+          if (patient && (patient as any).primary_payer_id) {
+            try {
+              const { getPayerFeeSchedule } = await import('@/lib/db/fee-schedules');
+              feeScheduleData = await getPayerFeeSchedule((patient as any).primary_payer_id);
+              if (feeScheduleData) {
+                console.log(`[Generate] Loaded fee schedule for payer ${feeScheduleData.payerName} (${feeScheduleData.rates.length} rates)`);
+              }
+            } catch (fsError) {
+              console.warn(`[Generate] Could not fetch fee schedule:`, fsError);
+            }
+          }
         }
       } catch (error) {
         console.warn(`[Generate] Could not fetch encounter ${encounterId}:`, error);
@@ -171,6 +185,19 @@ export async function POST(request: NextRequest) {
           }
         } catch (hkError) {
           console.warn(`[Generate] Could not fetch HealthKit data:`, hkError);
+        }
+
+        // Fetch payer fee schedule for Listening Coder
+        if (patient && (patient as any).primary_payer_id) {
+          try {
+            const { getPayerFeeSchedule } = await import('@/lib/db/fee-schedules');
+            feeScheduleData = await getPayerFeeSchedule((patient as any).primary_payer_id);
+            if (feeScheduleData) {
+              console.log(`[Generate] Loaded fee schedule for payer ${feeScheduleData.payerName} (${feeScheduleData.rates.length} rates)`);
+            }
+          } catch (fsError) {
+            console.warn(`[Generate] Could not fetch fee schedule:`, fsError);
+          }
         }
       } catch (error) {
         console.warn(`[Generate] Could not fetch patient ${patientId}:`, error);
@@ -243,6 +270,7 @@ export async function POST(request: NextRequest) {
       epicChartData: epicChartData?.trim() || undefined, // Include raw Epic chart data for AI to use
       longitudinalChartData: longitudinalChartDataPrompt, // Include PHQ-9/GAD-7 trends and medication history
       healthKitData: healthKitData || undefined, // Include HealthKit clinical data if available
+      feeScheduleData: feeScheduleData || undefined, // Include payer fee schedule for Listening Coder
       patientContext, // Include patient clinical context if available
       historicalNotes, // Include all previous finalized notes for continuity
       setting: setting as Setting,
