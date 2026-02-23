@@ -15,6 +15,7 @@ import {
   deletePatient,
 } from '@/lib/db';
 import { getPatientFinalizedNotes } from '@/lib/db/notes';
+import { getSupabaseClient } from '@/lib/supabase';
 
 export async function GET(
   _request: NextRequest,
@@ -62,6 +63,17 @@ export async function GET(
       // Continue without notes
     }
 
+    // Look up payer name if patient has a primary payer
+    if (patient.primary_payer_id) {
+      const supabase = getSupabaseClient(true);
+      const { data: payer } = await supabase
+        .from('payers')
+        .select('name')
+        .eq('id', patient.primary_payer_id)
+        .single();
+      (patient as any).primary_payer_name = payer?.name || null;
+    }
+
     return NextResponse.json({ patient, encounters, notes });
   } catch (error) {
     console.error('Error fetching patient:', error);
@@ -93,7 +105,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { firstName, lastName, dateOfBirth, mrn, email, notes, active } = body;
+    const { firstName, lastName, dateOfBirth, mrn, email, notes, active, primaryPayerId } = body;
 
     const updates: any = {};
 
@@ -114,6 +126,7 @@ export async function PATCH(
     if (email !== undefined) updates.email = email;
     if (notes !== undefined) updates.notes = notes;
     if (active !== undefined) updates.active = active;
+    if (primaryPayerId !== undefined) updates.primary_payer_id = primaryPayerId;
 
     const patient = await updatePatient(patientId, updates);
 

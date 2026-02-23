@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Save, User, FileText, Calendar, Activity, Pencil, X, Check, QrCode, Smartphone } from 'lucide-react';
 import QRCode from 'qrcode';
 
@@ -11,6 +11,8 @@ interface Patient {
   date_of_birth: string;
   mrn: string | null;
   email: string | null;
+  primary_payer_id?: string | null;
+  primary_payer_name?: string | null;
   notes: string | null;
   active: boolean;
   created_at: string;
@@ -41,7 +43,16 @@ export default function PatientOverviewTab({
   const [editDob, setEditDob] = useState(patient.date_of_birth?.split('T')[0] || '');
   const [editMrn, setEditMrn] = useState(patient.mrn || '');
   const [editEmail, setEditEmail] = useState(patient.email || '');
+  const [editPayerId, setEditPayerId] = useState(patient.primary_payer_id || '');
+  const [payers, setPayers] = useState<{ id: string; name: string; payer_type: string }[]>([]);
   const [savingDemographics, setSavingDemographics] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/payers')
+      .then((res) => res.json())
+      .then((data) => setPayers(data.payers || []))
+      .catch(() => {});
+  }, []);
 
   // QR code state
   const [showQr, setShowQr] = useState(false);
@@ -103,6 +114,7 @@ export default function PatientOverviewTab({
     setEditDob(patient.date_of_birth?.split('T')[0] || '');
     setEditMrn(patient.mrn || '');
     setEditEmail(patient.email || '');
+    setEditPayerId(patient.primary_payer_id || '');
     setEditingDemographics(true);
   };
 
@@ -128,6 +140,7 @@ export default function PatientOverviewTab({
           dateOfBirth: editDob || null,
           mrn: editMrn.trim() || null,
           email: editEmail.trim() || null,
+          primaryPayerId: editPayerId || null,
         }),
       });
 
@@ -309,6 +322,21 @@ export default function PatientOverviewTab({
                   className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
                 />
               </div>
+              <div>
+                <label className="text-sm text-[#5A6B7D] block mb-1">Primary Payer</label>
+                <select
+                  value={editPayerId}
+                  onChange={(e) => setEditPayerId(e.target.value)}
+                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent bg-white"
+                >
+                  <option value="">No payer</option>
+                  {payers.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </>
           ) : (
             <>
@@ -331,6 +359,10 @@ export default function PatientOverviewTab({
               <div>
                 <label className="text-sm text-[#5A6B7D]">Email</label>
                 <p className="text-[#0A1F3D] font-medium">{patient.email || 'Not set'}</p>
+              </div>
+              <div>
+                <label className="text-sm text-[#5A6B7D]">Primary Payer</label>
+                <p className="text-[#0A1F3D] font-medium">{patient.primary_payer_name || 'Not set'}</p>
               </div>
               <div>
                 <label className="text-sm text-[#5A6B7D]">Record Created</label>
