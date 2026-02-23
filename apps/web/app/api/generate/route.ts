@@ -10,6 +10,52 @@ import { getClinicalDataForPatient } from '@/lib/db/clinical-data';
 import crypto from 'crypto';
 
 /**
+ * Determine if an encounter qualifies for after-hours billing (99051).
+ * Eligible if: weekend, US federal holiday, or scheduled end after cutoff
+ * (5 PM for follow-up, 4:30 PM for intake).
+ */
+function isAfterHours(
+  scheduledStart: string,
+  scheduledEnd: string | null,
+  visitType: string
+): boolean {
+  const start = new Date(scheduledStart);
+  const end = scheduledEnd ? new Date(scheduledEnd) : null;
+  const day = start.getDay(); // 0=Sun, 6=Sat
+
+  // Weekend
+  if (day === 0 || day === 6) return true;
+
+  // US federal holidays (fixed-date; floating holidays approximated)
+  const month = start.getMonth(); // 0-indexed
+  const date = start.getDate();
+  const year = start.getFullYear();
+  const isHoliday =
+    (month === 0 && date === 1) ||   // New Year's Day
+    (month === 0 && day === 1 && date >= 15 && date <= 21) || // MLK Day (3rd Mon Jan)
+    (month === 1 && day === 1 && date >= 15 && date <= 21) || // Presidents' Day (3rd Mon Feb)
+    (month === 4 && day === 1 && date >= 25) ||               // Memorial Day (last Mon May)
+    (month === 5 && date === 19) ||  // Juneteenth
+    (month === 6 && date === 4) ||   // Independence Day
+    (month === 8 && day === 1 && date <= 7) ||                // Labor Day (1st Mon Sep)
+    (month === 10 && day === 4 && date >= 22 && date <= 28) || // Thanksgiving (4th Thu Nov)
+    (month === 11 && date === 25);   // Christmas
+  if (isHoliday) return true;
+
+  // End time after cutoff
+  if (end) {
+    const endHour = end.getHours();
+    const endMinute = end.getMinutes();
+    const endMinutes = endHour * 60 + endMinute;
+    const isIntake = visitType === 'Intake' || visitType === 'Consultation Visit';
+    const cutoffMinutes = isIntake ? 16 * 60 + 30 : 17 * 60; // 4:30 PM or 5:00 PM
+    if (endMinutes >= cutoffMinutes) return true;
+  }
+
+  return false;
+}
+
+/**
  * Format historical notes for inclusion in prompt
  */
 function formatHistoricalNotes(notes: any[]): string {
@@ -54,6 +100,7 @@ export async function POST(request: NextRequest) {
     let longitudinalChartDataPrompt: string | undefined;
     let healthKitData: HealthKitClinicalData | null = null;
     let feeScheduleData: PayerFeeSchedule | null = null;
+    let afterHoursEligible: boolean | undefined;
 
     // Helper function to calculate age from DOB
     const calculateAge = (dob: string | null | undefined): number | null => {
@@ -76,6 +123,18 @@ export async function POST(request: NextRequest) {
       try {
         const encounter = await getEncounterById(encounterId);
         if (encounter && encounter.patient_id) {
+          // Compute after-hours eligibility from encounter timing
+          if (encounter.scheduled_start) {
+            afterHoursEligible = isAfterHours(
+              encounter.scheduled_start,
+              encounter.scheduled_end,
+              visitType
+            );
+            if (afterHoursEligible) {
+              console.log(`[Generate] After-hours visit detected (99051 eligible)`);
+            }
+          }
+
           const patient = await getPatientById(encounter.patient_id);
           if (patient) {
             // Get patient demographics if not provided in request
@@ -271,6 +330,7 @@ export async function POST(request: NextRequest) {
       longitudinalChartData: longitudinalChartDataPrompt, // Include PHQ-9/GAD-7 trends and medication history
       healthKitData: healthKitData || undefined, // Include HealthKit clinical data if available
       feeScheduleData: feeScheduleData || undefined, // Include payer fee schedule for Listening Coder
+      afterHoursEligible, // 99051 eligibility based on encounter timing
       patientContext, // Include patient clinical context if available
       historicalNotes, // Include all previous finalized notes for continuity
       setting: setting as Setting,

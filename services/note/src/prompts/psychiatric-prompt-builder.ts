@@ -499,7 +499,8 @@ export function buildPsychiatricPrompt(
     lastName?: string;
     age?: number | null;
   },
-  feeScheduleData?: PayerFeeSchedule
+  feeScheduleData?: PayerFeeSchedule,
+  afterHoursEligible?: boolean
 ): string {
   // Check for staffing configuration
   const staffingConfig = template.staffing_config;
@@ -746,6 +747,15 @@ LISTENING CODER — Suggested CPT Codes
       prompt += `\nCOMPLEXITY ADD-ON (ALWAYS BILL):\n`;
       prompt += `- G2211: Medical visit complexity add-on (${formatRate(rG2211)})\n`;
       prompt += `  This code is billed on EVERY visit (intake and follow-up) for this payer. It is not conditional on time or complexity — simply include it whenever the E/M code is billed.\n`;
+    }
+    // 99051 — After-hours add-on
+    if (afterHoursEligible) {
+      const r99051 = rateMap.get('99051');
+      if (r99051) {
+        prompt += `\nAFTER-HOURS ADD-ON (ALWAYS BILL):\n`;
+        prompt += `- 99051: After-hours service (${formatRate(r99051)})\n`;
+        prompt += `  This visit qualifies for after-hours billing based on the scheduled time. Always include this code.\n`;
+      }
     }
     prompt += `\nUse these rates to recommend the highest-reimbursing clinically defensible code combination.\n`;
   } else {

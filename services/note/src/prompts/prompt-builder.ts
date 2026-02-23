@@ -29,6 +29,7 @@ export interface PromptBuilderOptions {
   longitudinalChartData?: string; // Formatted longitudinal chart data (PHQ-9/GAD-7 trends, medication history)
   healthKitData?: HealthKitClinicalData; // HealthKit clinical data (meds, labs, conditions, etc.)
   feeScheduleData?: PayerFeeSchedule; // Payer fee schedule for Listening Coder CPT suggestions
+  afterHoursEligible?: boolean; // 99051 eligibility based on encounter timing
   patientContext?: string;  // Clinical context from patient record
   historicalNotes?: string;  // All previous finalized notes for this patient
   setting: Setting;
@@ -170,7 +171,7 @@ export class PromptBuilder {
    * Build a complete prompt from components
    */
   async build(options: PromptBuilderOptions): Promise<CompiledPrompt> {
-    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, epicChartData, longitudinalChartData, healthKitData, feeScheduleData, patientContext, historicalNotes, setting, visitType, patientFirstName, patientLastName, patientAge } = options;
+    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, epicChartData, longitudinalChartData, healthKitData, feeScheduleData, afterHoursEligible, patientContext, historicalNotes, setting, visitType, patientFirstName, patientLastName, patientAge } = options;
 
     // Check if this is a therapy-focused template (BHIDC therapy)
     const isTherapyFocused = template.setting === 'BHIDC therapy' ||
@@ -219,7 +220,7 @@ export class PromptBuilder {
         firstName: patientFirstName,
         lastName: patientLastName,
         age: patientAge
-      }, feeScheduleData);
+      }, feeScheduleData, afterHoursEligible);
 
       sections = {
         system: 'Psychiatric note generator for Dr. Rufus Sweeney',
@@ -274,7 +275,7 @@ export class PromptBuilder {
         firstName: patientFirstName,
         lastName: patientLastName,
         age: patientAge
-      }, longitudinalChartData, healthKitData, feeScheduleData);
+      }, longitudinalChartData, healthKitData, feeScheduleData, afterHoursEligible);
     }
 
     // Generate hash
@@ -449,7 +450,7 @@ export class PromptBuilder {
     firstName?: string;
     lastName?: string;
     age?: number | null;
-  }, longitudinalChartData?: string, healthKitData?: HealthKitClinicalData, feeScheduleData?: PayerFeeSchedule): string {
+  }, longitudinalChartData?: string, healthKitData?: HealthKitClinicalData, feeScheduleData?: PayerFeeSchedule, afterHoursEligible?: boolean): string {
     let prompt = '';
 
     // System prompt
@@ -774,6 +775,15 @@ export class PromptBuilder {
         prompt += `COMPLEXITY ADD-ON (ALWAYS BILL):\n`;
         prompt += `- G2211: Medical visit complexity add-on (${formatRate2(rG2211)})\n`;
         prompt += `  This code is billed on EVERY visit (intake and follow-up) for this payer. It is not conditional on time or complexity — simply include it whenever the E/M code is billed.\n\n`;
+      }
+      // 99051 — After-hours add-on
+      if (afterHoursEligible) {
+        const r99051 = rateMap2.get('99051');
+        if (r99051) {
+          prompt += `AFTER-HOURS ADD-ON (ALWAYS BILL):\n`;
+          prompt += `- 99051: After-hours service (${formatRate2(r99051)})\n`;
+          prompt += `  This visit qualifies for after-hours billing based on the scheduled time. Always include this code.\n\n`;
+        }
       }
     }
     prompt += `INSTRUCTIONS FOR THE LISTENING CODER OUTPUT:\n`;
