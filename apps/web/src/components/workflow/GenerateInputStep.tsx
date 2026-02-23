@@ -94,6 +94,11 @@ export default function GenerateInputStep({
     counts: Record<string, number>;
   } | null>(null);
 
+  // Payer dropdown state
+  const [payers, setPayers] = useState<{ id: string; name: string }[]>([]);
+  const [patientPayerId, setPatientPayerId] = useState<string>('');
+  const [savingPayer, setSavingPayer] = useState(false);
+
   // QR code state
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
@@ -112,6 +117,43 @@ export default function GenerateInputStep({
     setQrDataUrl(url);
     setShowQrModal(true);
   }, [selectedPatient]);
+
+  // Fetch payers list on mount
+  useEffect(() => {
+    fetch('/api/payers')
+      .then((res) => res.json())
+      .then((data) => setPayers(data.payers || []))
+      .catch(() => {});
+  }, []);
+
+  // Load patient's current payer when patient changes
+  useEffect(() => {
+    if (selectedPatient) {
+      fetch(`/api/patients/${selectedPatient.id}`)
+        .then((res) => res.json())
+        .then((data) => setPatientPayerId(data.patient?.primary_payer_id || ''))
+        .catch(() => setPatientPayerId(''));
+    } else {
+      setPatientPayerId('');
+    }
+  }, [selectedPatient?.id]);
+
+  const handlePayerChange = async (payerId: string) => {
+    if (!selectedPatient) return;
+    setPatientPayerId(payerId);
+    setSavingPayer(true);
+    try {
+      await fetch(`/api/patients/${selectedPatient.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ primaryPayerId: payerId || null }),
+      });
+    } catch (error) {
+      console.error('Error saving payer:', error);
+    } finally {
+      setSavingPayer(false);
+    }
+  };
 
   // Epic chart data - only needed for Intake/Consultation (no copied-forward note)
   const [epicChartData, setEpicChartData] = useState('');
@@ -524,6 +566,29 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
           </div>
         )}
       </div>
+
+      {/* Payer Selection (shown when patient is selected) */}
+      {selectedPatient && payers.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-4">
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-medium text-[#0A1F3D] whitespace-nowrap">Primary Payer</label>
+            <select
+              value={patientPayerId}
+              onChange={(e) => handlePayerChange(e.target.value)}
+              disabled={savingPayer}
+              className="flex-1 px-3 py-1.5 text-sm border border-[#C5A882]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent bg-white"
+            >
+              <option value="">No payer</option>
+              {payers.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+            {savingPayer && (
+              <span className="text-xs text-[#5A6B7D]">Saving...</span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Manual Note Panel (collapsible - shown when patient is selected) */}
       {selectedPatient && (
