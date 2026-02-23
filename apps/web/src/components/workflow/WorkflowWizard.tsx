@@ -83,7 +83,7 @@ export default function WorkflowWizard() {
     }
   };
 
-  const handleGenerate = async (trans: string, prevNote: string, patient: Patient | null, encId: string | null, epicChartDataRaw?: string) => {
+  const handleGenerate = async (trans: string, prevNote: string, patient: Patient | null, encId: string | null, epicChartDataRaw?: string, questionnairesCompleted?: boolean) => {
     setTranscript(trans);
     setPreviousNote(prevNote);
     setSelectedPatient(patient);
@@ -111,6 +111,7 @@ export default function WorkflowWizard() {
           transcript: trans,
           priorNote: prevNote || undefined,
           epicChartData: epicChartDataRaw || undefined,
+          questionnairesCompleted: questionnairesCompleted || undefined,
           patientId: patient?.id,
           encounterId: encId,
         }),

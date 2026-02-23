@@ -500,7 +500,8 @@ export function buildPsychiatricPrompt(
     age?: number | null;
   },
   feeScheduleData?: PayerFeeSchedule,
-  afterHoursEligible?: boolean
+  afterHoursEligible?: boolean,
+  questionnairesCompleted?: boolean
 ): string {
   // Check for staffing configuration
   const staffingConfig = template.staffing_config;
@@ -755,6 +756,15 @@ LISTENING CODER — Suggested CPT Codes
         prompt += `\nAFTER-HOURS ADD-ON (ALWAYS BILL):\n`;
         prompt += `- 99051: After-hours service (${formatRate(r99051)})\n`;
         prompt += `  This visit qualifies for after-hours billing based on the scheduled time. Always include this code.\n`;
+      }
+    }
+    // 96127 — Brief emotional/behavioral assessment (follow-up only, questionnaires completed)
+    if (isFollowUp && questionnairesCompleted) {
+      const r96127 = rateMap.get('96127');
+      if (r96127) {
+        prompt += `\nBEHAVIORAL ASSESSMENT ADD-ON (ALWAYS BILL):\n`;
+        prompt += `- 96127: Brief emotional/behavioral assessment (${formatRate(r96127)})\n`;
+        prompt += `  Patient completed pre-visit PHQ-9/GAD-7 questionnaires. Always include this code for follow-up visits when questionnaires were administered.\n`;
       }
     }
     prompt += `\nUse these rates to recommend the highest-reimbursing clinically defensible code combination.\n`;

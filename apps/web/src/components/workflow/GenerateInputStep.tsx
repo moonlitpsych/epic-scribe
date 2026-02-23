@@ -26,7 +26,7 @@ interface GenerateInputStepProps {
   setting: Setting;
   visitType: string;
   template: Template;
-  onGenerate: (transcript: string, previousNote: string, patient: Patient | null, encounterId: string | null, epicChartData?: string) => void;
+  onGenerate: (transcript: string, previousNote: string, patient: Patient | null, encounterId: string | null, epicChartData?: string, questionnairesCompleted?: boolean) => void;
   onBack: () => void;
   isGenerating: boolean;
   initialTranscript?: string;
@@ -154,6 +154,9 @@ export default function GenerateInputStep({
       setSavingPayer(false);
     }
   };
+
+  // Pre-visit questionnaire state (for 96127 billing)
+  const [questionnairesCompleted, setQuestionnairesCompleted] = useState(false);
 
   // Epic chart data - only needed for Intake/Consultation (no copied-forward note)
   const [epicChartData, setEpicChartData] = useState('');
@@ -477,7 +480,7 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
 
   const handleGenerate = () => {
     if (canGenerate) {
-      onGenerate(transcript, previousNote, selectedPatient, encounterId, epicChartData || undefined);
+      onGenerate(transcript, previousNote, selectedPatient, encounterId, epicChartData || undefined, questionnairesCompleted || undefined);
     }
   };
 
@@ -901,6 +904,23 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
                 {setting === 'Moonlit Psychiatry' ? 'Prior note' : 'Copied-forward note'} is required for {visitType}
               </p>
             )}
+          </div>
+        )}
+
+        {/* Pre-visit questionnaires checkbox - Follow-up only */}
+        {showPreviousNote && (!isSpanishTranscript || hasTranslated) && (
+          <div className="mb-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={questionnairesCompleted}
+                onChange={(e) => setQuestionnairesCompleted(e.target.checked)}
+                className="rounded border-gray-300 text-[#E89C8A] focus:ring-[#E89C8A]"
+              />
+              <span className="text-sm text-[#5A6B7D]">
+                Patient completed pre-visit questionnaires (PHQ-9/GAD-7)
+              </span>
+            </label>
           </div>
         )}
 

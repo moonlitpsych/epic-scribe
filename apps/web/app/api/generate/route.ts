@@ -81,7 +81,7 @@ function formatHistoricalNotes(notes: any[]): string {
 export async function POST(request: NextRequest) {
   try {
     const body: GenerateNoteRequest = await request.json();
-    const { encounterId, patientId, setting, visitType, transcript, priorNote, staffingTranscript, collateralTranscript, epicChartData } = body;
+    const { encounterId, patientId, setting, visitType, transcript, priorNote, staffingTranscript, collateralTranscript, epicChartData, questionnairesCompleted } = body;
     // Patient demographics can be passed directly or fetched from database
     let { patientFirstName, patientLastName, patientAge } = body as any;
 
@@ -331,6 +331,7 @@ export async function POST(request: NextRequest) {
       healthKitData: healthKitData || undefined, // Include HealthKit clinical data if available
       feeScheduleData: feeScheduleData || undefined, // Include payer fee schedule for Listening Coder
       afterHoursEligible, // 99051 eligibility based on encounter timing
+      questionnairesCompleted, // Pre-visit PHQ-9/GAD-7 completed (enables 96127)
       patientContext, // Include patient clinical context if available
       historicalNotes, // Include all previous finalized notes for continuity
       setting: setting as Setting,

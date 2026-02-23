@@ -30,6 +30,7 @@ export interface PromptBuilderOptions {
   healthKitData?: HealthKitClinicalData; // HealthKit clinical data (meds, labs, conditions, etc.)
   feeScheduleData?: PayerFeeSchedule; // Payer fee schedule for Listening Coder CPT suggestions
   afterHoursEligible?: boolean; // 99051 eligibility based on encounter timing
+  questionnairesCompleted?: boolean; // Pre-visit PHQ-9/GAD-7 completed (enables 96127)
   patientContext?: string;  // Clinical context from patient record
   historicalNotes?: string;  // All previous finalized notes for this patient
   setting: Setting;
@@ -171,7 +172,7 @@ export class PromptBuilder {
    * Build a complete prompt from components
    */
   async build(options: PromptBuilderOptions): Promise<CompiledPrompt> {
-    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, epicChartData, longitudinalChartData, healthKitData, feeScheduleData, afterHoursEligible, patientContext, historicalNotes, setting, visitType, patientFirstName, patientLastName, patientAge } = options;
+    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, epicChartData, longitudinalChartData, healthKitData, feeScheduleData, afterHoursEligible, questionnairesCompleted, patientContext, historicalNotes, setting, visitType, patientFirstName, patientLastName, patientAge } = options;
 
     // Check if this is a therapy-focused template (BHIDC therapy)
     const isTherapyFocused = template.setting === 'BHIDC therapy' ||
@@ -220,7 +221,7 @@ export class PromptBuilder {
         firstName: patientFirstName,
         lastName: patientLastName,
         age: patientAge
-      }, feeScheduleData, afterHoursEligible);
+      }, feeScheduleData, afterHoursEligible, questionnairesCompleted);
 
       sections = {
         system: 'Psychiatric note generator for Dr. Rufus Sweeney',
@@ -275,7 +276,7 @@ export class PromptBuilder {
         firstName: patientFirstName,
         lastName: patientLastName,
         age: patientAge
-      }, longitudinalChartData, healthKitData, feeScheduleData, afterHoursEligible);
+      }, longitudinalChartData, healthKitData, feeScheduleData, afterHoursEligible, questionnairesCompleted);
     }
 
     // Generate hash
@@ -450,7 +451,7 @@ export class PromptBuilder {
     firstName?: string;
     lastName?: string;
     age?: number | null;
-  }, longitudinalChartData?: string, healthKitData?: HealthKitClinicalData, feeScheduleData?: PayerFeeSchedule, afterHoursEligible?: boolean): string {
+  }, longitudinalChartData?: string, healthKitData?: HealthKitClinicalData, feeScheduleData?: PayerFeeSchedule, afterHoursEligible?: boolean, questionnairesCompleted?: boolean): string {
     let prompt = '';
 
     // System prompt
@@ -783,6 +784,15 @@ export class PromptBuilder {
           prompt += `AFTER-HOURS ADD-ON (ALWAYS BILL):\n`;
           prompt += `- 99051: After-hours service (${formatRate2(r99051)})\n`;
           prompt += `  This visit qualifies for after-hours billing based on the scheduled time. Always include this code.\n\n`;
+        }
+      }
+      // 96127 — Brief emotional/behavioral assessment (follow-up only, questionnaires completed)
+      if (isFollowUp && questionnairesCompleted) {
+        const r96127 = rateMap2.get('96127');
+        if (r96127) {
+          prompt += `BEHAVIORAL ASSESSMENT ADD-ON (ALWAYS BILL):\n`;
+          prompt += `- 96127: Brief emotional/behavioral assessment (${formatRate2(r96127)})\n`;
+          prompt += `  Patient completed pre-visit PHQ-9/GAD-7 questionnaires. Always include this code for follow-up visits when questionnaires were administered.\n\n`;
         }
       }
     }

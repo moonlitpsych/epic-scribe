@@ -214,6 +214,7 @@ export interface GenerateNoteRequest {
   collateralTranscript?: string; // Optional collateral (parent/guardian) conversation transcript for Teenscope
   epicChartData?: string; // Optional pasted Epic DotPhrase data (full text - extraction happens server-side)
   healthKitData?: HealthKitClinicalData; // Optional HealthKit clinical data (auto-fetched from DB)
+  questionnairesCompleted?: boolean; // Pre-visit PHQ-9/GAD-7 completed (enables 96127 billing)
 }
 
 export interface GenerateNoteResponse {
