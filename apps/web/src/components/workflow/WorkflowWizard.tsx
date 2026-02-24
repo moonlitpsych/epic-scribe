@@ -201,6 +201,8 @@ export default function WorkflowWizard() {
           finalNoteContent: editedNote,
           isFinal: true, // Mark as finalized when user clicks Save
           epicChartData: extractedEpicData || undefined, // Include extracted Epic data
+          setting: setting || undefined,
+          visitType: visitType || undefined,
         }),
       });
 

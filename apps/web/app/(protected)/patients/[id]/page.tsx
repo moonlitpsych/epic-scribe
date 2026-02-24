@@ -3,11 +3,12 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, User, FileText, Calendar, Sparkles } from 'lucide-react';
+import { ArrowLeft, User, FileText, Calendar, Sparkles, Brain } from 'lucide-react';
 import PatientOverviewTab from '@/components/patient/PatientOverviewTab';
 import PatientNotesTab from '@/components/patient/PatientNotesTab';
 import PatientEncountersTab from '@/components/patient/PatientEncountersTab';
 import PatientGenerateTab from '@/components/patient/PatientGenerateTab';
+import PatientProfileTab from '@/components/patient/PatientProfileTab';
 
 interface Patient {
   id: string;
@@ -60,13 +61,14 @@ interface GeneratedNote {
   };
 }
 
-type TabType = 'overview' | 'notes' | 'encounters' | 'generate';
+type TabType = 'overview' | 'notes' | 'encounters' | 'generate' | 'profile';
 
 const TABS: { key: TabType; label: string; icon: React.ReactNode }[] = [
   { key: 'overview', label: 'Overview', icon: <User size={18} /> },
   { key: 'notes', label: 'Notes', icon: <FileText size={18} /> },
   { key: 'encounters', label: 'Encounters', icon: <Calendar size={18} /> },
   { key: 'generate', label: 'Generate Note', icon: <Sparkles size={18} /> },
+  { key: 'profile', label: 'Profile', icon: <Brain size={18} /> },
 ];
 
 function PatientDetailContent() {
@@ -291,6 +293,10 @@ function PatientDetailContent() {
               preselectedEncounterId={preselectedEncounterId}
               onNoteGenerated={() => fetchPatientData(patient.id)}
             />
+          )}
+
+          {activeTab === 'profile' && (
+            <PatientProfileTab patientId={patient.id} />
           )}
         </div>
       </div>

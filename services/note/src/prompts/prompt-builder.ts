@@ -11,7 +11,8 @@ import {
   PromptManifest,
   TemplateSection,
   HealthKitClinicalData,
-  PayerFeeSchedule
+  PayerFeeSchedule,
+  StructuredPatientProfile
 } from '@epic-scribe/types';
 import { getSmartListService } from '../smartlists/smartlist-service';
 import { noteParser, ExtractedNoteData } from '../parsers/note-parser';
@@ -33,6 +34,7 @@ export interface PromptBuilderOptions {
   questionnairesCompleted?: boolean; // Pre-visit PHQ-9/GAD-7 completed (enables 96127)
   patientContext?: string;  // Clinical context from patient record
   historicalNotes?: string;  // All previous finalized notes for this patient
+  patientProfile?: StructuredPatientProfile;  // Structured patient profile (replaces historicalNotes when present)
   setting: Setting;
   visitType: VisitType | string;
   // Patient demographics - used directly in note instead of dotphrases
@@ -177,7 +179,7 @@ export class PromptBuilder {
    * Build a complete prompt from components
    */
   async build(options: PromptBuilderOptions): Promise<CompiledPrompt> {
-    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, epicChartData, longitudinalChartData, healthKitData, feeScheduleData, afterHoursEligible, questionnairesCompleted, patientContext, historicalNotes, setting, visitType, patientFirstName, patientLastName, patientAge } = options;
+    const { template, transcript, previousNote, staffingTranscript, collateralTranscript, epicChartData, longitudinalChartData, healthKitData, feeScheduleData, afterHoursEligible, questionnairesCompleted, patientContext, historicalNotes, patientProfile, setting, visitType, patientFirstName, patientLastName, patientAge } = options;
 
     // Check if this is a therapy-focused template (BHIDC therapy)
     const isTherapyFocused = template.setting === 'BHIDC therapy' ||
@@ -229,7 +231,7 @@ export class PromptBuilder {
         firstName: patientFirstName,
         lastName: patientLastName,
         age: patientAge
-      }, feeScheduleData, afterHoursEligible, questionnairesCompleted, setting);
+      }, feeScheduleData, afterHoursEligible, questionnairesCompleted, setting, patientProfile);
 
       sections = {
         system: 'Psychiatric note generator for Dr. Rufus Sweeney',
@@ -284,7 +286,7 @@ export class PromptBuilder {
         firstName: patientFirstName,
         lastName: patientLastName,
         age: patientAge
-      }, longitudinalChartData, healthKitData, feeScheduleData, afterHoursEligible, questionnairesCompleted);
+      }, longitudinalChartData, healthKitData, feeScheduleData, afterHoursEligible, questionnairesCompleted, patientProfile);
     }
 
     // Generate hash
@@ -459,7 +461,7 @@ export class PromptBuilder {
     firstName?: string;
     lastName?: string;
     age?: number | null;
-  }, longitudinalChartData?: string, healthKitData?: HealthKitClinicalData, feeScheduleData?: PayerFeeSchedule, afterHoursEligible?: boolean, questionnairesCompleted?: boolean): string {
+  }, longitudinalChartData?: string, healthKitData?: HealthKitClinicalData, feeScheduleData?: PayerFeeSchedule, afterHoursEligible?: boolean, questionnairesCompleted?: boolean, patientProfile?: StructuredPatientProfile): string {
     let prompt = '';
 
     // System prompt
@@ -550,8 +552,15 @@ export class PromptBuilder {
       prompt += `Use it to maintain clinical continuity and reference relevant history where appropriate.\n\n`;
     }
 
-    // Historical notes (if provided)
-    if (historicalNotes) {
+    // Structured patient profile (replaces historical notes when available)
+    if (patientProfile) {
+      const { buildProfileContext } = require('../fhir/profile-to-context');
+      const profileContext = buildProfileContext(patientProfile);
+      if (profileContext) {
+        prompt += `${profileContext}\n\n`;
+      }
+    } else if (historicalNotes) {
+      // Fallback: raw historical notes (no profile yet)
       prompt += `${historicalNotes}\n\n`;
       prompt += `INSTRUCTIONS FOR HISTORICAL NOTES:\n`;
       prompt += `- Review these notes to understand the patient's longitudinal treatment journey\n`;
@@ -601,7 +610,11 @@ export class PromptBuilder {
 
     // Previous note (if provided and NOT a follow-up with extracted data)
     if (sections.previousNote && !isFollowUp) {
-      prompt += `PREVIOUS NOTE (for context only - do not copy verbatim):\n`;
+      if (patientProfile) {
+        prompt += `PREVIOUS NOTE (use ONLY for Plan section carry-forward — carry-forward sections are already covered by the structured profile above):\n`;
+      } else {
+        prompt += `PREVIOUS NOTE (for context only - do not copy verbatim):\n`;
+      }
       prompt += `${sections.previousNote}\n\n`;
     }
 
@@ -853,15 +866,15 @@ export class PromptBuilder {
   /**
    * Validate that required fields are present based on visit type
    */
-  validateRequirements(visitType: VisitType | string, previousNote?: string, hasHealthKitData?: boolean): {
+  validateRequirements(visitType: VisitType | string, previousNote?: string, hasHealthKitData?: boolean, hasPatientProfile?: boolean): {
     valid: boolean;
     message?: string;
   } {
-    // TOC and Follow-up require previous note OR HealthKit clinical data
-    if ((visitType === 'Transfer of Care' || visitType === 'Follow-up') && !previousNote && !hasHealthKitData) {
+    // TOC and Follow-up require previous note OR HealthKit clinical data OR structured profile
+    if ((visitType === 'Transfer of Care' || visitType === 'Follow-up') && !previousNote && !hasHealthKitData && !hasPatientProfile) {
       return {
         valid: false,
-        message: `${visitType} visits require a previous note or synced Health Records for context`
+        message: `${visitType} visits require a previous note, synced Health Records, or a patient profile for context`
       };
     }
 

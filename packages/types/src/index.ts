@@ -356,6 +356,105 @@ export interface PayerFeeSchedule {
   rates: { cpt: string; allowedCents: number }[];
 }
 
+// Structured Patient Profile Types (accumulated across notes)
+export interface ProfileDiagnosis {
+  name: string;
+  icd10Code?: string;
+  status: 'active' | 'resolved' | 'in-remission';
+  firstDocumentedDate?: string;
+  lastDocumentedDate?: string;
+}
+
+export interface ProfileMedication {
+  name: string;
+  dose?: string;
+  frequency?: string;
+  route?: string;
+  indication?: string;
+  status: 'active' | 'discontinued' | 'on-hold';
+  startDate?: string;
+  endDate?: string;
+  response?: string;
+  sideEffects?: string[];
+  reasonDiscontinued?: string;
+}
+
+export interface ProfilePsychiatricHistory {
+  hospitalizations: string[];
+  suicideAttempts: string[];
+  selfHarm: string[];
+  priorTreatments: string[];
+  priorDiagnoses: string[];
+  traumaHistory?: string;
+}
+
+export interface ProfileFamilyHistoryEntry {
+  relation: string;
+  condition: string;
+  details?: string;
+}
+
+export interface ProfileFamilyHistory {
+  entries: ProfileFamilyHistoryEntry[];
+}
+
+export interface ProfileSocialHistory {
+  livingSituation?: string;
+  employment?: string;
+  relationships?: string;
+  education?: string;
+  legal?: string;
+  supportSystem?: string;
+  additionalDetails?: string[];
+}
+
+export interface ProfileSubstanceEntry {
+  substance: string;
+  pattern: string; // e.g. "daily", "social", "denies", "in remission"
+  frequency?: string;
+  sobrietyDate?: string;
+  consequences?: string[];
+}
+
+export interface ProfileSubstanceUse {
+  substances: ProfileSubstanceEntry[];
+}
+
+export interface ProfileAllergy {
+  substance: string;
+  reaction?: string;
+  severity?: string;
+}
+
+export interface ProfileMedicalHistory {
+  conditions: string[];
+}
+
+export interface ProfileTreatmentThemes {
+  formulation?: string;
+  keyThemes: string[];
+  standingPlanItems: string[];
+}
+
+export interface StructuredPatientProfile {
+  diagnoses: ProfileDiagnosis[];
+  currentMedications: ProfileMedication[];
+  pastMedications: ProfileMedication[];
+  psychiatricHistory: ProfilePsychiatricHistory;
+  familyHistory: ProfileFamilyHistory;
+  socialHistory: ProfileSocialHistory;
+  substanceUse: ProfileSubstanceUse;
+  allergies: ProfileAllergy[];
+  medicalHistory: ProfileMedicalHistory;
+  treatmentThemes: ProfileTreatmentThemes;
+  // Metadata
+  lastUpdated: string;
+  sourceNoteCount: number;
+  lastNoteDate?: string;
+}
+
+export type NoteExtractionResult = Partial<StructuredPatientProfile>;
+
 // Error Types
 export class SmartToolsError extends Error {
   constructor(

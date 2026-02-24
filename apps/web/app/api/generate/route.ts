@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GenerateNoteRequest, GenerateNoteResponse, Setting, PromptReceipt, EpicChartData, LongitudinalChartData, HealthKitClinicalData, PayerFeeSchedule } from '@epic-scribe/types';
+import { GenerateNoteRequest, GenerateNoteResponse, Setting, PromptReceipt, EpicChartData, LongitudinalChartData, HealthKitClinicalData, PayerFeeSchedule, StructuredPatientProfile } from '@epic-scribe/types';
 import { templateService } from '@epic-scribe/note-service/src/templates/template-service';
 import { getPromptBuilder } from '@epic-scribe/note-service/src/prompts/prompt-builder';
 import { getGeminiClient } from '@epic-scribe/note-service/src/llm/gemini-client';
@@ -100,6 +100,7 @@ export async function POST(request: NextRequest) {
     let longitudinalChartDataPrompt: string | undefined;
     let healthKitData: HealthKitClinicalData | null = null;
     let feeScheduleData: PayerFeeSchedule | null = null;
+    let patientProfile: StructuredPatientProfile | null = null;
     let afterHoursEligible: boolean | undefined;
 
     // Helper function to calculate age from DOB
@@ -192,6 +193,19 @@ export async function POST(request: NextRequest) {
               console.warn(`[Generate] Could not fetch fee schedule:`, fsError);
             }
           }
+
+          // Fetch structured patient profile
+          try {
+            const { getPatientProfile } = await import('@/lib/db/patient-profiles');
+            patientProfile = await getPatientProfile(encounter.patient_id);
+            if (patientProfile) {
+              console.log(`[Generate] Loaded patient profile v${patientProfile.sourceNoteCount} for patient ${encounter.patient_id}`);
+              // Profile replaces raw historical notes dump
+              historicalNotes = undefined;
+            }
+          } catch (profileError) {
+            console.warn(`[Generate] Could not fetch patient profile:`, profileError);
+          }
         }
       } catch (error) {
         console.warn(`[Generate] Could not fetch encounter ${encounterId}:`, error);
@@ -258,8 +272,38 @@ export async function POST(request: NextRequest) {
             console.warn(`[Generate] Could not fetch fee schedule:`, fsError);
           }
         }
+
+        // Fetch structured patient profile
+        try {
+          const { getPatientProfile } = await import('@/lib/db/patient-profiles');
+          patientProfile = await getPatientProfile(patientId);
+          if (patientProfile) {
+            console.log(`[Generate] Loaded patient profile v${patientProfile.sourceNoteCount} for patient ${patientId}`);
+            // Profile replaces raw historical notes dump
+            historicalNotes = undefined;
+          }
+        } catch (profileError) {
+          console.warn(`[Generate] Could not fetch patient profile:`, profileError);
+        }
       } catch (error) {
         console.warn(`[Generate] Could not fetch patient ${patientId}:`, error);
+      }
+    }
+
+    // Merge HealthKit data into patient profile when both exist
+    if (patientProfile && healthKitData) {
+      try {
+        const { mergeHealthKitIntoProfile, stripProfileOverlap } = await import('@epic-scribe/note-service/src/fhir/healthkit-profile-merge');
+        patientProfile = mergeHealthKitIntoProfile(patientProfile, healthKitData);
+        console.log(`[Generate] Merged HealthKit data into patient profile`);
+        // Strip meds/conditions/allergies from HealthKit (now in profile); keep labs/vitals/procedures/notes
+        const filteredHealthKit = stripProfileOverlap(healthKitData);
+        healthKitData = filteredHealthKit;
+        if (!healthKitData) {
+          console.log(`[Generate] HealthKit data fully absorbed into profile`);
+        }
+      } catch (mergeError) {
+        console.warn(`[Generate] Could not merge HealthKit into profile:`, mergeError);
       }
     }
 
@@ -311,7 +355,7 @@ export async function POST(request: NextRequest) {
     const smartListService = await getSmartListService();
 
     // Check visit type requirements (HealthKit data can substitute for prior note)
-    const validation = promptBuilder.validateRequirements(visitType, priorNote, !!healthKitData);
+    const validation = promptBuilder.validateRequirements(visitType, priorNote, !!healthKitData, !!patientProfile);
     if (!validation.valid) {
       return NextResponse.json(
         { error: validation.message },
@@ -334,6 +378,7 @@ export async function POST(request: NextRequest) {
       questionnairesCompleted, // Pre-visit PHQ-9/GAD-7 completed (enables 96127)
       patientContext, // Include patient clinical context if available
       historicalNotes, // Include all previous finalized notes for continuity
+      patientProfile: patientProfile || undefined, // Structured profile replaces historicalNotes
       setting: setting as Setting,
       visitType,
       // Patient demographics - used directly in note instead of dotphrases

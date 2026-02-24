@@ -3,7 +3,7 @@
  * Enhanced prompt building with section-specific instructions and temperature control
  */
 
-import { Template, TemplateSection, PayerFeeSchedule, Setting } from '@epic-scribe/types';
+import { Template, TemplateSection, PayerFeeSchedule, Setting, StructuredPatientProfile } from '@epic-scribe/types';
 
 export interface SectionPromptConfig {
   sectionName: string;
@@ -531,7 +531,8 @@ export function buildPsychiatricPrompt(
   feeScheduleData?: PayerFeeSchedule,
   afterHoursEligible?: boolean,
   questionnairesCompleted?: boolean,
-  setting?: Setting
+  setting?: Setting,
+  patientProfile?: StructuredPatientProfile
 ): string {
   // Check for staffing configuration
   const staffingConfig = template.staffing_config;
@@ -659,6 +660,22 @@ Use the PATIENT TRANSCRIPT for all clinical content (HPI, Psych Hx, ROS, MSE, Fo
     if (medicationsMatch) {
       previousMedications = medicationsMatch[1].trim();
     }
+  }
+
+  // Inject structured patient profile if available
+  if (patientProfile) {
+    const { buildProfileContext } = require('../fhir/profile-to-context');
+    const profileContext = buildProfileContext(patientProfile);
+    if (profileContext) {
+      prompt += `\n${profileContext}\n\n`;
+    }
+  }
+
+  // Previous note — when profile exists, use only for Plan carry-forward
+  if (previousNote && patientProfile) {
+    prompt += `\nPREVIOUS NOTE (use ONLY for Plan section carry-forward — carry-forward sections are already covered by the structured profile above):\n${previousNote}\n`;
+  } else if (previousNote && !patientProfile) {
+    prompt += `\nPREVIOUS NOTE (for context — carry forward relevant history and plan):\n${previousNote}\n`;
   }
 
   prompt += `

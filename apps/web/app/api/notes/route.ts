@@ -60,6 +60,8 @@ export async function POST(request: NextRequest) {
       finalNoteContent,
       isFinal,
       epicChartData,
+      setting,
+      visitType,
     } = body;
 
     // Validation
@@ -143,6 +145,22 @@ export async function POST(request: NextRequest) {
         // Don't fail the whole request if chart history fails
         console.error('[POST /api/notes] Failed to save chart history (non-fatal):', chartError);
       }
+    }
+
+    // Trigger async profile extraction (non-blocking)
+    if (patientId && finalNoteContent) {
+      import('@/lib/profile/extract-and-merge')
+        .then(({ extractAndMergeProfile }) =>
+          extractAndMergeProfile(
+            patientId,
+            savedNote.id,
+            finalNoteContent,
+            setting || '',
+            visitType || '',
+            new Date().toISOString().split('T')[0]
+          )
+        )
+        .catch(err => console.error('[POST /api/notes] Profile extraction failed (non-fatal):', err));
     }
 
     return NextResponse.json({ note: savedNote }, { status: 201 });

@@ -205,6 +205,8 @@ export default function PatientGenerateTab({
           generatedContent: generatedNote,
           finalNoteContent: editedNote,
           isFinal: true,
+          setting,
+          visitType,
         }),
       });
 
