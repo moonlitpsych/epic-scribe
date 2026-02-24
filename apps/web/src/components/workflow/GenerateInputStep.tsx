@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Template, Setting } from '@epic-scribe/types';
-import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle, CloudDownload, Mail, Save, Link2, Heart, QrCode, X } from 'lucide-react';
+import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle, CloudDownload, Mail, Save, Link2, Heart, QrCode, X, FileText } from 'lucide-react';
 import QRCode from 'qrcode';
 import PatientSelector from './PatientSelector';
 import EncountersList from './EncountersList';
@@ -67,6 +67,16 @@ export default function GenerateInputStep({
   const [encounters, setEncounters] = useState<CalendarEncounter[]>([]);
   const [loadingEncounters, setLoadingEncounters] = useState(false);
   const [selectedEncounterId, setSelectedEncounterId] = useState<string | null>(null);
+
+  // Saved note from generated_notes (highest priority prior note source)
+  const [savedNote, setSavedNote] = useState<{
+    id: string;
+    finalizedAt: string;
+    setting: string;
+    visitType: string;
+    encounterDate: string;
+  } | null>(null);
+  const [checkingSavedNotes, setCheckingSavedNotes] = useState(false);
 
   // Auto-imported prior note state
   const [autoImportedNote, setAutoImportedNote] = useState<{
@@ -208,14 +218,56 @@ export default function GenerateInputStep({
     }
   }, [selectedPatient]);
 
-  // Check for auto-imported prior notes when patient is selected (for Follow-up/TOC)
+  // Primary: Check for saved notes from generated_notes (highest priority)
   useEffect(() => {
     if (selectedPatient && showPreviousNote && !previousNote) {
-      checkForPriorNotes();
+      checkForSavedNote();
     } else if (!selectedPatient) {
+      setSavedNote(null);
       setAutoImportedNote(null);
     }
   }, [selectedPatient, showPreviousNote]);
+
+  // Fallback: Check clipboard-imported prior notes when saved note check found nothing
+  useEffect(() => {
+    if (selectedPatient && showPreviousNote && !previousNote && !checkingSavedNotes && !savedNote) {
+      checkForPriorNotes();
+    }
+  }, [selectedPatient, showPreviousNote, checkingSavedNotes, savedNote]);
+
+  const checkForSavedNote = async () => {
+    if (!selectedPatient) return;
+
+    setCheckingSavedNotes(true);
+    try {
+      const response = await fetch(`/api/notes/most-recent?patientId=${selectedPatient.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.found) {
+          setSavedNote({
+            id: data.note.id,
+            finalizedAt: data.note.finalizedAt,
+            setting: data.note.setting,
+            visitType: data.note.visitType,
+            encounterDate: data.note.encounterDate,
+          });
+          setPreviousNote(data.note.finalNoteContent);
+          setAutoImportedNote(null);
+          setIntakeQNote(null);
+          setCompanionSynced(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking saved notes:', error);
+    } finally {
+      setCheckingSavedNotes(false);
+    }
+  };
+
+  const clearSavedNote = () => {
+    setSavedNote(null);
+    setPreviousNote('');
+  };
 
   const checkForPriorNotes = async () => {
     if (!selectedPatient) return;
@@ -249,6 +301,9 @@ export default function GenerateInputStep({
 
   // IntakeQ prior note fetching (for Moonlit Psychiatry patients with email)
   useEffect(() => {
+    // Skip if saved note already loaded (higher priority source)
+    if (savedNote) return;
+
     // Only fetch from IntakeQ for Moonlit Psychiatry patients
     if (setting !== 'Moonlit Psychiatry') {
       setIntakeQNote(null);
@@ -278,6 +333,9 @@ export default function GenerateInputStep({
 
   // Auto-populate from Companion Portal prior note
   useEffect(() => {
+    // Skip if saved note already loaded (higher priority source)
+    if (savedNote) return;
+
     if (companionPriorNote && !previousNote && !companionSynced) {
       setPreviousNote(companionPriorNote);
       setCompanionSynced(true);
@@ -827,6 +885,40 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
               </div>
             )}
 
+            {/* Saved note indicator (highest priority) */}
+            {savedNote && (
+              <div className="flex items-center gap-2 mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                <FileText className="text-blue-600 flex-shrink-0" size={16} />
+                <span className="text-sm text-blue-700">
+                  Last Patient Note
+                  {savedNote.encounterDate && (
+                    <> ({new Date(savedNote.encounterDate).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })})</>
+                  )}
+                  {savedNote.setting && savedNote.visitType && (
+                    <span className="text-blue-500"> &mdash; {savedNote.setting}, {savedNote.visitType}</span>
+                  )}
+                </span>
+                <button
+                  onClick={clearSavedNote}
+                  className="ml-auto text-xs text-blue-600 hover:text-blue-800 underline"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+
+            {/* Loading indicator for saved notes check */}
+            {checkingSavedNotes && (
+              <div className="flex items-center gap-2 mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                <span className="text-sm text-blue-700">Checking for saved notes...</span>
+              </div>
+            )}
+
             {/* Companion sync indicator */}
             {companionSynced && (
               <div className="flex items-center gap-2 mb-2 p-2 bg-indigo-50 border border-indigo-200 rounded-lg">
@@ -876,9 +968,9 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
               </div>
             )}
 
-            {setting !== 'Moonlit Psychiatry' && !autoImportedNote && !checkingPriorNotes && (
+            {setting !== 'Moonlit Psychiatry' && !savedNote && !autoImportedNote && !checkingSavedNotes && !checkingPriorNotes && (
               <p className="text-xs text-[#5A6B7D] mb-2">
-                Paste the copied-forward note from Epic, or use the clipboard watcher to auto-import.
+                Your last saved note will load automatically, or paste from Epic / use the clipboard watcher.
               </p>
             )}
             <textarea
@@ -886,6 +978,9 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
               onChange={(e) => {
                 setPreviousNote(e.target.value);
                 // Clear auto-import indicators if user manually edits
+                if (savedNote) {
+                  setSavedNote(null);
+                }
                 if (autoImportedNote) {
                   setAutoImportedNote(null);
                 }
@@ -894,8 +989,8 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
                 }
               }}
               placeholder={setting === 'Moonlit Psychiatry'
-                ? 'Prior note will be loaded from IntakeQ, or paste manually here...'
-                : 'Paste the copied-forward last note from Epic here (includes current chart data via SmartLinks)...'}
+                ? 'Your last saved note will load automatically, or paste manually here...'
+                : 'Your last saved note will load automatically, or paste from Epic here...'}
               rows={10}
               className="w-full px-4 py-3 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm"
             />
