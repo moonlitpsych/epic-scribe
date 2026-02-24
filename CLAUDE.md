@@ -190,10 +190,40 @@ pnpm lint             # Check for issues
 | Moonlit Psychiatry | Intake, TOC, Follow-up | None |
 | BHIDC therapy | First Visit, Follow-up | None |
 | Teenscope South | Intake, Follow-up | None |
+| Psycho-oncology (HCI) | Intake, Follow-up | None |
 
 ---
 
-## Recent Updates (2026-02-21)
+## Recent Updates (2026-02-24)
+
+### Psycho-oncology (HCI) Setting (COMPLETE)
+
+Added Huntsman Cancer Institute as a new clinical setting for Dr. Sweeney's psycho-oncology rotation. This is a consultation-liaison setting where psychiatric care intersects with cancer treatment.
+
+**What's different from standard psychiatric notes:**
+- **Bio-Psycho-Social-Existential Formulation**: Intake Formulation (Paragraph 2) expands the standard bio-psycho-social model to four domains:
+  - **Biological**: Cancer type/stage, cancer treatment effects (chemo brain, fatigue, neuropathy, pain), medication interactions between psychiatric and oncology drugs
+  - **Psychological**: Adjustment to diagnosis, illness identity, body image changes, anticipatory grief, fear of recurrence, trauma of treatment
+  - **Social**: Caregiver burden, role changes, financial toxicity of cancer care, functional/occupational changes
+  - **Existential**: Confrontation with mortality, meaning-making, loss of assumed future, death anxiety, spiritual distress/growth, legacy concerns
+- **Follow-up Assessment**: Interval update addresses cancer treatment trajectory changes, treatment side effects impacting psychiatric symptoms, and existential/adjustment concerns
+
+**Files:**
+| File | Change |
+|------|--------|
+| `packages/types/src/index.ts` | Added to `SETTINGS` and `EPIC_EMR_SETTINGS` arrays |
+| `apps/web/src/components/workflow/TemplateReviewStep.tsx` | Visit type mapping (Intake, Follow-up) |
+| `configs/template-mapping.json` | Template IDs for HCI |
+| `services/note/src/prompts/prompt-builder.ts` | SmartLink examples, template mappings, `isPsychoOncology` flag, passes `setting` to psychiatric builder |
+| `services/note/src/prompts/psychiatric-prompt-builder.ts` | Accepts `setting` param, injects psycho-oncology overrides for Formulation and Assessment sections |
+| `services/note/src/templates/template-service.ts` | Placeholder templates (`hci_psychonc_intake_v1`, `hci_psychonc_fu_v1`) using focused psychiatric format |
+
+**Staffing:** None configured. Can be added later once the HCI workflow is clearer.
+**Templates:** Using placeholder focused psychiatric templates. Real HCI-specific templates can replace them later.
+
+---
+
+## Previous Updates (2026-02-21)
 
 ### Background Sync for iOS App (COMPLETE)
 
