@@ -75,5 +75,15 @@
       "templateId": "teenscope_south_followup_v1",
       "version": 1
     }
+  },
+  "Psycho-oncology (HCI)": {
+    "Intake": {
+      "templateId": "hci_psychonc_intake_v1",
+      "version": 1
+    },
+    "Follow-up": {
+      "templateId": "hci_psychonc_fu_v1",
+      "version": 1
+    }
   }
 }

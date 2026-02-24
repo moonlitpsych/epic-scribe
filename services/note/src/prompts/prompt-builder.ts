@@ -140,7 +140,8 @@ export class PromptBuilder {
         'HMHI Downtown RCC': ['@lastvitals@→.lastvitals', '@provider@→.provider'],
         'Redwood Clinic MHI': ['@lastvitals@→.lastvitals', '@allergies@→.allergies'],
         'Davis Behavioral Health': ['@MRN@→.MRN', '@DATE@→.DATE'],
-        'Moonlit Psychiatry': ['@provider@→.provider', '@lastvitals@→.lastvitals']
+        'Moonlit Psychiatry': ['@provider@→.provider', '@lastvitals@→.lastvitals'],
+        'Psycho-oncology (HCI)': ['@lastvitals@→.lastvitals', '@provider@→.provider']
       },
 
       mappings: {
@@ -163,6 +164,10 @@ export class PromptBuilder {
           'Intake': 'moonlit_intake_v1',
           'Transfer of Care': 'moonlit_toc_v1',
           'Follow-up': 'moonlit_fu_v1'
+        },
+        'Psycho-oncology (HCI)': {
+          'Intake': 'hci_psychonc_intake_v1',
+          'Follow-up': 'hci_psychonc_fu_v1'
         }
       }
     };
@@ -184,6 +189,9 @@ export class PromptBuilder {
 
     // Check if this is a Teenscope South template (adolescent psychiatry with collateral)
     const isTeenscope = setting === 'Teenscope South';
+
+    // Check if this is a psycho-oncology template (cancer + psychiatry)
+    const isPsychoOncology = setting === 'Psycho-oncology (HCI)';
 
     // Get SmartList definitions from template
     const smartListIds = this.extractSmartListIds(template);
@@ -221,7 +229,7 @@ export class PromptBuilder {
         firstName: patientFirstName,
         lastName: patientLastName,
         age: patientAge
-      }, feeScheduleData, afterHoursEligible, questionnairesCompleted);
+      }, feeScheduleData, afterHoursEligible, questionnairesCompleted, setting);
 
       sections = {
         system: 'Psychiatric note generator for Dr. Rufus Sweeney',

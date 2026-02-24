@@ -3,7 +3,7 @@
  * Enhanced prompt building with section-specific instructions and temperature control
  */
 
-import { Template, TemplateSection, PayerFeeSchedule } from '@epic-scribe/types';
+import { Template, TemplateSection, PayerFeeSchedule, Setting } from '@epic-scribe/types';
 
 export interface SectionPromptConfig {
   sectionName: string;
@@ -442,7 +442,7 @@ function ensureProperSectionOrdering(template: Template): Template {
 /**
  * Build section-specific prompt instructions with visit type awareness
  */
-export function buildSectionPrompt(section: TemplateSection, visitType?: string, previousMedications?: string): string {
+export function buildSectionPrompt(section: TemplateSection, visitType?: string, previousMedications?: string, setting?: Setting): string {
   const isFollowUp = visitType === 'Follow-up' || visitType === 'Transfer of Care';
 
   // Choose the appropriate config based on section name and visit type
@@ -468,6 +468,35 @@ MEDICATIONS FROM PREVIOUS NOTE (use as baseline):
 ${previousMedications}
 `
     ).replace('${process.env.PREVIOUS_MEDICATIONS}', previousMedications).replace('` : \'\'}', '');
+  }
+
+  // Psycho-oncology (HCI) overrides for Formulation and Assessment sections
+  const isPsychoOncology = setting === 'Psycho-oncology (HCI)';
+  if (isPsychoOncology && configName === 'Formulation') {
+    instructions += `
+
+⚠️ PSYCHO-ONCOLOGY FORMULATION OVERRIDE (Huntsman Cancer Institute):
+This is a psycho-oncology consultation-liaison setting. The bio-psycho-social formulation MUST be expanded to a BIO-PSYCHO-SOCIAL-EXISTENTIAL model. Replace the standard Paragraph 2 instructions with the following:
+
+PARAGRAPH 2 — Diagnosis with DSM Criteria and Bio-Psycho-Social-Existential Formulation:
+Start with: "The patient's diagnosis is most consistent with [Primary Diagnosis, specify severity] based on [list specific DSM-5-TR criteria met from the transcript]."
+
+Then MUST include ALL FOUR perspectives in this order:
+"From a biological perspective, [discuss cancer type and stage, cancer treatment (chemotherapy, radiation, surgery, immunotherapy) and its neuropsychiatric effects, treatment side effects (fatigue, neuropathy, cognitive changes/'chemo brain', pain, nausea), medication interactions between psychiatric and oncology drugs, genetics/family history, substance effects, and any direct CNS effects of the malignancy]. Psychologically, [discuss adjustment to cancer diagnosis, illness identity and sense of self as a 'cancer patient', cognitive patterns around prognosis and uncertainty, coping mechanisms (adaptive and maladaptive), trauma of diagnosis and treatment procedures, body image changes (surgical scars, hair loss, weight changes, port placement), anticipatory grief, fear of recurrence or progression, health anxiety, and pre-existing psychological vulnerabilities]. Socially, [discuss impact on family system and role changes (from provider/caregiver to patient), caregiver burden on spouse/family, functional and occupational changes (ability to work, disability), financial toxicity of cancer care (medical bills, lost income, insurance issues), changes in social and intimate relationships, cultural beliefs about illness and death, community and religious support]. From an existential perspective, [discuss the patient's confrontation with mortality and finitude, meaning-making in the context of serious illness, loss of the assumed future and life trajectory, changes in life priorities and values, spiritual distress or spiritual growth, death anxiety, legacy concerns, and how the cancer diagnosis has affected their sense of purpose and relationship to time]."
+
+CRITICAL: All four domains (biological, psychological, social, existential) are REQUIRED. The existential domain is standard in psycho-oncology formulations and must not be omitted. Each domain should specifically reference how the cancer diagnosis and treatment intersect with the psychiatric presentation.`;
+  }
+
+  if (isPsychoOncology && configName === 'Assessment') {
+    instructions += `
+
+⚠️ PSYCHO-ONCOLOGY ASSESSMENT OVERRIDE (Huntsman Cancer Institute):
+This is a psycho-oncology consultation-liaison setting. In the interval update (Paragraph 2), in addition to standard psychiatric follow-up content, you MUST address:
+- Cancer treatment trajectory: Any changes in oncology treatment (new chemo cycle, radiation schedule, scan results, staging changes, treatment response or progression)
+- Treatment side effects impacting psychiatric symptoms: fatigue, cognitive changes, pain, nausea, sleep disruption, appetite changes from cancer treatment
+- Adjustment and existential concerns: How the patient is coping with their cancer diagnosis and prognosis, any shifts in meaning-making, death anxiety, fear of recurrence, changes in life priorities
+- Functional status: Changes in ability to work, engage in daily activities, or maintain social roles due to cancer and/or psychiatric symptoms
+- Support system: Caregiver burden, family coping, any changes in social support`;
   }
 
   let prompt = `\n=== ${config.sectionName.toUpperCase()} ===\n`;
@@ -501,7 +530,8 @@ export function buildPsychiatricPrompt(
   },
   feeScheduleData?: PayerFeeSchedule,
   afterHoursEligible?: boolean,
-  questionnairesCompleted?: boolean
+  questionnairesCompleted?: boolean,
+  setting?: Setting
 ): string {
   // Check for staffing configuration
   const staffingConfig = template.staffing_config;
@@ -643,7 +673,7 @@ TEMPLATE SECTIONS:
 
   // Add each section with its specific instructions
   ensuredTemplate.sections.forEach(section => {
-    prompt += buildSectionPrompt(section, visitType, previousMedications);
+    prompt += buildSectionPrompt(section, visitType, previousMedications, setting);
     prompt += '\n---\n';
   });
 

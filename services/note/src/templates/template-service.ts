@@ -147,6 +147,7 @@ export class TemplateService {
     initializeTemplates();
     initializeTeenscopeTemplates();
     initializeBHIDCTherapyTemplates();
+    initializeHCIPsychoOncologyTemplates();
   }
 
   /**
@@ -570,6 +571,27 @@ function initializeBHIDCTherapyTemplates() {
   });
 
   console.log('[TemplateService] BHIDC Therapy templates added. Total templates:', TEMPLATES.size);
+}
+
+// Initialize Psycho-oncology (HCI) templates
+function initializeHCIPsychoOncologyTemplates() {
+  console.log('[TemplateService] Initializing Psycho-oncology (HCI) templates');
+
+  TEMPLATES.set('hci_psychonc_intake_v1', createFocusedPsychiatricTemplate(
+    'hci_psychonc_intake_v1',
+    'HCI Psycho-oncology Intake - Focused Psychiatric',
+    'Psycho-oncology (HCI)' as Setting,
+    'Intake'
+  ));
+
+  TEMPLATES.set('hci_psychonc_fu_v1', createFocusedPsychiatricTemplate(
+    'hci_psychonc_fu_v1',
+    'HCI Psycho-oncology Follow-up - Focused Psychiatric',
+    'Psycho-oncology (HCI)' as Setting,
+    'Follow-up'
+  ));
+
+  console.log('[TemplateService] HCI Psycho-oncology templates added. Total templates:', TEMPLATES.size);
 }
 
 // Export singleton instance

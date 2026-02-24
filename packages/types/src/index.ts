@@ -5,7 +5,8 @@ export const SETTINGS = [
   'Davis Behavioral Health',
   'Moonlit Psychiatry',
   'BHIDC therapy',
-  'Teenscope South'
+  'Teenscope South',
+  'Psycho-oncology (HCI)'
 ] as const;
 
 export const VISIT_TYPES = [
@@ -155,7 +156,8 @@ export const EPIC_EMR_SETTINGS: Setting[] = [
   'HMHI Downtown RCC',
   'Redwood Clinic MHI',
   'Davis Behavioral Health',
-  'Teenscope South'
+  'Teenscope South',
+  'Psycho-oncology (HCI)'
 ];
 
 // Patient Chart History Types (for longitudinal tracking)
