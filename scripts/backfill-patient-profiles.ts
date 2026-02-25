@@ -362,7 +362,7 @@ async function main() {
         }, { onConflict: 'patient_id' });
 
       if (upsertError) {
-        console.error(`  ERROR upserting profile: ${upsertError.message}`);
+        console.error(`  ERROR upserting profile: ${upsertError.message}`, JSON.stringify(upsertError, null, 2));
       } else {
         console.log(`  Profile saved (v${profile.sourceNoteCount}): ${profile.diagnoses.length} dx, ${profile.currentMedications.length} current meds, ${profile.pastMedications.length} past meds`);
       }
