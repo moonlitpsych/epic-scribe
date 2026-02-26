@@ -1,7 +1,7 @@
 // apps/web/src/components/workflow/GenerateInputStep.tsx
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Template, Setting } from '@epic-scribe/types';
 import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle, CloudDownload, Mail, Save, Link2, Heart, QrCode, X, FileText } from 'lucide-react';
 import QRCode from 'qrcode';
@@ -127,6 +127,25 @@ export default function GenerateInputStep({
     setQrDataUrl(url);
     setShowQrModal(true);
   }, [selectedPatient]);
+
+  // Track the patient ID so we can detect actual patient changes (not initial mount)
+  const prevPatientIdRef = useRef(initialPatient?.id || null);
+
+  // Clear prior note state when patient changes so the correct note gets fetched
+  useEffect(() => {
+    const currentId = selectedPatient?.id || null;
+    const prevId = prevPatientIdRef.current;
+
+    if (currentId !== prevId) {
+      setPreviousNote('');
+      setSavedNote(null);
+      setAutoImportedNote(null);
+      setIntakeQNote(null);
+      setIntakeQError(null);
+      setCompanionSynced(false);
+      prevPatientIdRef.current = currentId;
+    }
+  }, [selectedPatient?.id]);
 
   // Fetch payers list on mount
   useEffect(() => {

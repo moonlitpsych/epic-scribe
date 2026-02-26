@@ -160,6 +160,9 @@ export default function WorkflowWizard() {
     setEditedNote('');
     setReceipt(null);
     setValidationResult(null);
+    setSelectedPatient(null);
+    setEncounterId(null);
+    setExtractedEpicData(null);
   };
 
   const handleSaveNote = async () => {
