@@ -350,7 +350,7 @@ export async function POST(request: NextRequest) {
     const promptBuilder = await getPromptBuilder();
     const geminiClient = getGeminiClient({
       apiKey: process.env.GEMINI_API_KEY,
-      model: process.env.GEMINI_MODEL || 'gemini-3-pro-preview'
+      model: (process.env.GEMINI_MODEL || 'gemini-3-pro-preview').trim()
     });
     const smartListService = await getSmartListService();
 
