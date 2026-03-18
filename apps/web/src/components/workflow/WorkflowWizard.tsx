@@ -237,15 +237,15 @@ export default function WorkflowWizard() {
   return (
     <div className="space-y-6">
       {/* Progress Indicator */}
-      <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-6">
+      <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
         <div className="flex items-center justify-between mb-3">
           <div className="flex-1" />
           <button
             onClick={() => setShowPairingModal(true)}
-            className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-lg transition-colors ${
+            className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded transition-colors ${
               hasPairedDevice
-                ? 'bg-green-50 text-green-700 border border-green-200'
-                : 'bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100'
+                ? 'bg-[var(--success-bg)] text-[var(--success-text)] border border-[var(--success-border)]'
+                : 'bg-[#13101f] text-[#a78bfa] border border-[#2a2050] hover:bg-[var(--bg-hover)]'
             }`}
           >
             {hasPairedDevice ? <Wifi size={14} /> : <Link2 size={14} />}
@@ -264,9 +264,9 @@ export default function WorkflowWizard() {
                   <div
                     className={`
                       w-10 h-10 rounded-full flex items-center justify-center font-semibold mb-2
-                      ${isComplete ? 'bg-[#0A1F3D] text-white' : ''}
-                      ${isCurrent ? 'bg-[#E89C8A] text-white' : ''}
-                      ${isUpcoming ? 'bg-[#F5F1ED] text-[#5A6B7D] border-2 border-[#C5A882]/30' : ''}
+                      ${isComplete ? 'bg-[var(--accent-primary)] text-[var(--text-inverse)]' : ''}
+                      ${isCurrent ? 'bg-[var(--accent-warm)] text-[var(--text-inverse)]' : ''}
+                      ${isUpcoming ? 'bg-[var(--bg-surface-2)] text-[var(--text-muted)] border-2 border-[var(--border-default)]' : ''}
                     `}
                   >
                     {isComplete ? <Check size={20} /> : index + 1}
@@ -274,7 +274,7 @@ export default function WorkflowWizard() {
                   <div
                     className={`
                       text-sm font-medium whitespace-nowrap
-                      ${isComplete || isCurrent ? 'text-[#0A1F3D]' : 'text-[#5A6B7D]'}
+                      ${isComplete || isCurrent ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'}
                     `}
                   >
                     {step.label}
@@ -284,7 +284,7 @@ export default function WorkflowWizard() {
                   <div
                     className={`
                       flex-1 h-1 mx-4 rounded
-                      ${isComplete ? 'bg-[#0A1F3D]' : 'bg-[#F5F1ED]'}
+                      ${isComplete ? 'bg-[var(--accent-primary)]' : 'bg-[var(--bg-surface-2)]'}
                     `}
                   />
                 )}

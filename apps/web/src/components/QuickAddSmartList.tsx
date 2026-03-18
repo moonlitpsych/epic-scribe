@@ -75,11 +75,11 @@ export function QuickAddSmartList({ onAdd, onClose }: QuickAddSmartListProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+      <div className="bg-[var(--bg-surface)] rounded-[2px] max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header with Moonlit cream background */}
         <div
-          className="px-6 py-4 border-b border-gray-200 flex justify-between items-center"
+          className="px-6 py-4 border-b border-[var(--border-default)] flex justify-between items-center"
           style={{ backgroundColor: moonlitTheme.colors.cream }}
         >
           <h2
@@ -93,7 +93,7 @@ export function QuickAddSmartList({ onAdd, onClose }: QuickAddSmartListProps) {
           </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg transition-all duration-200 hover:bg-white hover:bg-opacity-60"
+            className="p-1 rounded transition-all duration-200 hover:bg-[var(--bg-hover)]"
             style={{ color: moonlitTheme.colors.text.secondary }}
             aria-label="Close"
           >
@@ -116,9 +116,8 @@ export function QuickAddSmartList({ onAdd, onClose }: QuickAddSmartListProps) {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 transition-all duration-200 focus:ring-2 focus:border-transparent"
+              className="w-full border border-[var(--border-default)] rounded px-4 py-2.5 bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-all duration-200 focus:ring-2 focus:border-transparent"
               style={{
-                backgroundColor: 'white',
                 '--tw-ring-color': moonlitTheme.colors.terracotta
               } as any}
               required
@@ -142,7 +141,7 @@ export function QuickAddSmartList({ onAdd, onClose }: QuickAddSmartListProps) {
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="e.g., Sleep Quality"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 transition-all duration-200 focus:ring-2 focus:border-transparent"
+              className="w-full border border-[var(--border-default)] rounded px-4 py-2.5 bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-all duration-200 focus:ring-2 focus:border-transparent"
               style={{
                 '--tw-ring-color': moonlitTheme.colors.terracotta
               } as any}
@@ -167,7 +166,7 @@ export function QuickAddSmartList({ onAdd, onClose }: QuickAddSmartListProps) {
               onChange={(e) => setEpicId(e.target.value)}
               placeholder="e.g., 304120106"
               pattern="[0-9]+"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 transition-all duration-200 focus:ring-2 focus:border-transparent"
+              className="w-full border border-[var(--border-default)] rounded px-4 py-2.5 bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-all duration-200 focus:ring-2 focus:border-transparent"
               style={{
                 '--tw-ring-color': moonlitTheme.colors.terracotta
               } as any}
@@ -191,7 +190,7 @@ export function QuickAddSmartList({ onAdd, onClose }: QuickAddSmartListProps) {
                 value={optionsText}
                 onChange={(e) => setOptionsText(e.target.value)}
                 placeholder="Normal&#10;Mildly impaired&#10;Moderately impaired&#10;Severely impaired&#10;Not assessed"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 font-mono text-sm transition-all duration-200 focus:ring-2 focus:border-transparent"
+                className="w-full border border-[var(--border-default)] rounded px-4 py-2.5 font-mono text-sm bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-all duration-200 focus:ring-2 focus:border-transparent"
                 style={{
                   '--tw-ring-color': moonlitTheme.colors.terracotta,
                   minHeight: '180px'
@@ -202,7 +201,7 @@ export function QuickAddSmartList({ onAdd, onClose }: QuickAddSmartListProps) {
               <button
                 type="button"
                 onClick={fillTemplate}
-                className="absolute top-2 right-2 text-xs px-3 py-1.5 rounded-md transition-all duration-200"
+                className="absolute top-2 right-2 text-xs px-3 py-1.5 rounded transition-all duration-200"
                 style={{
                   backgroundColor: moonlitTheme.colors.cream,
                   color: moonlitTheme.colors.terracotta,
@@ -238,7 +237,7 @@ export function QuickAddSmartList({ onAdd, onClose }: QuickAddSmartListProps) {
               value={defaultValue}
               onChange={(e) => setDefaultValue(e.target.value)}
               placeholder="e.g., Not assessed"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 transition-all duration-200 focus:ring-2 focus:border-transparent"
+              className="w-full border border-[var(--border-default)] rounded px-4 py-2.5 bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-all duration-200 focus:ring-2 focus:border-transparent"
               style={{
                 '--tw-ring-color': moonlitTheme.colors.terracotta
               } as any}
@@ -251,7 +250,7 @@ export function QuickAddSmartList({ onAdd, onClose }: QuickAddSmartListProps) {
           {/* Preview */}
           {displayName && optionsText && (
             <div
-              className="p-4 rounded-lg"
+              className="p-4 rounded-[2px]"
               style={{ backgroundColor: moonlitTheme.colors.cream }}
             >
               <h3
@@ -297,7 +296,7 @@ export function QuickAddSmartList({ onAdd, onClose }: QuickAddSmartListProps) {
           <div className="flex gap-3 pt-4 border-t" style={{ borderColor: moonlitTheme.colors.gray[200] }}>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+              className="flex-1 px-6 py-3 rounded font-medium transition-all duration-200 flex items-center justify-center gap-2"
               style={{
                 backgroundColor: moonlitTheme.colors.tan,
                 color: 'white'
@@ -315,17 +314,17 @@ export function QuickAddSmartList({ onAdd, onClose }: QuickAddSmartListProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-200"
+              className="flex-1 px-6 py-3 rounded font-medium transition-all duration-200"
               style={{
                 border: `1px solid ${moonlitTheme.colors.tan}`,
                 color: moonlitTheme.colors.tan,
-                backgroundColor: 'white'
+                backgroundColor: 'var(--bg-surface)'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = moonlitTheme.colors.cream;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'white';
+                e.currentTarget.style.backgroundColor = 'var(--bg-surface)';
               }}
             >
               Cancel

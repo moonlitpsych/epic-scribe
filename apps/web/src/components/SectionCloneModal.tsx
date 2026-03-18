@@ -94,18 +94,18 @@ export function SectionCloneModal({
     sourceVisitType === targetVisitType;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+      <div className="bg-[var(--bg-surface)] rounded-[2px] shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 bg-[#0A1F3D]">
+        <div className="px-6 py-4 border-b border-[var(--border-default)] bg-[var(--bg-surface-2)]">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <Copy className="h-6 w-6 text-[#E89C8A]" />
-              <h2 className="text-2xl font-serif text-white">Clone Section</h2>
+              <Copy className="h-6 w-6 text-[var(--accent-warm)]" />
+              <h2 className="text-2xl font-heading text-[var(--text-primary)]">Clone Section</h2>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-300 hover:text-white transition-colors"
+              className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -117,45 +117,45 @@ export function SectionCloneModal({
         {/* Content */}
         <div className="px-6 py-4 overflow-y-auto max-h-[calc(90vh-180px)]">
           {/* Source Info */}
-          <div className="mb-6 p-4 bg-[#F5F1ED] rounded-lg border border-[#C5A882]/30">
-            <h3 className="text-sm font-semibold text-[#0A1F3D] mb-2">Source</h3>
+          <div className="mb-6 p-4 bg-[var(--bg-surface-2)] rounded-[2px] border border-[var(--border-default)]">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2">Source</h3>
             <div className="space-y-1 text-sm">
               <p>
-                <span className="text-[#5A6B7D]">Template:</span>{' '}
-                <span className="font-medium text-[#0A1F3D]">{sourceSetting} - {sourceVisitType}</span>
+                <span className="text-[var(--text-secondary)]">Template:</span>{' '}
+                <span className="font-medium text-[var(--text-primary)]">{sourceSetting} - {sourceVisitType}</span>
               </p>
               <p>
-                <span className="text-[#5A6B7D]">Section:</span>{' '}
-                <span className="font-medium text-[#0A1F3D]">{sourceSection.name}</span>
+                <span className="text-[var(--text-secondary)]">Section:</span>{' '}
+                <span className="font-medium text-[var(--text-primary)]">{sourceSection.name}</span>
               </p>
             </div>
 
             {/* Content Preview */}
             <div className="mt-3">
-              <p className="text-xs font-semibold text-[#5A6B7D] mb-2">Content Preview:</p>
-              <pre className="text-xs font-mono bg-white p-3 rounded border border-[#C5A882]/20 max-h-32 overflow-y-auto whitespace-pre-wrap">
+              <p className="text-xs font-semibold text-[var(--text-secondary)] mb-2">Content Preview:</p>
+              <pre className="text-xs font-mono bg-[var(--bg-surface)] p-3 rounded border border-[var(--border-default)] max-h-32 overflow-y-auto whitespace-pre-wrap">
                 {sourceSection.content}
               </pre>
             </div>
           </div>
 
           <div className="flex items-center justify-center my-4">
-            <ArrowRight className="h-6 w-6 text-[#E89C8A]" />
+            <ArrowRight className="h-6 w-6 text-[var(--accent-warm)]" />
           </div>
 
           {/* Target Selection */}
-          <div className="mb-6 p-4 bg-white rounded-lg border border-[#C5A882]/30">
-            <h3 className="text-sm font-semibold text-[#0A1F3D] mb-4">Target Template</h3>
+          <div className="mb-6 p-4 bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)]">
+            <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4">Target Template</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-[#0A1F3D] mb-2">
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
                   Setting
                 </label>
                 <select
                   value={targetSetting}
                   onChange={(e) => setTargetSetting(e.target.value as Setting)}
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)]"
                 >
                   {SETTINGS.map(setting => (
                     <option key={setting} value={setting}>{setting}</option>
@@ -164,13 +164,13 @@ export function SectionCloneModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#0A1F3D] mb-2">
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
                   Visit Type
                 </label>
                 <select
                   value={targetVisitType}
                   onChange={(e) => setTargetVisitType(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)]"
                 >
                   {availableVisitTypes.map(type => (
                     <option key={type} value={type}>{type}</option>
@@ -180,13 +180,13 @@ export function SectionCloneModal({
             </div>
 
             {loadingTemplate ? (
-              <div className="text-center py-4 text-[#5A6B7D]">
+              <div className="text-center py-4 text-[var(--text-secondary)]">
                 Loading template sections...
               </div>
             ) : (
               <>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-[#0A1F3D] mb-2">
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
                     Target Section
                   </label>
 
@@ -199,9 +199,9 @@ export function SectionCloneModal({
                             type="radio"
                             checked={!isNewSection}
                             onChange={() => setIsNewSection(false)}
-                            className="text-[#E89C8A] focus:ring-[#E89C8A]"
+                            className="text-[var(--accent-warm)] focus:ring-[var(--accent-warm)]"
                           />
-                          <span className="text-sm text-[#0A1F3D]">Replace existing section</span>
+                          <span className="text-sm text-[var(--text-primary)]">Replace existing section</span>
                         </label>
                         <select
                           value={targetSectionName}
@@ -210,7 +210,7 @@ export function SectionCloneModal({
                             setIsNewSection(false);
                           }}
                           disabled={isNewSection}
-                          className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent disabled:bg-[var(--bg-surface-2)] disabled:cursor-not-allowed bg-[var(--bg-surface-2)] text-[var(--text-primary)]"
                         >
                           <option value="">Select a section...</option>
                           {targetTemplate.sections
@@ -231,9 +231,9 @@ export function SectionCloneModal({
                           type="radio"
                           checked={isNewSection}
                           onChange={() => setIsNewSection(true)}
-                          className="text-[#E89C8A] focus:ring-[#E89C8A]"
+                          className="text-[var(--accent-warm)] focus:ring-[var(--accent-warm)]"
                         />
-                        <span className="text-sm text-[#0A1F3D]">Create new section</span>
+                        <span className="text-sm text-[var(--text-primary)]">Create new section</span>
                       </label>
                       <input
                         type="text"
@@ -244,23 +244,23 @@ export function SectionCloneModal({
                         }}
                         disabled={!isNewSection}
                         placeholder="Enter new section name..."
-                        className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent disabled:bg-[var(--bg-surface-2)] disabled:cursor-not-allowed bg-[var(--bg-surface-2)] text-[var(--text-primary)]"
                       />
                     </div>
                   </div>
                 </div>
 
                 {isSameTemplate && !isNewSection && targetSectionName === sourceSection.name && (
-                  <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-sm text-yellow-800">
+                  <div className="mt-3 p-3 bg-[var(--warning-bg)] border border-[var(--warning-border)] rounded-[2px]">
+                    <p className="text-sm text-[var(--warning-text)]">
                       ⚠️ You are cloning to the same section. This will replace the existing content.
                     </p>
                   </div>
                 )}
 
                 {isNewSection && (
-                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-800">
+                  <div className="mt-3 p-3 bg-[var(--info-bg)] border border-[var(--info-border)] rounded-[2px]">
+                    <p className="text-sm text-[var(--info-text)]">
                       ℹ️ A new section will be created at the end of the template.
                     </p>
                   </div>
@@ -271,17 +271,17 @@ export function SectionCloneModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-[var(--border-default)] bg-[var(--bg-surface-2)] flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-[#0A1F3D] bg-white border border-[#C5A882]/30 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[2px] hover:bg-[var(--bg-hover)] transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleClone}
             disabled={loading || loadingTemplate || !targetSectionName.trim()}
-            className="px-4 py-2 text-sm font-medium text-white bg-[#E89C8A] rounded-lg hover:bg-[#0A1F3D] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-2 text-sm font-medium bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded-[2px] hover:bg-[var(--accent-primary-hover)] transition-colors disabled:bg-[var(--bg-hover)] disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading ? (
               <>

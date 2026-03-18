@@ -48,38 +48,38 @@ export function Step5TestimonyView({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-serif text-[#0A1F3D] mb-2">
+        <h2 className="text-2xl font-heading text-[var(--text-primary)] mb-2">
           Step 5: Court Testimony
         </h2>
-        <p className="text-[#5A6B7D]">
+        <p className="text-[var(--text-secondary)]">
           Your assessment is complete. Use the testimony below for court. You can edit it as needed.
         </p>
       </div>
 
       {/* Summary Banner */}
       <div
-        className={`p-4 rounded-lg border-2 ${
+        className={`p-4 rounded-[2px] border-2 ${
           isCommit
-            ? 'bg-amber-50 border-amber-500'
-            : 'bg-green-50 border-green-500'
+            ? 'bg-[var(--warning-bg)] border-[var(--warning-border)]'
+            : 'bg-[var(--success-bg)] border-[var(--success-border)]'
         }`}
       >
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-bold text-lg text-gray-900">
+            <p className="font-bold text-lg text-[var(--text-primary)]">
               {patientName}
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-[var(--text-secondary)]">
               {hearingDate && `Hearing: ${hearingDate}`}
               {hearingDate && commitmentType && ' • '}
               {commitmentType && `${commitmentType} commitment`}
             </p>
           </div>
           <div
-            className={`px-4 py-2 rounded-lg font-bold ${
+            className={`px-4 py-2 rounded-[2px] font-bold ${
               isCommit
-                ? 'bg-amber-100 text-amber-800'
-                : 'bg-green-100 text-green-800'
+                ? 'bg-[var(--warning-bg)] text-[var(--warning-text)]'
+                : 'bg-[var(--success-bg)] text-[var(--success-text)]'
             }`}
           >
             {isCommit ? 'RECOMMEND COMMITMENT' : 'DO NOT COMMIT'}
@@ -88,12 +88,12 @@ export function Step5TestimonyView({
       </div>
 
       {/* Testimony Card */}
-      <div className="bg-white rounded-lg border border-[#C5A882]/20 shadow-sm">
+      <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)]">
         {/* Toolbar */}
-        <div className="flex items-center justify-between p-4 border-b border-[#C5A882]/20 bg-gray-50">
+        <div className="flex items-center justify-between p-4 border-b border-[var(--border-default)] bg-[var(--bg-surface-2)]">
           <div className="flex items-center gap-2">
-            <FileText className="text-[#E89C8A]" size={20} />
-            <h3 className="font-semibold text-[#0A1F3D]">
+            <FileText className="text-[var(--accent-warm)]" size={20} />
+            <h3 className="font-semibold text-[var(--text-primary)]">
               Court-Ready Testimony
             </h3>
           </div>
@@ -101,7 +101,7 @@ export function Step5TestimonyView({
           <div className="flex items-center gap-2">
             <button
               onClick={handleReset}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 text-sm border border-[var(--border-default)] rounded hover:bg-[var(--bg-hover)] transition-colors"
             >
               <RotateCcw size={14} />
               Reset
@@ -109,14 +109,14 @@ export function Step5TestimonyView({
 
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 text-sm border border-[var(--border-default)] rounded hover:bg-[var(--bg-hover)] transition-colors"
             >
               {isEditing ? 'Preview' : 'Edit'}
             </button>
 
             <button
               onClick={handleCopy}
-              className="flex items-center gap-2 px-4 py-2 bg-[#E89C8A] text-white rounded-lg hover:bg-[#D88A7A] transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--accent-warm)] text-[var(--text-inverse)] rounded hover:bg-[var(--accent-warm-hover)] transition-colors"
             >
               {copySuccess ? (
                 <>
@@ -139,11 +139,11 @@ export function Step5TestimonyView({
             <textarea
               value={editedText}
               onChange={(e) => setEditedText(e.target.value)}
-              className="w-full min-h-[500px] px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm resize-none"
+              className="w-full min-h-[500px] px-4 py-3 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent font-mono text-sm resize-none"
             />
           ) : (
             <div className="prose prose-sm max-w-none">
-              <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
+              <div className="whitespace-pre-wrap text-[var(--text-primary)] leading-relaxed">
                 {editedText}
               </div>
             </div>
@@ -151,9 +151,9 @@ export function Step5TestimonyView({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-3 bg-gray-50 border-t border-[#C5A882]/20">
-          <span className="text-sm text-gray-500">{wordCount} words</span>
-          <span className="text-xs text-gray-400">
+        <div className="flex items-center justify-between px-6 py-3 bg-[var(--bg-surface-2)] border-t border-[var(--border-default)]">
+          <span className="text-sm text-[var(--text-muted)]">{wordCount} words</span>
+          <span className="text-xs text-[var(--text-muted)]">
             Generated {new Date(finalAnalysis.generated_at).toLocaleString()}
           </span>
         </div>
@@ -163,7 +163,7 @@ export function Step5TestimonyView({
       <div className="flex items-center justify-between pt-4">
         <button
           onClick={onStartNew}
-          className="flex items-center gap-2 px-6 py-3 border-2 border-[#C5A882] text-[#0A1F3D] rounded-lg hover:bg-[#F5F1ED] transition-colors font-medium"
+          className="flex items-center gap-2 px-6 py-3 border-2 border-[var(--border-default)] text-[var(--text-primary)] rounded-[2px] hover:bg-[var(--bg-hover)] transition-colors font-medium"
         >
           <Plus size={18} />
           Start New Assessment
@@ -171,7 +171,7 @@ export function Step5TestimonyView({
 
         <button
           onClick={handleCopy}
-          className="flex items-center gap-2 px-6 py-3 bg-[#C5A882] text-white rounded-lg hover:bg-[#B39770] transition-colors font-medium"
+          className="flex items-center gap-2 px-6 py-3 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded-[2px] hover:bg-[var(--accent-primary-hover)] transition-colors font-medium"
         >
           {copySuccess ? (
             <>

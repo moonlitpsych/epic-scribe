@@ -145,14 +145,14 @@ export default function PatientNotesTab({
       {/* Add Note Button */}
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-semibold text-[#0A1F3D]">All Notes</h3>
-          <p className="text-sm text-[#5A6B7D]">
+          <h3 className="text-lg font-semibold text-[var(--text-primary)]">All Notes</h3>
+          <p className="text-sm text-[var(--text-secondary)]">
             Manual notes and AI-generated notes in one timeline
           </p>
         </div>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-[#0A1F3D] text-white rounded-lg hover:bg-[#0A1F3D]/90 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded hover:bg-[var(--accent-primary-hover)] transition-colors"
         >
           <Plus size={18} />
           Add Note
@@ -161,19 +161,19 @@ export default function PatientNotesTab({
 
       {/* Add Note Form */}
       {showAddForm && (
-        <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-6">
-          <h4 className="font-medium text-[#0A1F3D] mb-4">New Note</h4>
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+          <h4 className="font-medium text-[var(--text-primary)] mb-4">New Note</h4>
 
           {/* Note Type Selection */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-[#0A1F3D] mb-2">Note Type</label>
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">Note Type</label>
             <div className="flex gap-3">
               <button
                 onClick={() => setNewNoteType('quick_memo')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded border transition-all ${
                   newNoteType === 'quick_memo'
-                    ? 'border-[#E89C8A] bg-[#E89C8A]/10 text-[#E89C8A]'
-                    : 'border-[#C5A882]/30 text-[#5A6B7D] hover:border-[#C5A882]'
+                    ? 'border-[var(--accent-warm)] bg-[var(--accent-warm)]/10 text-[var(--accent-warm)]'
+                    : 'border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--accent-warm)]'
                 }`}
               >
                 <StickyNote size={18} />
@@ -181,10 +181,10 @@ export default function PatientNotesTab({
               </button>
               <button
                 onClick={() => setNewNoteType('clinical_note')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded border transition-all ${
                   newNoteType === 'clinical_note'
-                    ? 'border-[#0A1F3D] bg-[#0A1F3D]/10 text-[#0A1F3D]'
-                    : 'border-[#C5A882]/30 text-[#5A6B7D] hover:border-[#C5A882]'
+                    ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]'
+                    : 'border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--accent-primary)]'
                 }`}
               >
                 <FileText size={18} />
@@ -195,21 +195,21 @@ export default function PatientNotesTab({
 
           {/* Title */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
-              Title <span className="text-[#5A6B7D] font-normal">(optional)</span>
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+              Title <span className="text-[var(--text-secondary)] font-normal">(optional)</span>
             </label>
             <input
               type="text"
               value={newNoteTitle}
               onChange={(e) => setNewNoteTitle(e.target.value)}
               placeholder="Note title..."
-              className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent"
             />
           </div>
 
           {/* Content */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
               Content <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -217,7 +217,7 @@ export default function PatientNotesTab({
               onChange={(e) => setNewNoteContent(e.target.value)}
               placeholder="Enter note content..."
               rows={newNoteType === 'quick_memo' ? 4 : 8}
-              className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent font-mono text-sm"
             />
           </div>
 
@@ -229,14 +229,14 @@ export default function PatientNotesTab({
                 setNewNoteTitle('');
                 setNewNoteContent('');
               }}
-              className="px-4 py-2 text-[#5A6B7D] hover:text-[#0A1F3D] transition-colors"
+              className="px-4 py-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleAddNote}
               disabled={saving || !newNoteContent.trim()}
-              className="px-4 py-2 bg-[#0A1F3D] text-white rounded-lg hover:bg-[#0A1F3D]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded hover:bg-[var(--accent-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? 'Saving...' : 'Save Note'}
             </button>
@@ -246,10 +246,10 @@ export default function PatientNotesTab({
 
       {/* Notes Timeline */}
       {allNotes.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-12 text-center">
-          <FileText className="mx-auto text-[#C5A882] mb-4" size={48} />
-          <p className="text-[#5A6B7D]">No notes yet.</p>
-          <p className="text-sm text-[#5A6B7D] mt-1">
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-12 text-center">
+          <FileText className="mx-auto text-[var(--text-muted)] mb-4" size={48} />
+          <p className="text-[var(--text-secondary)]">No notes yet.</p>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
             Click &quot;Add Note&quot; to create a manual note, or generate a note from an encounter.
           </p>
         </div>
@@ -261,43 +261,43 @@ export default function PatientNotesTab({
               return (
                 <div
                   key={`manual-${note.id}`}
-                  className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 overflow-hidden"
+                  className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] overflow-hidden"
                 >
                   <div className="p-4">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         {note.note_type === 'clinical_note' ? (
-                          <div className="p-1.5 rounded bg-[#0A1F3D]/10">
-                            <FileText className="text-[#0A1F3D]" size={16} />
+                          <div className="p-1.5 rounded bg-[var(--accent-primary)]/10">
+                            <FileText className="text-[var(--accent-primary)]" size={16} />
                           </div>
                         ) : (
-                          <div className="p-1.5 rounded bg-[#E89C8A]/10">
-                            <StickyNote className="text-[#E89C8A]" size={16} />
+                          <div className="p-1.5 rounded bg-[var(--accent-warm)]/10">
+                            <StickyNote className="text-[var(--accent-warm)]" size={16} />
                           </div>
                         )}
                         <span
                           className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                             note.note_type === 'clinical_note'
-                              ? 'bg-[#0A1F3D]/10 text-[#0A1F3D]'
-                              : 'bg-[#E89C8A]/10 text-[#E89C8A]'
+                              ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]'
+                              : 'bg-[var(--accent-warm)]/10 text-[var(--accent-warm)]'
                           }`}
                         >
                           {note.note_type === 'clinical_note' ? 'Clinical Note' : 'Quick Memo'}
                         </span>
                         {note.title && (
-                          <span className="font-medium text-[#0A1F3D]">{note.title}</span>
+                          <span className="font-medium text-[var(--text-primary)]">{note.title}</span>
                         )}
                       </div>
                       <button
                         onClick={() => handleDeleteNote(note.id)}
-                        className="p-1.5 text-[#5A6B7D] hover:text-red-600 transition-colors"
+                        className="p-1.5 text-[var(--text-secondary)] hover:text-red-600 transition-colors"
                         title="Delete note"
                       >
                         <Trash2 size={16} />
                       </button>
                     </div>
-                    <p className="text-[#0A1F3D] whitespace-pre-wrap text-sm">{note.content}</p>
-                    <div className="mt-3 text-xs text-[#5A6B7D]">
+                    <p className="text-[var(--text-primary)] whitespace-pre-wrap text-sm">{note.content}</p>
+                    <div className="mt-3 text-xs text-[var(--text-muted)]">
                       {formatDateTime(note.created_at)} by {note.created_by}
                     </div>
                   </div>
@@ -312,48 +312,48 @@ export default function PatientNotesTab({
               return (
                 <div
                   key={`generated-${note.id}`}
-                  className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 overflow-hidden"
+                  className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] overflow-hidden"
                 >
                   <button
                     onClick={() => toggleNoteExpanded(note.id)}
-                    className="w-full p-4 text-left hover:bg-[#F5F1ED]/50 transition-colors"
+                    className="w-full p-4 text-left hover:bg-[var(--bg-hover)] transition-colors"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded bg-purple-100">
-                          <Sparkles className="text-purple-600" size={16} />
+                        <div className="p-1.5 rounded bg-[#13101f]">
+                          <Sparkles className="text-[#c084fc]" size={16} />
                         </div>
-                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#13101f] text-[#c084fc]">
                           AI Generated
                         </span>
                         {note.encounter && (
-                          <span className="text-sm text-[#5A6B7D]">
+                          <span className="text-sm text-[var(--text-secondary)]">
                             {note.encounter.setting} - {note.encounter.visit_type}
                           </span>
                         )}
                         {note.is_final && (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--success-bg)] text-[var(--success-text)]">
                             Finalized
                           </span>
                         )}
                       </div>
                       {isExpanded ? (
-                        <ChevronDown className="text-[#5A6B7D]" size={20} />
+                        <ChevronDown className="text-[var(--text-secondary)]" size={20} />
                       ) : (
-                        <ChevronRight className="text-[#5A6B7D]" size={20} />
+                        <ChevronRight className="text-[var(--text-secondary)]" size={20} />
                       )}
                     </div>
                     {!isExpanded && (
-                      <p className="mt-2 text-sm text-[#5A6B7D] line-clamp-2">{preview}...</p>
+                      <p className="mt-2 text-sm text-[var(--text-secondary)] line-clamp-2">{preview}...</p>
                     )}
-                    <div className="mt-2 text-xs text-[#5A6B7D]">
+                    <div className="mt-2 text-xs text-[var(--text-muted)]">
                       {formatDateTime(note.finalized_at || note.generated_at)}
                       {note.finalized_by && ` by ${note.finalized_by}`}
                     </div>
                   </button>
                   {isExpanded && (
-                    <div className="px-4 pb-4 border-t border-[#C5A882]/10">
-                      <pre className="mt-4 whitespace-pre-wrap text-sm text-[#0A1F3D] font-mono bg-[#F5F1ED]/50 p-4 rounded-lg max-h-96 overflow-auto">
+                    <div className="px-4 pb-4 border-t border-[var(--border-default)]">
+                      <pre className="mt-4 whitespace-pre-wrap text-sm text-[var(--text-primary)] font-mono bg-[var(--bg-surface-2)] p-4 rounded-[2px] max-h-96 overflow-auto">
                         {content}
                       </pre>
                     </div>

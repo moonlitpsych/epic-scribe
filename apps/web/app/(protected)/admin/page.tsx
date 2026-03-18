@@ -166,11 +166,11 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 px-4 py-8">
+      <main className="min-h-screen bg-[var(--bg-base)] px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center py-12">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-gray-900 border-r-transparent" />
-            <p className="mt-4 text-gray-600">Loading admin data...</p>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[var(--text-primary)] border-r-transparent" />
+            <p className="mt-4 text-[var(--text-secondary)]">Loading admin data...</p>
           </div>
         </div>
       </main>
@@ -178,89 +178,89 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-8">
+    <main className="min-h-screen bg-[var(--bg-base)] px-4 py-8">
       <div className="max-w-4xl mx-auto">
         {/* Navigation */}
         <div className="mb-6 flex gap-4">
-          <Link href="/workflow" className="text-sm text-gray-600 hover:text-gray-900">
+          <Link href="/workflow" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
             Workflow
           </Link>
-          <Link href="/patients" className="text-sm text-gray-600 hover:text-gray-900">
+          <Link href="/patients" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
             Patients
           </Link>
         </div>
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold font-heading text-[var(--text-primary)] mb-2">Admin Dashboard</h1>
+          <p className="text-[var(--text-secondary)]">
             Manage provider settings, IntakeQ credentials, and template configurations.
           </p>
           {currentProvider && (
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-[var(--text-muted)]">
               Logged in as: {currentProvider.first_name} {currentProvider.last_name}
-              {isAdmin && <span className="ml-2 text-green-600 font-medium">(Admin)</span>}
+              {isAdmin && <span className="ml-2 text-[var(--success-text)] font-medium">(Admin)</span>}
             </p>
           )}
         </div>
 
         {/* Alerts */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <div className="mb-6 p-4 bg-[var(--error-bg)] border border-[var(--error-border)] rounded-[2px] text-[var(--error-text)]">
             {error}
           </div>
         )}
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+          <div className="mb-6 p-4 bg-[var(--success-bg)] border border-[var(--success-border)] rounded-[2px] text-[var(--success-text)]">
             {success}
           </div>
         )}
 
         {/* IntakeQ Credentials Section */}
-        <section className="mb-8 bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">IntakeQ Credentials</h2>
-          <p className="text-sm text-gray-600 mb-4">
+        <section className="mb-8 bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-4">IntakeQ Credentials</h2>
+          <p className="text-sm text-[var(--text-secondary)] mb-4">
             Configure your IntakeQ login credentials for automatic note pushing.
           </p>
 
           {currentProvider ? (
             <form onSubmit={saveCredentials} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                   IntakeQ Email
                 </label>
                 <input
                   type="email"
                   value={credentials.login_email}
                   onChange={(e) => setCredentials((prev) => ({ ...prev, login_email: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-warm)]"
                   placeholder="your@intakeq-email.com"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                   IntakeQ Password
                 </label>
                 <input
                   type="password"
                   value={credentials.login_password}
                   onChange={(e) => setCredentials((prev) => ({ ...prev, login_password: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-warm)]"
                   placeholder="Leave blank to keep existing"
                 />
-                <p className="mt-1 text-xs text-gray-500">Leave blank to keep existing password</p>
+                <p className="mt-1 text-xs text-[var(--text-muted)]">Leave blank to keep existing password</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                   Default Template Name
                 </label>
                 <select
                   value={credentials.default_template_name}
                   onChange={(e) => setCredentials((prev) => ({ ...prev, default_template_name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-warm)]"
                 >
                   <option value="">Select a template...</option>
                   {templates.map((t) => (
@@ -274,13 +274,13 @@ export default function AdminPage() {
               <button
                 type="submit"
                 disabled={savingCredentials}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                className="px-4 py-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded hover:bg-[var(--accent-primary-hover)] disabled:opacity-50"
               >
                 {savingCredentials ? 'Saving...' : 'Save Credentials'}
               </button>
             </form>
           ) : (
-            <p className="text-amber-600">
+            <p className="text-[var(--warning-text)]">
               Your account is not linked to a provider. Contact an admin to get access.
             </p>
           )}
@@ -288,50 +288,50 @@ export default function AdminPage() {
 
         {/* Linked Users Section (Admin only) */}
         {isAdmin && (
-          <section className="mb-8 bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Linked Users</h2>
-            <p className="text-sm text-gray-600 mb-4">
+          <section className="mb-8 bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-4">Linked Users</h2>
+            <p className="text-sm text-[var(--text-secondary)] mb-4">
               Manage which NextAuth users are linked to which providers.
             </p>
 
             {/* Current Links Table */}
             <div className="mb-6 overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-[var(--border-default)]">
+                <thead className="bg-[var(--bg-surface-2)]">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase">
                       Email
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase">
                       Provider
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase">
                       Admin
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-[var(--bg-surface)] divide-y divide-[var(--border-default)]">
                   {linkedUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="px-4 py-4 text-center text-gray-500">
+                      <td colSpan={3} className="px-4 py-4 text-center text-[var(--text-muted)]">
                         No users linked yet
                       </td>
                     </tr>
                   ) : (
                     linkedUsers.map((link) => (
                       <tr key={link.id}>
-                        <td className="px-4 py-3 text-sm text-gray-900">
+                        <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
                           {link.nextauth_user_email}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
+                        <td className="px-4 py-3 text-sm text-[var(--text-secondary)]">
                           {link.provider.first_name} {link.provider.last_name}
                           {link.provider.title && ` (${link.provider.title})`}
                         </td>
                         <td className="px-4 py-3 text-sm">
                           {link.is_admin ? (
-                            <span className="text-green-600">Yes</span>
+                            <span className="text-[var(--success-text)]">Yes</span>
                           ) : (
-                            <span className="text-gray-400">No</span>
+                            <span className="text-[var(--text-muted)]">No</span>
                           )}
                         </td>
                       </tr>
@@ -342,32 +342,32 @@ export default function AdminPage() {
             </div>
 
             {/* Add Link Form */}
-            <form onSubmit={linkUser} className="space-y-4 pt-4 border-t">
-              <h3 className="font-medium text-gray-900">Link New User</h3>
+            <form onSubmit={linkUser} className="space-y-4 pt-4 border-t border-[var(--border-default)]">
+              <h3 className="font-medium text-[var(--text-primary)]">Link New User</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                     User Email
                   </label>
                   <input
                     type="email"
                     value={newLinkEmail}
                     onChange={(e) => setNewLinkEmail(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-warm)]"
                     placeholder="user@example.com"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                     Provider
                   </label>
                   <select
                     value={newLinkProviderId}
                     onChange={(e) => setNewLinkProviderId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-warm)]"
                     required
                   >
                     <option value="">Select provider...</option>
@@ -386,9 +386,9 @@ export default function AdminPage() {
                       type="checkbox"
                       checked={newLinkIsAdmin}
                       onChange={(e) => setNewLinkIsAdmin(e.target.checked)}
-                      className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                      className="h-4 w-4 text-[var(--accent-primary)] border-[var(--border-default)] rounded"
                     />
-                    <span className="text-sm text-gray-700">Admin</span>
+                    <span className="text-sm text-[var(--text-primary)]">Admin</span>
                   </label>
                 </div>
               </div>
@@ -396,7 +396,7 @@ export default function AdminPage() {
               <button
                 type="submit"
                 disabled={savingLink}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+                className="px-4 py-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded hover:bg-[var(--accent-primary-hover)] disabled:opacity-50"
               >
                 {savingLink ? 'Linking...' : 'Link User'}
               </button>
@@ -405,50 +405,50 @@ export default function AdminPage() {
         )}
 
         {/* Templates Overview Section */}
-        <section className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">IntakeQ Templates</h2>
-          <p className="text-sm text-gray-600 mb-4">
+        <section className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-4">IntakeQ Templates</h2>
+          <p className="text-sm text-[var(--text-secondary)] mb-4">
             Available IntakeQ note templates with field mappings.
           </p>
 
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-[var(--border-default)]">
+              <thead className="bg-[var(--bg-surface-2)]">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase">
                     Template Name
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase">
                     Type
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase">
                     Fields
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase">
                     Description
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-[var(--bg-surface)] divide-y divide-[var(--border-default)]">
                 {templates.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-4 py-4 text-center text-gray-500">
+                    <td colSpan={4} className="px-4 py-4 text-center text-[var(--text-muted)]">
                       No templates configured. Run the seed migration to add templates.
                     </td>
                   </tr>
                 ) : (
                   templates.map((t) => (
                     <tr key={t.id}>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                      <td className="px-4 py-3 text-sm font-medium text-[var(--text-primary)]">
                         {t.name}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600 capitalize">
+                      <td className="px-4 py-3 text-sm text-[var(--text-secondary)] capitalize">
                         {t.template_type}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
+                      <td className="px-4 py-3 text-sm text-[var(--text-secondary)]">
                         {t.total_contenteditable_fields || '-'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
+                      <td className="px-4 py-3 text-sm text-[var(--text-muted)]">
                         {t.description || '-'}
                       </td>
                     </tr>

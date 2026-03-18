@@ -27,9 +27,9 @@ export function StepProgressBar({ currentStep, isProcessing = false }: StepProgr
                 <div
                   className={`
                     flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all
-                    ${isCompleted ? 'bg-green-500 border-green-500 text-white' : ''}
-                    ${isCurrent ? 'bg-[#E89C8A] border-[#E89C8A] text-white' : ''}
-                    ${isUpcoming ? 'bg-white border-gray-300 text-gray-400' : ''}
+                    ${isCompleted ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)] text-[var(--text-inverse)]' : ''}
+                    ${isCurrent ? 'bg-[var(--accent-warm)] border-[var(--accent-warm)] text-[var(--text-inverse)]' : ''}
+                    ${isUpcoming ? 'bg-[var(--bg-surface)] border-[var(--border-default)] text-[var(--text-muted)]' : ''}
                   `}
                 >
                   {isCompleted ? (
@@ -43,9 +43,9 @@ export function StepProgressBar({ currentStep, isProcessing = false }: StepProgr
                 <span
                   className={`
                     mt-2 text-xs font-medium text-center max-w-[80px]
-                    ${isCompleted ? 'text-green-600' : ''}
-                    ${isCurrent ? 'text-[#0A1F3D]' : ''}
-                    ${isUpcoming ? 'text-gray-400' : ''}
+                    ${isCompleted ? 'text-[var(--success-text)]' : ''}
+                    ${isCurrent ? 'text-[var(--text-primary)]' : ''}
+                    ${isUpcoming ? 'text-[var(--text-muted)]' : ''}
                   `}
                 >
                   {WORKFLOW_STEP_LABELS[step]}
@@ -57,7 +57,7 @@ export function StepProgressBar({ currentStep, isProcessing = false }: StepProgr
                 <div
                   className={`
                     flex-1 h-0.5 mx-2 transition-all
-                    ${step < currentStep ? 'bg-green-500' : 'bg-gray-200'}
+                    ${step < currentStep ? 'bg-[var(--accent-primary)]' : 'bg-[var(--border-default)]'}
                   `}
                 />
               )}

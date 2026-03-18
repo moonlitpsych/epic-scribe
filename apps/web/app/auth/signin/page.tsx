@@ -22,25 +22,25 @@ function SignInContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)]">
+      <div className="max-w-md w-full space-y-8 p-8 bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)]">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-bold font-heading text-[var(--text-primary)] mb-2 tracking-tight">
             Epic Scribe
           </h1>
-          <p className="text-sm text-gray-600 mb-8">
+          <p className="text-sm text-[var(--text-secondary)] mb-8">
             AI-powered clinical documentation for psychiatry
           </p>
         </div>
 
         {/* Session Expired Notice */}
         {isSessionExpired && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+          <div className="bg-[var(--warning-bg)] border border-[var(--warning-border)] rounded-[2px] p-4 mb-4">
             <div className="flex items-start gap-3">
-              <span className="text-amber-600 text-xl">&#9888;</span>
+              <span className="text-[var(--warning-text)] text-xl">&#9888;</span>
               <div>
-                <h3 className="font-semibold text-amber-900">Session Expired</h3>
-                <p className="text-sm text-amber-800 mt-1">
+                <h3 className="font-semibold text-[var(--warning-text)]">Session Expired</h3>
+                <p className="text-sm text-[var(--warning-text)]/80 mt-1">
                   Your session has expired for security. Please sign in again to continue.
                 </p>
               </div>
@@ -49,25 +49,25 @@ function SignInContent() {
         )}
 
         <div className="space-y-6">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-semibold text-blue-900 mb-2">
-              🔒 Permissions Needed
+          <div className="bg-[var(--info-bg)] border border-[var(--info-border)] rounded-[2px] p-4">
+            <h3 className="font-semibold text-[var(--info-text)] mb-2">
+              Permissions Needed
             </h3>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Google Calendar - View and create appointments</li>
-              <li>• Google Meet - Launch video sessions</li>
-              <li>• Google Drive - Access transcripts</li>
+            <ul className="text-sm text-[var(--info-text)]/80 space-y-1">
+              <li>Google Calendar - View and create appointments</li>
+              <li>Google Meet - Launch video sessions</li>
+              <li>Google Drive - Access transcripts</li>
             </ul>
           </div>
 
           <button
             onClick={handleSignIn}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-[var(--border-default)] rounded text-base font-medium text-[var(--text-primary)] bg-[var(--bg-surface-2)] hover:bg-[var(--bg-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? (
               <>
-                <svg className="animate-spin h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-5 w-5 text-[var(--text-secondary)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -98,15 +98,15 @@ function SignInContent() {
             )}
           </button>
 
-          <p className="text-xs text-center text-gray-500">
+          <p className="text-xs text-center text-[var(--text-muted)]">
             By signing in, you agree to grant access to your Google Calendar, Meet, and Drive for clinical documentation purposes only.
           </p>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <p className="text-xs text-center text-gray-400">
+        <div className="mt-8 pt-6 border-t border-[var(--border-subtle)]">
+          <p className="text-xs text-center text-[var(--text-muted)]">
             HIPAA-compliant clinical documentation system<br />
-            PHI stored in Google Drive only • No PHI in application logs
+            PHI stored in Google Drive only - No PHI in application logs
           </p>
         </div>
       </div>
@@ -118,9 +118,9 @@ function SignInContent() {
 export default function SignIn() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)]">
         <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-gray-600 border-r-transparent" />
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[var(--accent-primary)] border-r-transparent" />
         </div>
       </div>
     }>

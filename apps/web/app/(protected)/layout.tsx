@@ -39,11 +39,11 @@ export default function ProtectedLayout({
   // Show logging out state
   if (isLoggingOut) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#F5F1ED] to-[#E5DDD6] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#0A1F3D] border-r-transparent mb-4" />
-          <h2 className="text-lg font-semibold text-[#0A1F3D] mb-2">Session Expired</h2>
-          <p className="text-[#5A6B7D]">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[var(--accent-primary)] border-r-transparent mb-4" />
+          <h2 className="text-lg font-semibold text-[var(--text-primary)] mb-2">Session Expired</h2>
+          <p className="text-[var(--text-secondary)]">
             Your session has expired. Redirecting to sign in...
           </p>
         </div>
@@ -53,10 +53,10 @@ export default function ProtectedLayout({
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#F5F1ED] to-[#E5DDD6] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#0A1F3D] border-r-transparent" />
-          <p className="mt-4 text-[#5A6B7D]">Loading...</p>
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[var(--accent-primary)] border-r-transparent" />
+          <p className="mt-4 text-[var(--text-secondary)]">Loading...</p>
         </div>
       </div>
     );

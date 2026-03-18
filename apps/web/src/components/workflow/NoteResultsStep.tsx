@@ -190,32 +190,32 @@ export default function NoteResultsStep({
     <div className="space-y-6">
       {/* Authentication Warning */}
       {showAuthWarning && (
-        <div className="bg-[#FEF2F2] border-2 border-[#EF4444] rounded-lg p-6">
+        <div className="bg-[var(--error-bg)] border-2 border-[var(--error-border)] rounded-[2px] p-6">
           <div className="flex items-start gap-4">
-            <AlertCircle size={24} className="text-[#DC2626] flex-shrink-0 mt-1" />
+            <AlertCircle size={24} className="text-[var(--error-text)] flex-shrink-0 mt-1" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-[#991B1B] mb-2">
+              <h3 className="text-lg font-semibold text-[var(--error-text)] mb-2">
                 Sign In Required to Save Notes
               </h3>
-              <p className="text-[#DC2626] mb-4">
+              <p className="text-[var(--error-text)] mb-4">
                 You must be signed in to save notes to your account. Don't worry—your note has been automatically
                 backed up and won't be lost!
               </p>
               <div className="flex gap-3">
                 <a
                   href="/api/auth/signin?callbackUrl=/workflow"
-                  className="px-4 py-2 bg-[#E89C8A] text-white rounded-lg hover:bg-[#0A1F3D] transition-colors font-semibold"
+                  className="px-4 py-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded-[2px] hover:bg-[var(--accent-primary-hover)] transition-colors font-semibold"
                 >
                   Sign In Now
                 </a>
                 <button
                   onClick={() => setShowAuthWarning(false)}
-                  className="px-4 py-2 border border-[#C5A882] text-[#0A1F3D] rounded-lg hover:bg-[#F5F1ED] transition-colors"
+                  className="px-4 py-2 border border-[var(--border-default)] text-[var(--text-primary)] rounded-[2px] hover:bg-[var(--bg-hover)] transition-colors"
                 >
                   Continue Without Saving
                 </button>
               </div>
-              <p className="text-xs text-[#DC2626] mt-3">
+              <p className="text-xs text-[var(--error-text)] mt-3">
                 💾 Your note is auto-saved in your browser and will persist across page refreshes
               </p>
             </div>
@@ -225,19 +225,19 @@ export default function NoteResultsStep({
 
       {/* IntakeQ Push Error */}
       {intakeQPushError && (
-        <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6">
+        <div className="bg-[var(--error-bg)] border-2 border-[var(--error-border)] rounded-[2px] p-6">
           <div className="flex items-start gap-4">
-            <AlertCircle size={24} className="text-red-600 flex-shrink-0 mt-1" />
+            <AlertCircle size={24} className="text-[var(--error-text)] flex-shrink-0 mt-1" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-red-800 mb-2">
+              <h3 className="text-lg font-semibold text-[var(--error-text)] mb-2">
                 IntakeQ Push Failed
               </h3>
-              <p className="text-red-700 mb-4">
+              <p className="text-[var(--error-text)] mb-4">
                 {intakeQPushError}
               </p>
               <button
                 onClick={() => setIntakeQPushError(null)}
-                className="px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-100 transition-colors"
+                className="px-4 py-2 border border-[var(--error-border)] text-[var(--error-text)] rounded-[2px] hover:bg-[var(--bg-hover)] transition-colors"
               >
                 Dismiss
               </button>
@@ -248,14 +248,14 @@ export default function NoteResultsStep({
 
       {/* Patient Selection (if not selected) */}
       {!selectedPatient && onPatientSelect && (
-        <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-6">
+        <div className="bg-[var(--warning-bg)] border-2 border-[var(--warning-border)] rounded-[2px] p-6">
           <div className="flex items-start gap-4">
-            <UserPlus size={24} className="text-amber-600 flex-shrink-0 mt-1" />
+            <UserPlus size={24} className="text-[var(--warning-text)] flex-shrink-0 mt-1" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-amber-800 mb-2">
+              <h3 className="text-lg font-semibold text-[var(--warning-text)] mb-2">
                 Select a Patient to Enable Saving
               </h3>
-              <p className="text-amber-700 mb-4">
+              <p className="text-[var(--warning-text)] mb-4">
                 To save this note and maintain patient history, please select or create a patient.
                 Once selected, you'll be able to save this note and it will be automatically included
                 in future visits for this patient.
@@ -272,15 +272,15 @@ export default function NoteResultsStep({
       )}
 
       {/* Header with Actions */}
-      <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-6">
+      <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-serif text-[#0A1F3D] mb-1">Generated Note</h2>
-            <p className="text-sm text-[#5A6B7D]">
+            <h2 className="text-2xl font-heading text-[var(--text-primary)] mb-1">Generated Note</h2>
+            <p className="text-sm text-[var(--text-secondary)]">
               {template.name} • {setting} • {visitType}
             </p>
             {hasModifications && (
-              <p className="text-xs text-[#E89C8A] mt-1">
+              <p className="text-xs text-[var(--accent-warm)] mt-1">
                 ✓ Note has been modified
               </p>
             )}
@@ -292,10 +292,10 @@ export default function NoteResultsStep({
                 <button
                   onClick={handleSave}
                   disabled={saving || status === 'loading'}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-[2px] transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed ${
                     status === 'unauthenticated'
-                      ? 'bg-[#FFA500] text-white hover:bg-[#FF8C00]'
-                      : 'bg-[#10B981] text-white hover:bg-[#059669]'
+                      ? 'bg-[var(--warning-text)] text-[var(--text-inverse)] hover:bg-[#e5a820]'
+                      : 'bg-[var(--accent-primary)] text-[var(--text-inverse)] hover:bg-[var(--accent-primary-hover)]'
                   }`}
                   title={status === 'unauthenticated' ? 'Click to sign in and save' : 'Save note to database'}
                 >
@@ -309,7 +309,7 @@ export default function NoteResultsStep({
                     : 'Save Note'}
                 </button>
                 {status === 'authenticated' && (
-                  <span className="hidden group-hover:block absolute top-full left-0 mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap z-10">
+                  <span className="hidden group-hover:block absolute top-full left-0 mt-1 px-2 py-1 bg-[var(--bg-surface-2)] text-[var(--text-primary)] text-xs rounded whitespace-nowrap z-10">
                     Signed in as {session?.user?.email}
                   </span>
                 )}
@@ -322,9 +322,9 @@ export default function NoteResultsStep({
                 <button
                   onClick={handlePushToIntakeQ}
                   disabled={pushingToIntakeQ || !canPushToIntakeQ || intakeQPushSuccess}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-[2px] transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed ${
                     intakeQPushSuccess
-                      ? 'bg-[#10B981] text-white'
+                      ? 'bg-[var(--accent-primary)] text-[var(--text-inverse)]'
                       : intakeQPushError
                       ? 'bg-red-500 text-white hover:bg-red-600'
                       : 'bg-[#6366F1] text-white hover:bg-[#4F46E5]'
@@ -353,7 +353,7 @@ export default function NoteResultsStep({
                     : 'Push to IntakeQ'}
                 </button>
                 {!canPushToIntakeQ && selectedPatient && (
-                  <span className="hidden group-hover:block absolute top-full left-0 mt-1 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap z-10">
+                  <span className="hidden group-hover:block absolute top-full left-0 mt-1 px-2 py-1 bg-[var(--bg-surface-2)] text-[var(--text-primary)] text-xs rounded whitespace-nowrap z-10">
                     Add patient email or IntakeQ link to enable push
                   </span>
                 )}
@@ -362,7 +362,7 @@ export default function NoteResultsStep({
 
             <button
               onClick={handleCopy}
-              className="flex items-center gap-2 px-4 py-2 bg-[#E89C8A] text-white rounded-lg hover:bg-[#0A1F3D] transition-colors font-semibold"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded-[2px] hover:bg-[var(--accent-primary-hover)] transition-colors font-semibold"
             >
               {copySuccess ? <CheckCircle2 size={16} /> : <Copy size={16} />}
               {copySuccess ? 'Copied!' : 'Copy Note'}
@@ -370,7 +370,7 @@ export default function NoteResultsStep({
 
             <button
               onClick={onRegenerate}
-              className="flex items-center gap-2 px-4 py-2 border border-[#C5A882] text-[#0A1F3D] rounded-lg hover:bg-[#F5F1ED] transition-colors"
+              className="flex items-center gap-2 px-4 py-2 border border-[var(--border-default)] text-[var(--text-primary)] rounded-[2px] hover:bg-[var(--bg-hover)] transition-colors"
             >
               <RefreshCw size={16} />
               Regenerate
@@ -378,7 +378,7 @@ export default function NoteResultsStep({
 
             <button
               onClick={onStartOver}
-              className="flex items-center gap-2 px-4 py-2 border border-[#C5A882] text-[#0A1F3D] rounded-lg hover:bg-[#F5F1ED] transition-colors"
+              className="flex items-center gap-2 px-4 py-2 border border-[var(--border-default)] text-[var(--text-primary)] rounded-[2px] hover:bg-[var(--bg-hover)] transition-colors"
             >
               <RotateCcw size={16} />
               Start Over
@@ -388,14 +388,14 @@ export default function NoteResultsStep({
               href="/templates"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 text-sm text-[#5A6B7D] hover:text-[#0A1F3D] transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               <ExternalLink size={14} />
               Edit Template
             </a>
 
             {hasPairedDevice && (
-              <span className="flex items-center gap-1 text-xs text-indigo-600">
+              <span className="flex items-center gap-1 text-xs text-[#a78bfa]">
                 <Link2 size={12} />
                 Synced to companion
               </span>
@@ -408,11 +408,11 @@ export default function NoteResultsStep({
       {validationResult && (
         <div className="space-y-3">
           {validationResult.valid && (
-            <div className="bg-[#ECFDF5] border border-[#10B981]/30 rounded-lg p-4 flex items-start gap-3">
+            <div className="bg-[var(--success-bg)] border border-[var(--success-border)] rounded-[2px] p-4 flex items-start gap-3">
               <CheckCircle2 size={20} className="text-[#10B981] flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-[#065F46]">All Validations Passed</p>
-                <p className="text-sm text-[#047857] mt-1">
+                <p className="font-semibold text-[var(--success-text)]">All Validations Passed</p>
+                <p className="text-sm text-[var(--success-text)] mt-1">
                   The note meets all structure and content requirements. Review for clinical accuracy before copying to Epic.
                 </p>
               </div>
@@ -420,12 +420,12 @@ export default function NoteResultsStep({
           )}
 
           {Array.isArray(validationResult.errors) && validationResult.errors.length > 0 && (
-            <div className="bg-[#FEF2F2] border border-[#EF4444]/30 rounded-lg p-4">
+            <div className="bg-[var(--error-bg)] border border-[var(--error-border)] rounded-[2px] p-4">
               <div className="flex items-start gap-3">
-                <AlertCircle size={20} className="text-[#DC2626] flex-shrink-0 mt-0.5" />
+                <AlertCircle size={20} className="text-[var(--error-text)] flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="font-semibold text-[#991B1B]">Structure Errors ({validationResult.errors.length})</p>
-                  <ul className="text-sm text-[#DC2626] mt-2 space-y-1 list-disc list-inside">
+                  <p className="font-semibold text-[var(--error-text)]">Structure Errors ({validationResult.errors.length})</p>
+                  <ul className="text-sm text-[var(--error-text)] mt-2 space-y-1 list-disc list-inside">
                     {validationResult.errors.map((error, idx) => (
                       <li key={idx}>{error}</li>
                     ))}
@@ -436,12 +436,12 @@ export default function NoteResultsStep({
           )}
 
           {Array.isArray(validationResult.warnings) && validationResult.warnings.length > 0 && (
-            <div className="bg-[#FFF4E6] border border-[#FFA500]/30 rounded-lg p-4">
+            <div className="bg-[var(--warning-bg)] border border-[var(--warning-border)] rounded-[2px] p-4">
               <div className="flex items-start gap-3">
-                <AlertTriangle size={20} className="text-[#FFA500] flex-shrink-0 mt-0.5" />
+                <AlertTriangle size={20} className="text-[var(--warning-text)] flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="font-semibold text-[#8B4513]">Warnings ({validationResult.warnings.length})</p>
-                  <ul className="text-sm text-[#8B4513] mt-2 space-y-1 list-disc list-inside">
+                  <p className="font-semibold text-[var(--warning-text)]">Warnings ({validationResult.warnings.length})</p>
+                  <ul className="text-sm text-[var(--warning-text)] mt-2 space-y-1 list-disc list-inside">
                     {validationResult.warnings.map((warning, idx) => (
                       <li key={idx}>{warning}</li>
                     ))}
@@ -454,9 +454,9 @@ export default function NoteResultsStep({
       )}
 
       {/* Edit Instructions */}
-      <div className="bg-[#E8F4FD] border border-[#3B82F6]/30 rounded-lg p-4 flex items-start gap-3">
-        <Info size={18} className="text-[#3B82F6] flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-[#1E40AF]">
+      <div className="bg-[var(--info-bg)] border border-[var(--info-border)] rounded-[2px] p-4 flex items-start gap-3">
+        <Info size={18} className="text-[var(--info-text)] flex-shrink-0 mt-0.5" />
+        <p className="text-sm text-[var(--info-text)]">
           The note below is editable. Make any necessary changes before copying to Epic.
         </p>
       </div>
@@ -464,9 +464,9 @@ export default function NoteResultsStep({
       {/* Side-by-Side View */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Template Used */}
-        <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-6">
-          <h3 className="text-lg font-semibold text-[#0A1F3D] mb-4 flex items-center gap-2">
-            <span className="text-xs bg-[#E89C8A] text-white px-2 py-1 rounded">Reference</span>
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+            <span className="text-xs bg-[var(--accent-warm)] text-[var(--text-inverse)] px-2 py-1 rounded">Reference</span>
             Template Used
           </h3>
 
@@ -476,17 +476,17 @@ export default function NoteResultsStep({
               .map((section) => (
                 <div
                   key={section.order}
-                  className="border border-[#C5A882]/20 rounded-lg p-3 bg-[#F5F1ED]"
+                  className="border border-[var(--border-default)] rounded-[2px] p-3 bg-[var(--bg-surface-2)]"
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-semibold text-[#E89C8A] bg-white px-2 py-0.5 rounded">
+                    <span className="text-xs font-semibold text-[var(--accent-warm)] bg-[var(--bg-surface)] px-2 py-0.5 rounded">
                       {section.order}
                     </span>
-                    <h4 className="text-sm font-semibold text-[#0A1F3D]">
+                    <h4 className="text-sm font-semibold text-[var(--text-primary)]">
                       {section.name}
                     </h4>
                   </div>
-                  <pre className="text-xs font-mono bg-white p-2 rounded border border-[#C5A882]/20 whitespace-pre-wrap overflow-x-auto">
+                  <pre className="text-xs font-mono bg-[var(--bg-surface)] p-2 rounded border border-[var(--border-default)] whitespace-pre-wrap overflow-x-auto">
                     {section.content.substring(0, 200)}
                     {section.content.length > 200 && '...'}
                   </pre>
@@ -496,27 +496,27 @@ export default function NoteResultsStep({
         </div>
 
         {/* Right: Editable Note */}
-        <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-6">
-          <h3 className="text-lg font-semibold text-[#0A1F3D] mb-4 flex items-center gap-2">
-            <span className="text-xs bg-[#E89C8A] text-white px-2 py-1 rounded">Editable</span>
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+            <span className="text-xs bg-[var(--accent-warm)] text-[var(--text-inverse)] px-2 py-1 rounded">Editable</span>
             Generated Note
           </h3>
 
           <textarea
             value={editedNote}
             onChange={(e) => onEditedNoteChange(e.target.value)}
-            className="w-full h-[800px] px-4 py-3 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm resize-none"
+            className="w-full h-[800px] px-4 py-3 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent font-mono text-sm resize-none bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
             placeholder="Your generated note will appear here..."
           />
 
           <div className="mt-3 flex items-center justify-between">
-            <p className="text-xs text-[#5A6B7D]">
+            <p className="text-xs text-[var(--text-secondary)]">
               {editedNote.split(/\s+/).filter(Boolean).length} words
             </p>
             {hasModifications && (
               <button
                 onClick={() => onEditedNoteChange(generatedNote)}
-                className="text-xs text-[#E89C8A] hover:text-[#0A1F3D] transition-colors"
+                className="text-xs text-[var(--accent-warm)] hover:text-[var(--text-primary)] transition-colors"
               >
                 Reset to original
               </button>

@@ -168,8 +168,8 @@ function PatientDetailContent() {
     return (
       <div className="py-12 flex justify-center">
         <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#0A1F3D] border-r-transparent" />
-          <p className="mt-4 text-[#5A6B7D]">Loading patient...</p>
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[var(--accent-primary)] border-r-transparent" />
+          <p className="mt-4 text-[var(--text-secondary)]">Loading patient...</p>
         </div>
       </div>
     );
@@ -180,11 +180,11 @@ function PatientDetailContent() {
     return (
       <div className="py-8 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-            <p className="text-red-800 font-medium">{error || 'Patient not found'}</p>
+          <div className="bg-[var(--error-bg)] border border-[var(--error-border)] rounded-[2px] p-6">
+            <p className="text-[var(--error-text)] font-medium">{error || 'Patient not found'}</p>
             <Link
               href="/patients"
-              className="mt-4 inline-flex items-center gap-2 text-red-600 hover:text-red-700"
+              className="mt-4 inline-flex items-center gap-2 text-[var(--error-text)] hover:underline"
             >
               <ArrowLeft size={16} />
               Back to Patients
@@ -201,20 +201,20 @@ function PatientDetailContent() {
         {/* Back Link */}
         <Link
           href="/patients"
-          className="inline-flex items-center gap-2 text-[#5A6B7D] hover:text-[#0A1F3D] mb-6 transition-colors"
+          className="inline-flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-6 transition-colors"
         >
           <ArrowLeft size={18} />
           Back to Patients
         </Link>
 
         {/* Patient Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-6 mb-6">
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-serif text-[#0A1F3D]">
+              <h1 className="text-3xl font-heading text-[var(--text-primary)] tracking-tight">
                 {patient.last_name}, {patient.first_name}
               </h1>
-              <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-[#5A6B7D]">
+              <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-[var(--text-secondary)]">
                 <span>
                   <strong>DOB:</strong> {formatDate(patient.date_of_birth)} (Age {calculateAge(patient.date_of_birth)})
                 </span>
@@ -228,8 +228,8 @@ function PatientDetailContent() {
             <div
               className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
                 patient.active
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-gray-100 text-gray-600'
+                  ? 'bg-[var(--success-bg)] text-[var(--success-text)]'
+                  : 'bg-[var(--bg-surface-2)] text-[var(--text-muted)]'
               }`}
             >
               {patient.active ? 'Active' : 'Inactive'}
@@ -238,7 +238,7 @@ function PatientDetailContent() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 mb-6">
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] mb-6">
           <div className="flex overflow-x-auto">
             {TABS.map((tab) => (
               <button
@@ -246,8 +246,8 @@ function PatientDetailContent() {
                 onClick={() => handleTabChange(tab.key)}
                 className={`flex items-center gap-2 px-6 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                   activeTab === tab.key
-                    ? 'border-[#E89C8A] text-[#0A1F3D] bg-[#F5F1ED]/30'
-                    : 'border-transparent text-[#5A6B7D] hover:text-[#0A1F3D] hover:bg-[#F5F1ED]/20'
+                    ? 'border-[var(--accent-warm)] text-[var(--accent-warm)] bg-[var(--bg-surface-2)]/30'
+                    : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
                 }`}
               >
                 {tab.icon}
@@ -311,8 +311,8 @@ export default function PatientDetailPage() {
       fallback={
         <div className="py-12 flex justify-center">
           <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#0A1F3D] border-r-transparent" />
-            <p className="mt-4 text-[#5A6B7D]">Loading...</p>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[var(--accent-primary)] border-r-transparent" />
+            <p className="mt-4 text-[var(--text-secondary)]">Loading...</p>
           </div>
         </div>
       }

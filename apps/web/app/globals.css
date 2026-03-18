@@ -1,3 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  /* Backgrounds */
+  --bg-base:         #0f1117;
+  --bg-surface:      #141720;
+  --bg-surface-2:    #1a1d27;
+  --bg-hover:        #1e2130;
+
+  /* Borders */
+  --border-default:  #1e2130;
+  --border-subtle:   #171a23;
+
+  /* Text */
+  --text-primary:    #e8eaf0;
+  --text-secondary:  #8b90a0;
+  --text-muted:      #5a5e68;
+  --text-inverse:    #0f1117;
+
+  /* Accents */
+  --accent-primary:       #10b981;
+  --accent-primary-hover: #0ea472;
+  --accent-warm:          #E89C8A;
+  --accent-warm-hover:    #d88777;
+
+  /* Header */
+  --header-bg:       #0b0d13;
+
+  /* Status */
+  --success-bg: #0f2920;
+  --success-border: #15503d;
+  --success-text: #34d399;
+
+  --warning-bg: #1f1a0f;
+  --warning-border: #4d3a14;
+  --warning-text: #fbbf24;
+
+  --error-bg: #1f0f0f;
+  --error-border: #4d1414;
+  --error-text: #f87171;
+
+  --info-bg: #0f1328;
+  --info-border: #1e2850;
+  --info-text: #60a5fa;
+}
+
+html {
+  background: var(--bg-base);
+  color: var(--text-primary);
+}
+
+/* Dark scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1e2130; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #2a2d3a; }
+
+/* Selection */
+::selection {
+  background: rgba(16, 185, 129, 0.25);
+  color: #e8eaf0;
+}

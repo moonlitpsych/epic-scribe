@@ -165,16 +165,16 @@ export default function AudioRecorder({ onTranscriptReady, disabled, patientName
   const isProcessing = state === 'uploading' || state === 'transcribing';
 
   return (
-    <div className="mb-4 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-lg">
+    <div className="mb-4 p-4 bg-[var(--bg-surface-2)] border border-[var(--border-default)] rounded-[2px]">
       <div className="flex items-center gap-3">
-        <FileAudio className="text-emerald-600 flex-shrink-0" size={18} />
-        <span className="text-sm font-medium text-emerald-900">Record Encounter</span>
+        <FileAudio className="text-[var(--accent-primary)] flex-shrink-0" size={18} />
+        <span className="text-sm font-medium text-[var(--accent-primary)]">Record Encounter</span>
 
         {state === 'idle' && (
           <button
             onClick={startRecording}
             disabled={disabled}
-            className="ml-auto flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="ml-auto flex items-center gap-2 px-4 py-2 text-sm font-medium text-[var(--text-inverse)] bg-[var(--accent-primary)] rounded hover:bg-[var(--accent-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Mic size={16} />
             Record
@@ -188,11 +188,11 @@ export default function AudioRecorder({ onTranscriptReady, disabled, patientName
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
               </span>
-              <span className="text-sm font-mono text-red-700">{formatTime(elapsed)}</span>
+              <span className="text-sm font-mono text-[var(--error-text)]">{formatTime(elapsed)}</span>
             </div>
             <button
               onClick={stopRecording}
-              className="ml-auto flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+              className="ml-auto flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors"
             >
               <Square size={14} />
               Stop
@@ -202,19 +202,19 @@ export default function AudioRecorder({ onTranscriptReady, disabled, patientName
 
         {state === 'recorded' && (
           <>
-            <span className="text-sm text-emerald-700 ml-2">
+            <span className="text-sm text-[var(--accent-primary)] ml-2">
               {formatTime(elapsed)} &middot; {blobSize ? formatSize(blobSize) : ''}
             </span>
             <div className="ml-auto flex items-center gap-2">
               <button
                 onClick={reset}
-                className="px-3 py-2 text-sm text-emerald-700 hover:text-emerald-900 transition-colors"
+                className="px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
               >
                 Discard
               </button>
               <button
                 onClick={transcribe}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[var(--text-inverse)] bg-[var(--accent-primary)] rounded hover:bg-[var(--accent-primary-hover)] transition-colors"
               >
                 Transcribe
               </button>
@@ -223,7 +223,7 @@ export default function AudioRecorder({ onTranscriptReady, disabled, patientName
         )}
 
         {isProcessing && (
-          <div className="ml-auto flex items-center gap-2 text-sm text-emerald-700">
+          <div className="ml-auto flex items-center gap-2 text-sm text-[var(--accent-primary)]">
             <Loader2 size={16} className="animate-spin" />
             {state === 'uploading' ? 'Uploading...' : 'Transcribing...'}
           </div>
@@ -231,7 +231,7 @@ export default function AudioRecorder({ onTranscriptReady, disabled, patientName
       </div>
 
       {error && (
-        <p className="mt-2 text-sm text-red-600">{error}</p>
+        <p className="mt-2 text-sm text-[var(--error-text)]">{error}</p>
       )}
     </div>
   );

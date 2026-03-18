@@ -68,20 +68,20 @@ function SortableItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-2 p-3 bg-gray-50 rounded-md ${isDragging ? 'opacity-50' : ''}`}
+      className={`flex items-center gap-2 p-3 bg-[var(--bg-surface-2)] rounded ${isDragging ? 'opacity-50' : ''}`}
     >
       {/* Drag Handle */}
       <div
         {...attributes}
         {...listeners}
-        className="cursor-move p-1 text-gray-400 hover:text-gray-600"
+        className="cursor-move p-1 text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </div>
 
-      <div className="w-12 text-center text-sm text-gray-500">
+      <div className="w-12 text-center text-sm text-[var(--text-muted)]">
         #{option.order}
       </div>
 
@@ -89,7 +89,7 @@ function SortableItem({
         type="text"
         value={option.value}
         onChange={(e) => onValueChange(e.target.value)}
-        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+        className="flex-1 px-3 py-2 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)]"
       />
 
       <label className="flex items-center">
@@ -99,12 +99,12 @@ function SortableItem({
           onChange={(e) => onDefaultChange(e.target.checked)}
           className="mr-2"
         />
-        <span className="text-sm text-gray-600">Default</span>
+        <span className="text-sm text-[var(--text-secondary)]">Default</span>
       </label>
 
       <button
         onClick={onRemove}
-        className="p-2 text-red-500 hover:text-red-700"
+        className="p-2 text-[var(--error-text)] hover:text-[var(--error-text)]"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -336,8 +336,8 @@ export function SmartListEditor() {
   return (
     <div className="flex h-full">
       {/* Left Panel - List View */}
-      <div className="w-1/3 border-r border-gray-200 overflow-y-auto">
-        <div className="p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
+      <div className="w-1/3 border-r border-[var(--border-default)] overflow-y-auto">
+        <div className="p-4 border-b border-[var(--border-default)] bg-[var(--bg-surface)] sticky top-0 z-10">
           <h2 className="text-xl font-semibold mb-4">SmartList Manager</h2>
 
           {/* Search and Filter */}
@@ -347,13 +347,13 @@ export function SmartListEditor() {
               placeholder="Search by name or Epic ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)]"
             />
 
             <select
               value={selectedGroup}
               onChange={(e) => setSelectedGroup(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)]"
             >
               <option value="all">All Groups</option>
               {groups.map(group => (
@@ -366,7 +366,7 @@ export function SmartListEditor() {
           <div className="mt-4 flex gap-2">
             <button
               onClick={handleCreateNew}
-              className="flex-1 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+              className="flex-1 px-3 py-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded hover:bg-[var(--accent-primary-hover)] text-sm"
             >
               + New SmartList
             </button>
@@ -375,14 +375,14 @@ export function SmartListEditor() {
               <select
                 value={exportFormat}
                 onChange={(e) => setExportFormat(e.target.value as 'json' | 'csv')}
-                className="px-2 py-1 border border-gray-300 rounded-l-md text-sm"
+                className="px-2 py-1 border border-[var(--border-default)] rounded-l text-sm bg-[var(--bg-surface-2)] text-[var(--text-primary)]"
               >
                 <option value="json">JSON</option>
                 <option value="csv">CSV</option>
               </select>
               <button
                 onClick={handleExport}
-                className="px-3 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 text-sm"
+                className="px-3 py-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded-r hover:bg-[var(--accent-primary-hover)] text-sm"
               >
                 Export
               </button>
@@ -396,30 +396,30 @@ export function SmartListEditor() {
             <div
               key={key}
               onClick={() => handleEditList(key)}
-              className={`p-3 border rounded-lg cursor-pointer transition-all ${
+              className={`p-3 border rounded-[2px] cursor-pointer transition-all ${
                 selectedList === key
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  ? 'border-[var(--accent-warm)] bg-[var(--accent-warm)]/10'
+                  : 'border-[var(--border-default)] hover:border-[var(--border-default)] hover:bg-[var(--bg-hover)]'
               }`}
             >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">{list.displayName}</h3>
-                  <div className="text-xs text-gray-500 mt-1">
+                  <h3 className="font-semibold text-[var(--text-primary)]">{list.displayName}</h3>
+                  <div className="text-xs text-[var(--text-muted)] mt-1">
                     Epic ID: {list.epicId}
                   </div>
                   {list.group && (
-                    <span className="inline-block mt-2 px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                    <span className="inline-block mt-2 px-2 py-1 bg-[var(--bg-surface-2)] text-[var(--text-secondary)] rounded-full text-xs">
                       {list.group}
                     </span>
                   )}
                 </div>
                 <div className="text-right">
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-[var(--text-muted)]">
                     {list.options.length} options
                   </div>
                   {list.options.find(o => o.is_default) && (
-                    <div className="text-xs text-blue-600 mt-1">
+                    <div className="text-xs text-[var(--info-text)] mt-1">
                       Default: {list.options.find(o => o.is_default)?.value}
                     </div>
                   )}
@@ -429,7 +429,7 @@ export function SmartListEditor() {
           ))}
 
           {filteredLists.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-[var(--text-muted)]">
               No SmartLists found matching your criteria
             </div>
           )}
@@ -437,17 +437,17 @@ export function SmartListEditor() {
       </div>
 
       {/* Right Panel - Editor */}
-      <div className="flex-1 bg-gray-50 overflow-y-auto">
+      <div className="flex-1 bg-[var(--bg-surface-2)] overflow-y-auto">
         {editingList ? (
           <div className="p-6">
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="p-6 border-b border-gray-200">
+            <div className="bg-[var(--bg-surface)] rounded-[2px]">
+              <div className="p-6 border-b border-[var(--border-default)]">
                 <h3 className="text-2xl font-semibold mb-4">Edit SmartList</h3>
 
                 {/* SmartList Properties */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                       Display Name
                     </label>
                     <input
@@ -457,12 +457,12 @@ export function SmartListEditor() {
                         ...editingList,
                         displayName: e.target.value
                       })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                       Epic ID
                     </label>
                     <input
@@ -472,12 +472,12 @@ export function SmartListEditor() {
                         ...editingList,
                         epicId: e.target.value
                       })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                       Identifier
                     </label>
                     <input
@@ -487,12 +487,12 @@ export function SmartListEditor() {
                         ...editingList,
                         identifier: e.target.value
                       })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                       Group
                     </label>
                     <input
@@ -502,16 +502,16 @@ export function SmartListEditor() {
                         ...editingList,
                         group: e.target.value
                       })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)]"
                       placeholder="e.g., Mental Status Exam"
                     />
                   </div>
                 </div>
 
                 {/* Template Placeholder Display */}
-                <div className="mt-4 p-3 bg-gray-50 rounded-md">
-                  <div className="text-sm font-medium text-gray-700 mb-1">Template Placeholder:</div>
-                  <code className="text-purple-600 font-mono">
+                <div className="mt-4 p-3 bg-[var(--bg-surface-2)] rounded">
+                  <div className="text-sm font-medium text-[var(--text-primary)] mb-1">Template Placeholder:</div>
+                  <code className="text-[#c084fc] font-mono">
                     {`{${editingList.displayName}:${editingList.epicId}}`}
                   </code>
                 </div>
@@ -523,7 +523,7 @@ export function SmartListEditor() {
                   <h4 className="text-lg font-semibold">Options</h4>
                   <button
                     onClick={handleAddOption}
-                    className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                    className="px-3 py-1 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded hover:bg-[var(--accent-primary-hover)] text-sm"
                   >
                     + Add Option
                   </button>
@@ -554,22 +554,22 @@ export function SmartListEditor() {
                 </DndContext>
 
                 {editingList.options.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-[var(--text-muted)]">
                     No options defined. Click "Add Option" to create one.
                   </div>
                 )}
 
                 {/* Save/Cancel Buttons */}
-                <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
+                <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-[var(--border-default)]">
                   <button
                     onClick={handleCancelEdit}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+                    className="px-4 py-2 border border-[var(--border-default)] text-[var(--text-primary)] rounded hover:bg-[var(--bg-hover)]"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveList}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    className="px-4 py-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded hover:bg-[var(--accent-primary-hover)]"
                   >
                     Save Changes
                   </button>
@@ -578,9 +578,9 @@ export function SmartListEditor() {
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-500">
+          <div className="flex items-center justify-center h-full text-[var(--text-muted)]">
             <div className="text-center">
-              <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="mx-auto h-12 w-12 text-[var(--text-muted)] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <h3 className="text-lg font-medium mb-1">No SmartList Selected</h3>

@@ -69,11 +69,11 @@ interface PatientResult {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
-  ready: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  generating: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  generated: 'bg-green-500/20 text-green-400 border-green-500/30',
-  copied: 'bg-green-600/20 text-green-300 border-green-600/30',
+  pending: 'bg-[var(--bg-surface-2)] text-[var(--text-muted)] border-[var(--border-default)]',
+  ready: 'bg-[var(--info-bg)] text-[var(--info-text)] border-[var(--info-border)]',
+  generating: 'bg-[var(--warning-bg)] text-[var(--warning-text)] border-[var(--warning-border)]',
+  generated: 'bg-[var(--success-bg)] text-[var(--success-text)] border-[var(--success-border)]',
+  copied: 'bg-[var(--success-bg)] text-[var(--success-text)] border-[var(--success-border)]',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -506,30 +506,30 @@ export default function CompanionPage() {
   // Pairing screen
   if (!deviceToken || sessionRevoked) {
     return (
-      <div className="min-h-screen bg-[#0A1F3D] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center p-4">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <Link2 className="text-[#E89C8A]" size={32} />
-              <h1 className="text-3xl font-serif text-white">Epic Scribe</h1>
+              <Link2 className="text-[var(--accent-warm)]" size={32} />
+              <h1 className="text-3xl font-heading text-[var(--text-primary)]">Epic Scribe</h1>
             </div>
-            <p className="text-[#C5A882] text-lg">Companion Portal</p>
-            <p className="text-[#C5A882]/70 text-sm mt-2">
+            <p className="text-[var(--accent-warm)] text-lg">Companion Portal</p>
+            <p className="text-[var(--text-secondary)] text-sm mt-2">
               Link this device to sync notes with your laptop
             </p>
           </div>
 
           {sessionRevoked && (
-            <div className="bg-amber-900/30 border border-amber-500/30 rounded-lg p-4 text-center">
-              <p className="text-amber-300 text-sm">
+            <div className="bg-[var(--warning-bg)] border border-[var(--warning-border)] rounded p-4 text-center">
+              <p className="text-[var(--warning-text)] text-sm">
                 Session was disconnected. Enter a new pairing code to reconnect.
               </p>
             </div>
           )}
 
-          <div className="bg-white/10 backdrop-blur rounded-xl p-8 space-y-6">
+          <div className="bg-[var(--bg-surface-2)] backdrop-blur rounded-[2px] p-8 space-y-6">
             <div>
-              <label className="block text-[#C5A882] text-sm font-medium mb-2">
+              <label className="block text-[var(--accent-warm)] text-sm font-medium mb-2">
                 Pairing Code
               </label>
               <input
@@ -541,7 +541,7 @@ export default function CompanionPage() {
                   setPairingError(null);
                 }}
                 placeholder="000000"
-                className="w-full text-center text-3xl font-mono tracking-[0.5em] bg-white/10 border border-[#C5A882]/30 rounded-lg px-4 py-4 text-white placeholder-white/20 focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                className="w-full text-center text-3xl font-mono tracking-[0.5em] bg-[var(--bg-surface-2)] border border-[var(--border-default)] rounded px-4 py-4 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent"
                 maxLength={6}
                 autoFocus
                 onKeyDown={(e) => {
@@ -551,13 +551,13 @@ export default function CompanionPage() {
             </div>
 
             {pairingError && (
-              <p className="text-red-400 text-sm text-center">{pairingError}</p>
+              <p className="text-[var(--error-text)] text-sm text-center">{pairingError}</p>
             )}
 
             <button
               onClick={handlePair}
               disabled={isPairing || pairingCode.length !== 6}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#E89C8A] text-white rounded-lg hover:bg-[#d4887a] transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[var(--accent-warm)] text-[var(--text-inverse)] rounded hover:bg-[var(--accent-warm-hover)] transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPairing ? (
                 <Loader2 size={20} className="animate-spin" />
@@ -567,7 +567,7 @@ export default function CompanionPage() {
               {isPairing ? 'Connecting...' : 'Connect'}
             </button>
 
-            <p className="text-[#C5A882]/50 text-xs text-center">
+            <p className="text-[var(--text-muted)] text-xs text-center">
               Get a pairing code from your Epic Scribe workflow page
             </p>
           </div>
@@ -585,28 +585,28 @@ export default function CompanionPage() {
   ).length;
 
   return (
-    <div className="min-h-screen bg-[#0A1F3D] p-4 md:p-6">
+    <div className="min-h-screen bg-[var(--bg-base)] p-4 md:p-6">
       <div className="max-w-3xl mx-auto space-y-5">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link2 className="text-[#E89C8A]" size={24} />
-            <h1 className="text-xl font-serif text-white">Companion Portal</h1>
+            <Link2 className="text-[var(--accent-warm)]" size={24} />
+            <h1 className="text-xl font-heading text-[var(--text-primary)]">Companion Portal</h1>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               {isConnected ? (
-                <Wifi className="text-green-400" size={16} />
+                <Wifi className="text-[var(--success-text)]" size={16} />
               ) : (
-                <WifiOff className="text-red-400" size={16} />
+                <WifiOff className="text-[var(--error-text)]" size={16} />
               )}
-              <span className={`text-xs ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
+              <span className={`text-xs ${isConnected ? 'text-[var(--success-text)]' : 'text-[var(--error-text)]'}`}>
                 {isConnected ? 'Live' : 'Connecting...'}
               </span>
             </div>
             <button
               onClick={handleDisconnect}
-              className="text-xs text-[#C5A882]/50 hover:text-[#C5A882] transition-colors"
+              className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
             >
               Disconnect
             </button>
@@ -614,34 +614,34 @@ export default function CompanionPage() {
         </div>
 
         {/* Add Patient Section */}
-        <div className="bg-white/5 border border-[#C5A882]/20 rounded-xl p-4 space-y-3">
-          <h2 className="text-sm font-medium text-[#C5A882]">Add Patient to Queue</h2>
+        <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[2px] p-4 space-y-3">
+          <h2 className="text-sm font-medium text-[var(--accent-warm)]">Add Patient to Queue</h2>
 
           {/* Setting + Visit Type dropdowns */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-[#C5A882]/50 mb-1">Setting</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Setting</label>
               <select
                 value={selectedSetting}
                 onChange={(e) => setSelectedSetting(e.target.value)}
-                className="w-full bg-white/10 border border-[#C5A882]/20 rounded-lg px-3 py-2 text-white text-sm focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                className="w-full bg-[var(--bg-surface-2)] border border-[var(--border-default)] rounded px-3 py-2 text-[var(--text-primary)] text-sm focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent"
               >
                 {SETTINGS.map((s) => (
-                  <option key={s} value={s} className="bg-[#0A1F3D]">
+                  <option key={s} value={s} className="bg-[var(--bg-base)]">
                     {s}
                   </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-xs text-[#C5A882]/50 mb-1">Visit Type</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Visit Type</label>
               <select
                 value={selectedVisitType}
                 onChange={(e) => setSelectedVisitType(e.target.value)}
-                className="w-full bg-white/10 border border-[#C5A882]/20 rounded-lg px-3 py-2 text-white text-sm focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                className="w-full bg-[var(--bg-surface-2)] border border-[var(--border-default)] rounded px-3 py-2 text-[var(--text-primary)] text-sm focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent"
               >
                 {VISIT_TYPES.map((v) => (
-                  <option key={v} value={v} className="bg-[#0A1F3D]">
+                  <option key={v} value={v} className="bg-[var(--bg-base)]">
                     {v}
                   </option>
                 ))}
@@ -651,11 +651,11 @@ export default function CompanionPage() {
 
           {/* Patient search */}
           <div ref={searchContainerRef} className="relative">
-            <div className="flex items-center bg-white/10 border border-[#C5A882]/20 rounded-lg px-3 py-2">
+            <div className="flex items-center bg-[var(--bg-surface-2)] border border-[var(--border-default)] rounded px-3 py-2">
               {isSearching ? (
-                <Loader2 size={16} className="text-[#C5A882]/50 animate-spin flex-shrink-0" />
+                <Loader2 size={16} className="text-[var(--text-muted)] animate-spin flex-shrink-0" />
               ) : (
-                <Search size={16} className="text-[#C5A882]/50 flex-shrink-0" />
+                <Search size={16} className="text-[var(--text-muted)] flex-shrink-0" />
               )}
               <input
                 value={searchQuery}
@@ -664,7 +664,7 @@ export default function CompanionPage() {
                   if (searchResults.length > 0) setShowSearchResults(true);
                 }}
                 placeholder="Search patients by name..."
-                className="flex-1 bg-transparent border-none text-white text-sm placeholder-white/20 focus:outline-none ml-2"
+                className="flex-1 bg-transparent border-none text-[var(--text-primary)] text-sm placeholder:text-[var(--text-muted)] focus:outline-none ml-2"
               />
               {searchQuery && (
                 <button
@@ -674,14 +674,14 @@ export default function CompanionPage() {
                     setShowSearchResults(false);
                   }}
                 >
-                  <X size={14} className="text-[#C5A882]/50" />
+                  <X size={14} className="text-[var(--text-muted)]" />
                 </button>
               )}
             </div>
 
             {/* Search results dropdown */}
             {showSearchResults && searchResults.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-[#0F2A4A] border border-[#C5A882]/30 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-10 w-full mt-1 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[2px] max-h-60 overflow-y-auto">
                 {searchResults.map((patient) => {
                   const alreadyInQueue = batchItems.some(
                     (i) => i.patient_id === patient.id
@@ -691,18 +691,18 @@ export default function CompanionPage() {
                       key={patient.id}
                       onClick={() => !alreadyInQueue && handleAddPatient(patient)}
                       disabled={alreadyInQueue}
-                      className={`w-full text-left px-4 py-3 border-b border-[#C5A882]/10 last:border-b-0 transition-colors ${
+                      className={`w-full text-left px-4 py-3 border-b border-[var(--border-subtle)] last:border-b-0 transition-colors ${
                         alreadyInQueue
                           ? 'opacity-40 cursor-not-allowed'
-                          : 'hover:bg-white/10 cursor-pointer'
+                          : 'hover:bg-[var(--bg-hover)] cursor-pointer'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-white text-sm font-medium">
+                          <p className="text-[var(--text-primary)] text-sm font-medium">
                             {patient.last_name}, {patient.first_name}
                           </p>
-                          <p className="text-[#C5A882]/50 text-xs">
+                          <p className="text-[var(--text-muted)] text-xs">
                             {patient.date_of_birth
                               ? new Date(patient.date_of_birth).toLocaleDateString()
                               : 'No DOB'}
@@ -710,9 +710,9 @@ export default function CompanionPage() {
                           </p>
                         </div>
                         {alreadyInQueue ? (
-                          <span className="text-xs text-[#C5A882]/40">In queue</span>
+                          <span className="text-xs text-[var(--text-muted)]">In queue</span>
                         ) : (
-                          <Plus size={16} className="text-[#E89C8A]" />
+                          <Plus size={16} className="text-[var(--accent-warm)]" />
                         )}
                       </div>
                     </button>
@@ -727,10 +727,10 @@ export default function CompanionPage() {
         {batchItems.length > 0 && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-medium text-[#C5A882]">
+              <h2 className="text-sm font-medium text-[var(--accent-warm)]">
                 Patient Queue ({batchItems.length})
               </h2>
-              <span className="text-xs text-[#C5A882]/50">
+              <span className="text-xs text-[var(--text-muted)]">
                 {generatedCount}/{batchItems.length} generated
               </span>
             </div>
@@ -745,8 +745,8 @@ export default function CompanionPage() {
               return (
                 <div
                   key={item.id}
-                  className={`bg-white/5 border rounded-xl overflow-hidden transition-colors ${
-                    STATUS_COLORS[item.status]?.split(' ').pop() || 'border-[#C5A882]/20'
+                  className={`bg-[var(--bg-surface)] border rounded-[2px] overflow-hidden transition-colors ${
+                    STATUS_COLORS[item.status]?.split(' ').pop() || 'border-[var(--border-default)]'
                   }`}
                 >
                   {/* Item header */}
@@ -755,19 +755,19 @@ export default function CompanionPage() {
                       className="flex items-center gap-3 flex-1 cursor-pointer"
                       onClick={() => toggleExpanded(item.id)}
                     >
-                      <button className="text-[#C5A882]/50">
+                      <button className="text-[var(--text-muted)]">
                         {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
-                      <User className="text-[#C5A882]/60 flex-shrink-0" size={16} />
+                      <User className="text-[var(--text-muted)] flex-shrink-0" size={16} />
                       <div className="min-w-0">
-                        <p className="text-white text-sm font-medium truncate">
+                        <p className="text-[var(--text-primary)] text-sm font-medium truncate">
                           {item.patient_first_name} {item.patient_last_name}
                         </p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-xs bg-[#C5A882]/15 text-[#C5A882]/80 px-1.5 py-0.5 rounded">
+                          <span className="text-xs bg-[var(--bg-surface-2)] text-[var(--text-secondary)] px-1.5 py-0.5 rounded">
                             {item.setting}
                           </span>
-                          <span className="text-xs text-[#C5A882]/50">{item.visit_type}</span>
+                          <span className="text-xs text-[var(--text-muted)]">{item.visit_type}</span>
                         </div>
                       </div>
                     </div>
@@ -787,10 +787,10 @@ export default function CompanionPage() {
                           onClick={() =>
                             handleCopyGeneratedNote(item.id, item.generated_note_content!)
                           }
-                          className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                          className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold transition-colors ${
                             isCopied
-                              ? 'bg-green-600 text-white'
-                              : 'bg-[#E89C8A] text-white hover:bg-[#d4887a]'
+                              ? 'bg-[var(--accent-primary)] text-[var(--text-inverse)]'
+                              : 'bg-[var(--accent-warm)] text-[var(--text-inverse)] hover:bg-[var(--accent-warm-hover)]'
                           }`}
                         >
                           {isCopied ? (
@@ -804,7 +804,7 @@ export default function CompanionPage() {
 
                       <button
                         onClick={() => handleRemoveItem(item.id)}
-                        className="text-[#C5A882]/30 hover:text-red-400 transition-colors p-1"
+                        className="text-[var(--text-muted)] hover:text-[var(--error-text)] transition-colors p-1"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -813,14 +813,14 @@ export default function CompanionPage() {
 
                   {/* Expanded content */}
                   {isExpanded && (
-                    <div className="border-t border-[#C5A882]/10 p-3 space-y-3">
+                    <div className="border-t border-[var(--border-subtle)] p-3 space-y-3">
                       {/* Prior note section */}
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-xs text-[#C5A882]/50">
+                          <p className="text-xs text-[var(--text-muted)]">
                             Prior Note
                             {item.prior_note_source && (
-                              <span className="ml-1 text-[#C5A882]/30">
+                              <span className="ml-1 text-[var(--text-muted)]">
                                 ({item.prior_note_source})
                               </span>
                             )}
@@ -830,7 +830,7 @@ export default function CompanionPage() {
                             <button
                               onClick={() => handleFetchPriorNote(item.id)}
                               disabled={fetchingPriorNote === item.id}
-                              className="flex items-center gap-1 text-xs text-[#E89C8A] hover:text-[#d4887a] disabled:opacity-50 transition-colors"
+                              className="flex items-center gap-1 text-xs text-[var(--accent-warm)] hover:bg-[var(--bg-hover)] disabled:opacity-50 transition-colors"
                             >
                               {fetchingPriorNote === item.id ? (
                                 <Loader2 size={10} className="animate-spin" />
@@ -843,7 +843,7 @@ export default function CompanionPage() {
                             {item.status === 'pending' && !hasPriorNote && (
                               <button
                                 onClick={() => handleMarkNoPriorNote(item.id)}
-                                className="text-xs text-[#C5A882]/40 hover:text-[#C5A882] transition-colors"
+                                className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                               >
                                 Skip
                               </button>
@@ -861,14 +861,14 @@ export default function CompanionPage() {
                           }
                           placeholder="Paste prior note from Epic..."
                           rows={4}
-                          className="w-full bg-white/5 border border-[#C5A882]/20 rounded-lg px-3 py-2 text-white/80 placeholder-white/20 font-mono text-xs focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent resize-none"
+                          className="w-full bg-[var(--bg-surface)] border border-[var(--border-default)] rounded px-3 py-2 text-[var(--text-secondary)] placeholder:text-[var(--text-muted)] font-mono text-xs focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent resize-none"
                         />
 
                         {draft.trim() && draft !== (item.prior_note_content ?? '') && (
                           <button
                             onClick={() => handleSavePriorNote(item.id)}
                             disabled={sendingPriorNote === item.id}
-                            className="mt-1 flex items-center gap-1 px-3 py-1 bg-[#E89C8A] text-white rounded text-xs font-semibold hover:bg-[#d4887a] disabled:opacity-50 transition-colors"
+                            className="mt-1 flex items-center gap-1 px-3 py-1 bg-[var(--accent-warm)] text-[var(--text-inverse)] rounded text-xs font-semibold hover:bg-[var(--accent-warm-hover)] disabled:opacity-50 transition-colors"
                           >
                             {sendingPriorNote === item.id ? (
                               <Loader2 size={10} className="animate-spin" />
@@ -883,12 +883,12 @@ export default function CompanionPage() {
                       {/* Generated note preview */}
                       {hasGeneratedNote && (
                         <div>
-                          <p className="text-xs text-green-400 mb-1 flex items-center gap-1">
+                          <p className="text-xs text-[var(--success-text)] mb-1 flex items-center gap-1">
                             <FileText size={10} />
                             Generated Note
                           </p>
-                          <div className="bg-white/5 border border-green-500/20 rounded-lg px-3 py-2 max-h-48 overflow-y-auto">
-                            <pre className="text-white/70 text-xs whitespace-pre-wrap font-mono">
+                          <div className="bg-[var(--bg-surface)] border border-[var(--success-border)] rounded-[2px] px-3 py-2 max-h-48 overflow-y-auto">
+                            <pre className="text-[var(--text-secondary)] text-xs whitespace-pre-wrap font-mono">
                               {item.generated_note_content}
                             </pre>
                           </div>
@@ -897,8 +897,8 @@ export default function CompanionPage() {
 
                       {/* Error message */}
                       {item.error_message && (
-                        <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-2">
-                          <p className="text-red-400 text-xs">{item.error_message}</p>
+                        <div className="bg-[var(--error-bg)] border border-[var(--error-border)] rounded-[2px] p-2">
+                          <p className="text-[var(--error-text)] text-xs">{item.error_message}</p>
                         </div>
                       )}
                     </div>
@@ -911,15 +911,15 @@ export default function CompanionPage() {
 
         {/* Summary footer */}
         {batchItems.length > 0 && (
-          <div className="bg-white/5 border border-[#C5A882]/20 rounded-lg p-3 text-center">
-            <p className="text-xs text-[#C5A882]/50">
+          <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[2px] p-3 text-center">
+            <p className="text-xs text-[var(--text-muted)]">
               {readyCount}/{batchItems.length} prepped ·{' '}
               {generatedCount}/{batchItems.length} generated
               {batchItems.length > 0 &&
                 batchItems.every(
                   (i) => i.status === 'generated' || i.status === 'copied'
                 ) && (
-                  <span className="text-green-400 ml-2">
+                  <span className="text-[var(--success-text)] ml-2">
                     All done! Copy each note above.
                   </span>
                 )}
@@ -929,9 +929,9 @@ export default function CompanionPage() {
 
         {/* Empty state */}
         {batchItems.length === 0 && (
-          <div className="bg-white/5 border border-dashed border-[#C5A882]/20 rounded-xl p-8 text-center space-y-2">
-            <User className="text-[#C5A882]/20 mx-auto" size={36} />
-            <p className="text-[#C5A882]/50 text-sm">
+          <div className="bg-[var(--bg-surface)] border border-dashed border-[var(--border-default)] rounded-[2px] p-8 text-center space-y-2">
+            <User className="text-[var(--text-muted)] mx-auto" size={36} />
+            <p className="text-[var(--text-muted)] text-sm">
               Search for patients above to add them to your batch queue
             </p>
           </div>

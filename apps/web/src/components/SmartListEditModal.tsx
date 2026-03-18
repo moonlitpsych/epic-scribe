@@ -80,12 +80,12 @@ function SortableOption({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-200 hover:shadow-sm transition-shadow"
+      className="flex items-center gap-2 p-2 bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] transition-colors"
     >
       {!readOnly && (
         <button
           type="button"
-          className="cursor-move text-gray-400 hover:text-gray-600"
+          className="cursor-move text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
           {...attributes}
           {...listeners}
         >
@@ -93,7 +93,7 @@ function SortableOption({
         </button>
       )}
 
-      <span className="text-xs font-mono text-gray-400 w-6">
+      <span className="text-xs font-mono text-[var(--text-muted)] w-6">
         {index + 1}.
       </span>
 
@@ -106,7 +106,7 @@ function SortableOption({
           type="text"
           value={option.value}
           onChange={(e) => onUpdate(e.target.value)}
-          className="flex-1 px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-purple-400"
+          className="flex-1 px-2 py-1 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-warm)]"
           style={{ color: moonlitTheme.colors.text.primary }}
         />
       )}
@@ -129,7 +129,7 @@ function SortableOption({
             <button
               type="button"
               onClick={onSetDefault}
-              className="text-xs px-2 py-1 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
+              className="text-xs px-2 py-1 text-[var(--text-muted)] hover:text-[#c084fc] hover:bg-[#13101f] rounded transition-colors"
               title="Set as default"
             >
               Set default
@@ -138,7 +138,7 @@ function SortableOption({
           <button
             type="button"
             onClick={onDelete}
-            className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+            className="p-1 text-[var(--text-muted)] hover:text-[var(--error-text)] hover:bg-[var(--error-bg)] rounded transition-colors"
             title="Delete option"
           >
             <Trash2 className="w-4 h-4" />
@@ -320,11 +320,11 @@ export function SmartListEditModal({
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-white rounded-xl shadow-2xl p-8">
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+        <div className="bg-[var(--bg-surface)] rounded-[2px] p-8">
           <div className="flex items-center gap-3">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-            <span className="text-gray-600">Loading SmartList...</span>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7c3aed]"></div>
+            <span className="text-[var(--text-secondary)]">Loading SmartList...</span>
           </div>
         </div>
       </div>
@@ -333,24 +333,24 @@ export function SmartListEditModal({
 
   if (error && !smartList) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md">
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+        <div className="bg-[var(--bg-surface)] rounded-[2px] p-8 max-w-md">
           <div className="text-center">
-            <div className="text-red-600 mb-4">
+            <div className="text-[var(--error-text)] mb-4">
               <X className="w-12 h-12 mx-auto" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">SmartList Not Found</h3>
-            <p className="text-gray-600 mb-4">{error}</p>
+            <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">SmartList Not Found</h3>
+            <p className="text-[var(--text-secondary)] mb-4">{error}</p>
             <div className="flex gap-3 justify-center">
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+                className="px-4 py-2 bg-[var(--bg-surface-2)] hover:bg-[var(--bg-hover)] rounded transition-colors"
               >
                 Close
               </button>
               <a
                 href="/smartlists"
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors inline-flex items-center gap-2"
+                className="px-4 py-2 bg-[#7c3aed] hover:bg-[#6d28d9] text-white rounded transition-colors inline-flex items-center gap-2"
               >
                 <Edit3 className="w-4 h-4" />
                 Open SmartList Editor
@@ -363,11 +363,11 @@ export function SmartListEditModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+      <div className="bg-[var(--bg-surface)] rounded-[2px] max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div
-          className="px-6 py-4 border-b border-gray-200 flex justify-between items-center"
+          className="px-6 py-4 border-b border-[var(--border-default)] flex justify-between items-center"
           style={{ backgroundColor: moonlitTheme.colors.cream }}
         >
           <div>
@@ -386,7 +386,7 @@ export function SmartListEditModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg transition-all duration-200 hover:bg-white hover:bg-opacity-60"
+            className="p-1 rounded transition-all duration-200 hover:bg-[var(--bg-hover)]"
             style={{ color: moonlitTheme.colors.text.secondary }}
             aria-label="Close"
           >
@@ -398,7 +398,7 @@ export function SmartListEditModal({
         <div className="p-6 overflow-y-auto flex-1">
           {error && (
             <div
-              className="mb-4 p-3 rounded-lg"
+              className="mb-4 p-3 rounded-[2px]"
               style={{
                 backgroundColor: moonlitTheme.colors.error.bg,
                 color: moonlitTheme.colors.error.text
@@ -424,7 +424,7 @@ export function SmartListEditModal({
                       type="text"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 transition-all duration-200 focus:ring-2 focus:border-transparent"
+                      className="w-full border border-[var(--border-default)] rounded px-4 py-2.5 bg-[var(--bg-surface-2)] text-[var(--text-primary)] transition-all duration-200 focus:ring-2 focus:border-transparent"
                       style={{
                         '--tw-ring-color': moonlitTheme.colors.terracotta
                       } as any}
@@ -463,7 +463,7 @@ export function SmartListEditModal({
 
               {/* Placeholder Format */}
               <div
-                className="p-4 rounded-lg"
+                className="p-4 rounded-[2px]"
                 style={{ backgroundColor: moonlitTheme.colors.cream }}
               >
                 <label
@@ -490,7 +490,7 @@ export function SmartListEditModal({
                     <button
                       type="button"
                       onClick={handleAddOption}
-                      className="px-3 py-1.5 text-sm rounded-lg transition-all duration-200 flex items-center gap-1"
+                      className="px-3 py-1.5 text-sm rounded transition-all duration-200 flex items-center gap-1"
                       style={{
                         backgroundColor: moonlitTheme.colors.terracotta,
                         color: 'white'
@@ -509,7 +509,7 @@ export function SmartListEditModal({
                 </div>
 
                 <div
-                  className="space-y-2 p-4 rounded-lg border-2 border-dashed"
+                  className="space-y-2 p-4 rounded-[2px] border-2 border-dashed"
                   style={{ borderColor: moonlitTheme.colors.gray[300] }}
                 >
                   {options.length > 0 ? (
@@ -541,9 +541,9 @@ export function SmartListEditModal({
                       options.map((option, index) => (
                         <div
                           key={index}
-                          className="flex items-center gap-2 p-2 bg-white rounded-lg"
+                          className="flex items-center gap-2 p-2 bg-[var(--bg-surface)] rounded-[2px]"
                         >
-                          <span className="text-xs font-mono text-gray-400 w-6">
+                          <span className="text-xs font-mono text-[var(--text-muted)] w-6">
                             {index + 1}.
                           </span>
                           <span className="flex-1" style={{ color: moonlitTheme.colors.text.primary }}>
@@ -564,15 +564,15 @@ export function SmartListEditModal({
                       ))
                     )
                   ) : (
-                    <p className="text-center text-gray-400 py-8">
-                      No options defined. Click "Add Option" to get started.
+                    <p className="text-center text-[var(--text-muted)] py-8">
+                      No options defined. Click &quot;Add Option&quot; to get started.
                     </p>
                   )}
                 </div>
 
                 {editMode && (
                   <p className="text-xs mt-2" style={{ color: moonlitTheme.colors.text.muted }}>
-                    💡 Drag options to reorder. Include "Not assessed" as a safety option.
+                    Drag options to reorder. Include &quot;Not assessed&quot; as a safety option.
                   </p>
                 )}
               </div>
@@ -581,22 +581,22 @@ export function SmartListEditModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-between">
+        <div className="px-6 py-4 border-t border-[var(--border-default)] flex justify-between">
           <a
             href="/smartlists"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2 text-sm rounded-lg transition-all duration-200 flex items-center gap-2"
+            className="px-4 py-2 text-sm rounded transition-all duration-200 flex items-center gap-2"
             style={{
               border: `1px solid ${moonlitTheme.colors.terracotta}`,
               color: moonlitTheme.colors.terracotta,
-              backgroundColor: 'white'
+              backgroundColor: moonlitTheme.colors.cream
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = moonlitTheme.colors.cream;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.backgroundColor = moonlitTheme.colors.cream;
             }}
           >
             <ExternalLink className="w-4 h-4" />
@@ -608,17 +608,17 @@ export function SmartListEditModal({
               <>
                 <button
                   onClick={() => setEditMode(false)}
-                  className="px-4 py-2 rounded-lg font-medium transition-all duration-200"
+                  className="px-4 py-2 rounded font-medium transition-all duration-200"
                   style={{
                     border: `1px solid ${moonlitTheme.colors.gray[300]}`,
                     color: moonlitTheme.colors.text.secondary,
-                    backgroundColor: 'white'
+                    backgroundColor: moonlitTheme.colors.cream
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = moonlitTheme.colors.gray[100];
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'white';
+                    e.currentTarget.style.backgroundColor = moonlitTheme.colors.cream;
                   }}
                 >
                   Cancel Edit
@@ -626,7 +626,7 @@ export function SmartListEditModal({
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-6 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
+                  className="px-6 py-2 rounded font-medium transition-all duration-200 flex items-center gap-2"
                   style={{
                     backgroundColor: moonlitTheme.colors.tan,
                     color: 'white',
@@ -660,7 +660,7 @@ export function SmartListEditModal({
               <>
                 <button
                   onClick={() => setEditMode(true)}
-                  className="px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2"
+                  className="px-4 py-2 rounded font-medium transition-all duration-200 flex items-center gap-2"
                   style={{
                     backgroundColor: moonlitTheme.colors.terracotta,
                     color: 'white'
@@ -677,17 +677,17 @@ export function SmartListEditModal({
                 </button>
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 rounded-lg font-medium transition-all duration-200"
+                  className="px-4 py-2 rounded font-medium transition-all duration-200"
                   style={{
                     border: `1px solid ${moonlitTheme.colors.gray[300]}`,
                     color: moonlitTheme.colors.text.secondary,
-                    backgroundColor: 'white'
+                    backgroundColor: moonlitTheme.colors.cream
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = moonlitTheme.colors.gray[100];
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'white';
+                    e.currentTarget.style.backgroundColor = moonlitTheme.colors.cream;
                   }}
                 >
                   Close
@@ -698,7 +698,7 @@ export function SmartListEditModal({
             {initialReadOnly && (
               <button
                 onClick={onClose}
-                className="px-6 py-2 rounded-lg font-medium transition-all duration-200"
+                className="px-6 py-2 rounded font-medium transition-all duration-200"
                 style={{
                   backgroundColor: moonlitTheme.colors.tan,
                   color: 'white'

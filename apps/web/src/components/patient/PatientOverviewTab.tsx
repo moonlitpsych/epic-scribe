@@ -186,52 +186,52 @@ export default function PatientOverviewTab({
     <div className="space-y-6">
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-5">
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-5">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-[#0A1F3D]/10">
-              <User className="text-[#0A1F3D]" size={20} />
+            <div className="p-2 rounded-[2px] bg-[var(--bg-surface-2)]">
+              <User className="text-[var(--text-primary)]" size={20} />
             </div>
             <div>
-              <p className="text-sm text-[#5A6B7D]">Age</p>
-              <p className="text-2xl font-semibold text-[#0A1F3D]">
+              <p className="text-sm text-[var(--text-secondary)]">Age</p>
+              <p className="text-2xl font-semibold text-[var(--text-primary)]">
                 {calculateAge(patient.date_of_birth)}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-5">
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-5">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-[#E89C8A]/10">
-              <Calendar className="text-[#E89C8A]" size={20} />
+            <div className="p-2 rounded-[2px] bg-[var(--accent-warm)]/10">
+              <Calendar className="text-[var(--accent-warm)]" size={20} />
             </div>
             <div>
-              <p className="text-sm text-[#5A6B7D]">Encounters</p>
-              <p className="text-2xl font-semibold text-[#0A1F3D]">{encounterCount}</p>
+              <p className="text-sm text-[var(--text-secondary)]">Encounters</p>
+              <p className="text-2xl font-semibold text-[var(--text-primary)]">{encounterCount}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-5">
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-5">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-[#C5A882]/10">
+            <div className="p-2 rounded-[2px] bg-[#C5A882]/10">
               <FileText className="text-[#C5A882]" size={20} />
             </div>
             <div>
-              <p className="text-sm text-[#5A6B7D]">Notes</p>
-              <p className="text-2xl font-semibold text-[#0A1F3D]">{noteCount}</p>
+              <p className="text-sm text-[var(--text-secondary)]">Notes</p>
+              <p className="text-2xl font-semibold text-[var(--text-primary)]">{noteCount}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-5">
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-5">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${patient.active ? 'bg-green-100' : 'bg-gray-100'}`}>
-              <Activity className={patient.active ? 'text-green-600' : 'text-gray-500'} size={20} />
+            <div className={`p-2 rounded-[2px] ${patient.active ? 'bg-[var(--success-bg)]' : 'bg-[var(--bg-surface-2)]'}`}>
+              <Activity className={patient.active ? 'text-[var(--success-text)]' : 'text-[var(--text-muted)]'} size={20} />
             </div>
             <div>
-              <p className="text-sm text-[#5A6B7D]">Status</p>
-              <p className={`text-lg font-semibold ${patient.active ? 'text-green-600' : 'text-gray-500'}`}>
+              <p className="text-sm text-[var(--text-secondary)]">Status</p>
+              <p className={`text-lg font-semibold ${patient.active ? 'text-[var(--success-text)]' : 'text-[var(--text-muted)]'}`}>
                 {patient.active ? 'Active' : 'Inactive'}
               </p>
             </div>
@@ -240,13 +240,13 @@ export default function PatientOverviewTab({
       </div>
 
       {/* Demographics */}
-      <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-6">
+      <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-[#0A1F3D]">Demographics</h3>
+          <h3 className="text-lg font-semibold text-[var(--text-primary)]">Demographics</h3>
           {!editingDemographics ? (
             <button
               onClick={handleStartEditDemographics}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[#5A6B7D] hover:bg-[#F5F1ED] transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-[2px] text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
             >
               <Pencil size={14} />
               Edit
@@ -256,7 +256,7 @@ export default function PatientOverviewTab({
               <button
                 onClick={handleCancelEditDemographics}
                 disabled={savingDemographics}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-[#5A6B7D] hover:bg-[#F5F1ED] transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-[2px] text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
               >
                 <X size={14} />
                 Cancel
@@ -264,7 +264,7 @@ export default function PatientOverviewTab({
               <button
                 onClick={handleSaveDemographics}
                 disabled={savingDemographics}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-[#0A1F3D] text-white hover:bg-[#0A1F3D]/90 transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-[2px] text-sm font-medium bg-[var(--accent-primary)] text-[var(--text-inverse)] hover:bg-[var(--accent-primary-hover)] transition-colors"
               >
                 <Check size={14} />
                 {savingDemographics ? 'Saving...' : 'Save'}
@@ -276,58 +276,58 @@ export default function PatientOverviewTab({
           {editingDemographics ? (
             <>
               <div>
-                <label className="text-sm text-[#5A6B7D] block mb-1">First Name</label>
+                <label className="text-sm text-[var(--text-secondary)] block mb-1">First Name</label>
                 <input
                   type="text"
                   value={editFirstName}
                   onChange={(e) => setEditFirstName(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                 />
               </div>
               <div>
-                <label className="text-sm text-[#5A6B7D] block mb-1">Last Name</label>
+                <label className="text-sm text-[var(--text-secondary)] block mb-1">Last Name</label>
                 <input
                   type="text"
                   value={editLastName}
                   onChange={(e) => setEditLastName(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                 />
               </div>
               <div>
-                <label className="text-sm text-[#5A6B7D] block mb-1">Date of Birth</label>
+                <label className="text-sm text-[var(--text-secondary)] block mb-1">Date of Birth</label>
                 <input
                   type="date"
                   value={editDob}
                   onChange={(e) => setEditDob(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                 />
               </div>
               <div>
-                <label className="text-sm text-[#5A6B7D] block mb-1">MRN</label>
+                <label className="text-sm text-[var(--text-secondary)] block mb-1">MRN</label>
                 <input
                   type="text"
                   value={editMrn}
                   onChange={(e) => setEditMrn(e.target.value)}
                   placeholder="Optional"
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                 />
               </div>
               <div>
-                <label className="text-sm text-[#5A6B7D] block mb-1">Email</label>
+                <label className="text-sm text-[var(--text-secondary)] block mb-1">Email</label>
                 <input
                   type="email"
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
                   placeholder="Required for IntakeQ push"
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                 />
               </div>
               <div>
-                <label className="text-sm text-[#5A6B7D] block mb-1">Primary Payer</label>
+                <label className="text-sm text-[var(--text-secondary)] block mb-1">Primary Payer</label>
                 <select
                   value={editPayerId}
                   onChange={(e) => setEditPayerId(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent bg-white"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)]"
                 >
                   <option value="">No payer</option>
                   {payers.map((p) => (
@@ -341,32 +341,32 @@ export default function PatientOverviewTab({
           ) : (
             <>
               <div>
-                <label className="text-sm text-[#5A6B7D]">Full Name</label>
-                <p className="text-[#0A1F3D] font-medium">
+                <label className="text-sm text-[var(--text-secondary)]">Full Name</label>
+                <p className="text-[var(--text-primary)] font-medium">
                   {patient.first_name} {patient.last_name}
                 </p>
               </div>
               <div>
-                <label className="text-sm text-[#5A6B7D]">Date of Birth</label>
-                <p className="text-[#0A1F3D] font-medium">
+                <label className="text-sm text-[var(--text-secondary)]">Date of Birth</label>
+                <p className="text-[var(--text-primary)] font-medium">
                   {patient.date_of_birth ? formatDate(patient.date_of_birth) : 'Not set'}
                 </p>
               </div>
               <div>
-                <label className="text-sm text-[#5A6B7D]">MRN</label>
-                <p className="text-[#0A1F3D] font-medium">{patient.mrn || 'Not assigned'}</p>
+                <label className="text-sm text-[var(--text-secondary)]">MRN</label>
+                <p className="text-[var(--text-primary)] font-medium">{patient.mrn || 'Not assigned'}</p>
               </div>
               <div>
-                <label className="text-sm text-[#5A6B7D]">Email</label>
-                <p className="text-[#0A1F3D] font-medium">{patient.email || 'Not set'}</p>
+                <label className="text-sm text-[var(--text-secondary)]">Email</label>
+                <p className="text-[var(--text-primary)] font-medium">{patient.email || 'Not set'}</p>
               </div>
               <div>
-                <label className="text-sm text-[#5A6B7D]">Primary Payer</label>
-                <p className="text-[#0A1F3D] font-medium">{patient.primary_payer_name || 'Not set'}</p>
+                <label className="text-sm text-[var(--text-secondary)]">Primary Payer</label>
+                <p className="text-[var(--text-primary)] font-medium">{patient.primary_payer_name || 'Not set'}</p>
               </div>
               <div>
-                <label className="text-sm text-[#5A6B7D]">Record Created</label>
-                <p className="text-[#0A1F3D] font-medium">{formatDateTime(patient.created_at)}</p>
+                <label className="text-sm text-[var(--text-secondary)]">Record Created</label>
+                <p className="text-[var(--text-primary)] font-medium">{formatDateTime(patient.created_at)}</p>
               </div>
             </>
           )}
@@ -374,15 +374,15 @@ export default function PatientOverviewTab({
       </div>
 
       {/* HealthKit Sync */}
-      <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-6">
+      <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-100">
-              <Smartphone className="text-green-600" size={20} />
+            <div className="p-2 rounded-[2px] bg-[var(--success-bg)]">
+              <Smartphone className="text-[var(--success-text)]" size={20} />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-[#0A1F3D]">HealthKit Sync</h3>
-              <p className="text-sm text-[#5A6B7D]">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">HealthKit Sync</h3>
+              <p className="text-sm text-[var(--text-secondary)]">
                 Scan this QR code with the Epic Scribe iOS app to link health records
               </p>
             </div>
@@ -391,13 +391,16 @@ export default function PatientOverviewTab({
 
         {showQr && qrDataUrl ? (
           <div className="flex flex-col items-center gap-3">
-            <img src={qrDataUrl} alt="Patient QR Code" width={256} height={256} />
-            <p className="text-sm font-medium text-[#0A1F3D]">
+            {/* Keep QR code on white background for scanability */}
+            <div className="bg-white p-2 rounded-[2px]">
+              <img src={qrDataUrl} alt="Patient QR Code" width={256} height={256} />
+            </div>
+            <p className="text-sm font-medium text-[var(--text-primary)]">
               {patient.first_name} {patient.last_name}
             </p>
             <button
               onClick={() => setShowQr(false)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-[#5A6B7D] hover:bg-[#F5F1ED] transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-[2px] text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
             >
               <X size={14} />
               Hide QR Code
@@ -406,7 +409,7 @@ export default function PatientOverviewTab({
         ) : (
           <button
             onClick={generateQrCode}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#0A1F3D] text-white hover:bg-[#0A1F3D]/90 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-[2px] text-sm font-medium bg-[var(--accent-primary)] text-[var(--text-inverse)] hover:bg-[var(--accent-primary-hover)] transition-colors"
           >
             <QrCode size={16} />
             Show QR Code
@@ -415,21 +418,21 @@ export default function PatientOverviewTab({
       </div>
 
       {/* Clinical Context */}
-      <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-6">
+      <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-[#0A1F3D]">Clinical Context</h3>
-            <p className="text-sm text-[#5A6B7D] mt-1">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">Clinical Context</h3>
+            <p className="text-sm text-[var(--text-secondary)] mt-1">
               Background info, treatment approach, key considerations - used to inform AI-generated notes
             </p>
           </div>
           <button
             onClick={handleSaveClinicalContext}
             disabled={!hasUnsavedChanges || saving}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-[2px] text-sm font-medium transition-all ${
               hasUnsavedChanges && !saving
-                ? 'bg-[#0A1F3D] text-white hover:bg-[#0A1F3D]/90'
-                : 'bg-[#C5A882]/20 text-[#5A6B7D] cursor-not-allowed'
+                ? 'bg-[var(--accent-primary)] text-[var(--text-inverse)] hover:bg-[var(--accent-primary-hover)]'
+                : 'bg-[var(--border-default)] text-[var(--text-secondary)] cursor-not-allowed'
             }`}
           >
             <Save size={16} />
@@ -441,14 +444,14 @@ export default function PatientOverviewTab({
           value={clinicalContext}
           onChange={(e) => handleContextChange(e.target.value)}
           placeholder="Enter clinical context, background, ongoing treatment notes, key considerations..."
-          className="w-full h-48 px-4 py-3 border border-[#C5A882]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm bg-[#F5F1ED]/30"
+          className="w-full h-48 px-4 py-3 border border-[var(--border-default)] rounded-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent font-mono text-sm bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
         />
 
-        <div className="mt-2 flex items-center justify-between text-xs text-[#5A6B7D]">
+        <div className="mt-2 flex items-center justify-between text-xs text-[var(--text-secondary)]">
           <span>
             {clinicalContext.length} characters, {clinicalContext.split(/\s+/).filter((w) => w).length} words
           </span>
-          {hasUnsavedChanges && <span className="text-[#E89C8A] font-medium">Unsaved changes</span>}
+          {hasUnsavedChanges && <span className="text-[var(--accent-warm)] font-medium">Unsaved changes</span>}
           {patient.updated_at && !hasUnsavedChanges && (
             <span>Last updated: {formatDateTime(patient.updated_at)}</span>
           )}

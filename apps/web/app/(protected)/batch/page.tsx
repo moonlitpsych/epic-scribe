@@ -194,27 +194,27 @@ export default function NotePrep() {
   const wordCount = noteText.trim().split(/\s+/).filter(Boolean).length;
 
   return (
-    <div className="min-h-screen bg-[#0A1F3D] p-4 md:p-6">
+    <div className="min-h-screen bg-[var(--bg-base)] p-4 md:p-6">
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <FileText className="text-[#E89C8A]" size={24} />
-          <h1 className="text-xl font-serif text-white">Note Prep</h1>
+          <FileText className="text-[var(--accent-warm)]" size={24} />
+          <h1 className="text-xl font-heading text-[var(--text-primary)]">Note Prep</h1>
           {preppedPatients.length > 0 && (
-            <span className="text-[#C5A882]/50 text-sm">
+            <span className="text-[var(--text-muted)] text-sm">
               {preppedPatients.length} prepped
             </span>
           )}
         </div>
 
         {/* Add Section */}
-        <div className="bg-white/5 border border-[#C5A882]/20 rounded-xl p-5 space-y-4">
+        <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[2px] p-5 space-y-4">
           {/* Patient Search */}
           {!selectedPatient ? (
             <div ref={dropdownRef} className="relative">
-              <label className="block text-sm text-[#C5A882]/70 mb-1">Patient</label>
+              <label className="block text-sm text-[var(--text-muted)] mb-1">Patient</label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C5A882]/40" size={16} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={16} />
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -222,28 +222,28 @@ export default function NotePrep() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => searchQuery.trim() && setShowDropdown(true)}
                   placeholder="Search patient by name..."
-                  className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-[#C5A882]/20 rounded-lg text-white placeholder-white/30 focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                  className="w-full pl-9 pr-4 py-2.5 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent"
                   autoFocus
                 />
                 {searching && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#C5A882]/40 animate-spin" size={16} />
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] animate-spin" size={16} />
                 )}
               </div>
 
               {/* Search Results Dropdown */}
               {showDropdown && searchResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-[#0F2847] border border-[#C5A882]/20 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded max-h-60 overflow-y-auto">
                   {searchResults.map((patient) => (
                     <button
                       key={patient.id}
                       onClick={() => handleSelectPatient(patient)}
-                      className="w-full text-left px-4 py-3 hover:bg-white/10 transition-colors border-b border-[#C5A882]/10 last:border-b-0"
+                      className="w-full text-left px-4 py-3 hover:bg-[var(--bg-hover)] transition-colors border-b border-[var(--border-subtle)] last:border-b-0"
                     >
-                      <p className="text-white font-medium text-sm">
+                      <p className="text-[var(--text-primary)] font-medium text-sm">
                         {patient.last_name}, {patient.first_name}
                       </p>
                       {patient.date_of_birth && (
-                        <p className="text-[#C5A882]/50 text-xs mt-0.5">
+                        <p className="text-[var(--text-muted)] text-xs mt-0.5">
                           DOB: {new Date(patient.date_of_birth).toLocaleDateString()}
                         </p>
                       )}
@@ -253,28 +253,28 @@ export default function NotePrep() {
               )}
 
               {showDropdown && searchQuery.trim() && !searching && searchResults.length === 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-[#0F2847] border border-[#C5A882]/20 rounded-lg shadow-xl px-4 py-3">
-                  <p className="text-[#C5A882]/50 text-sm">No patients found</p>
+                <div className="absolute z-10 w-full mt-1 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded px-4 py-3">
+                  <p className="text-[var(--text-muted)] text-sm">No patients found</p>
                 </div>
               )}
             </div>
           ) : (
             <>
               {/* Selected Patient */}
-              <div className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-3">
+              <div className="flex items-center justify-between bg-[var(--bg-surface)] rounded px-4 py-3">
                 <div>
-                  <p className="text-white font-medium">
+                  <p className="text-[var(--text-primary)] font-medium">
                     {selectedPatient.last_name}, {selectedPatient.first_name}
                   </p>
                   {selectedPatient.date_of_birth && (
-                    <p className="text-[#C5A882]/50 text-xs mt-0.5">
+                    <p className="text-[var(--text-muted)] text-xs mt-0.5">
                       DOB: {new Date(selectedPatient.date_of_birth).toLocaleDateString()}
                     </p>
                   )}
                 </div>
                 <button
                   onClick={handleClearSelection}
-                  className="text-[#C5A882]/50 hover:text-white transition-colors"
+                  className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   <X size={18} />
                 </button>
@@ -282,20 +282,20 @@ export default function NotePrep() {
 
               {/* Existing Note Info */}
               {checkingExisting && (
-                <div className="flex items-center gap-2 text-[#C5A882]/50 text-xs">
+                <div className="flex items-center gap-2 text-[var(--text-muted)] text-xs">
                   <Loader2 size={12} className="animate-spin" />
                   Checking for existing prior note...
                 </div>
               )}
 
               {existingNote && !checkingExisting && (
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-3">
-                  <p className="text-blue-400 text-xs font-medium mb-1">Already has a prior note</p>
-                  <pre className="text-white/50 text-xs whitespace-pre-wrap font-mono max-h-24 overflow-y-auto">
+                <div className="bg-[var(--info-bg)] border border-blue-500/20 rounded px-4 py-3">
+                  <p className="text-[var(--info-text)] text-xs font-medium mb-1">Already has a prior note</p>
+                  <pre className="text-[var(--text-muted)] text-xs whitespace-pre-wrap font-mono max-h-24 overflow-y-auto">
                     {existingNote.content.slice(0, 300)}
                     {existingNote.content.length > 300 ? '...' : ''}
                   </pre>
-                  <p className="text-blue-400/50 text-xs mt-1">
+                  <p className="text-[var(--info-text)] text-xs mt-1 opacity-50">
                     Imported {new Date(existingNote.importedAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -303,7 +303,7 @@ export default function NotePrep() {
 
               {/* Note Textarea */}
               <div>
-                <label className="block text-sm text-[#C5A882]/70 mb-1">
+                <label className="block text-sm text-[var(--text-muted)] mb-1">
                   Paste prior Epic note
                 </label>
                 <textarea
@@ -311,20 +311,20 @@ export default function NotePrep() {
                   onChange={(e) => setNoteText(e.target.value)}
                   placeholder="Paste the patient's last Epic note here..."
                   rows={10}
-                  className="w-full bg-white/5 border border-[#C5A882]/20 rounded-lg px-3 py-2.5 text-white/90 placeholder-white/20 font-mono text-sm focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent resize-none"
+                  className="w-full bg-[var(--bg-surface)] border border-[var(--border-default)] rounded px-3 py-2.5 text-[var(--text-secondary)] placeholder:text-[var(--text-muted)] font-mono text-sm focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent resize-none"
                 />
-                <p className="text-xs text-[#C5A882]/30 mt-1">{wordCount} words</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">{wordCount} words</p>
               </div>
 
               {/* Save Message */}
               {saveMessage && (
                 <div
-                  className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${
+                  className={`flex items-center gap-2 text-xs px-3 py-2 rounded ${
                     saveMessage.type === 'success'
-                      ? 'bg-green-500/10 text-green-400'
+                      ? 'bg-[var(--success-bg)] text-[var(--success-text)]'
                       : saveMessage.type === 'info'
-                        ? 'bg-blue-500/10 text-blue-400'
-                        : 'bg-red-500/10 text-red-400'
+                        ? 'bg-[var(--info-bg)] text-[var(--info-text)]'
+                        : 'bg-[var(--error-bg)] text-[var(--error-text)]'
                   }`}
                 >
                   {saveMessage.type === 'error' ? <AlertCircle size={14} /> : <CheckCircle2 size={14} />}
@@ -336,7 +336,7 @@ export default function NotePrep() {
               <button
                 onClick={handleSave}
                 disabled={saving || !noteText.trim()}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#E89C8A] text-white rounded-lg font-semibold text-sm hover:bg-[#d4887a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--accent-primary)] text-[var(--text-primary)] rounded font-semibold text-sm hover:bg-[var(--accent-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? (
                   <>
@@ -357,21 +357,21 @@ export default function NotePrep() {
         {/* Prepped Patients List */}
         {preppedPatients.length > 0 && (
           <div className="space-y-3">
-            <h2 className="text-sm text-[#C5A882]/50 font-medium">Prepped this session</h2>
+            <h2 className="text-sm text-[var(--text-muted)] font-medium">Prepped this session</h2>
             {preppedPatients.map((pp) => (
               <div
                 key={pp.noteId}
-                className="bg-white/5 border border-green-500/20 rounded-xl px-4 py-3 flex items-start gap-3"
+                className="bg-[var(--bg-surface)] border border-[var(--success-border)] rounded-[2px] px-4 py-3 flex items-start gap-3"
               >
-                <CheckCircle2 className="text-green-400 mt-0.5 flex-shrink-0" size={16} />
+                <CheckCircle2 className="text-[var(--success-text)] mt-0.5 flex-shrink-0" size={16} />
                 <div className="min-w-0 flex-1">
-                  <p className="text-white font-medium text-sm">
+                  <p className="text-[var(--text-primary)] font-medium text-sm">
                     {pp.patient.last_name}, {pp.patient.first_name}
                   </p>
-                  <p className="text-white/40 text-xs font-mono mt-1 truncate">
+                  <p className="text-[var(--text-muted)] text-xs font-mono mt-1 truncate">
                     {pp.preview}
                   </p>
-                  <p className="text-[#C5A882]/30 text-xs mt-1">
+                  <p className="text-[var(--text-muted)] text-xs mt-1">
                     {pp.isDuplicate ? 'Already imported' : 'Saved'}{' '}
                     {new Date(pp.savedAt).toLocaleTimeString()}
                   </p>
@@ -384,11 +384,11 @@ export default function NotePrep() {
         {/* Empty state hint */}
         {preppedPatients.length === 0 && !selectedPatient && (
           <div className="text-center py-8">
-            <ClipboardPaste className="text-[#C5A882]/20 mx-auto mb-3" size={40} />
-            <p className="text-[#C5A882]/40 text-sm">
+            <ClipboardPaste className="text-[var(--text-muted)] mx-auto mb-3" size={40} />
+            <p className="text-[var(--text-muted)] text-sm">
               Search for a patient above, paste their last Epic note, and save.
             </p>
-            <p className="text-[#C5A882]/30 text-xs mt-1">
+            <p className="text-[var(--text-muted)] text-xs mt-1">
               Saved notes auto-populate in the workflow for Follow-up and TOC visits.
             </p>
           </div>

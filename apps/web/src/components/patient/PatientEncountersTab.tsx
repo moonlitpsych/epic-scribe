@@ -74,13 +74,13 @@ export default function PatientEncountersTab({
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'scheduled':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-[var(--info-bg)] text-[var(--info-text)]';
       case 'completed':
-        return 'bg-green-100 text-green-700';
+        return 'bg-[var(--success-bg)] text-[var(--success-text)]';
       case 'cancelled':
-        return 'bg-red-100 text-red-700';
+        return 'bg-[var(--error-bg)] text-[var(--error-text)]';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-[var(--bg-surface-2)] text-[var(--text-secondary)]';
     }
   };
 
@@ -138,14 +138,14 @@ export default function PatientEncountersTab({
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-semibold text-[#0A1F3D]">Encounters</h3>
-          <p className="text-sm text-[#5A6B7D]">
+          <h3 className="text-lg font-semibold text-[var(--text-primary)]">Encounters</h3>
+          <p className="text-sm text-[var(--text-secondary)]">
             Schedule and manage patient encounters
           </p>
         </div>
         <button
           onClick={() => setShowCreateForm(!showCreateForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-[#0A1F3D] text-white rounded-lg hover:bg-[#0A1F3D]/90 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded hover:bg-[var(--accent-primary-hover)] transition-colors"
         >
           <Plus size={18} />
           Schedule Encounter
@@ -154,17 +154,17 @@ export default function PatientEncountersTab({
 
       {/* Create Encounter Form */}
       {showCreateForm && (
-        <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-6">
-          <h4 className="font-medium text-[#0A1F3D] mb-4">New Encounter</h4>
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+          <h4 className="font-medium text-[var(--text-primary)] mb-4">New Encounter</h4>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Setting */}
             <div>
-              <label className="block text-sm font-medium text-[#0A1F3D] mb-1">Setting</label>
+              <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Setting</label>
               <select
                 value={selectedSetting}
                 onChange={(e) => handleSettingChange(e.target.value)}
-                className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent bg-white"
+                className="w-full px-3 py-2 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent"
               >
                 {SETTINGS.map((setting) => (
                   <option key={setting} value={setting}>
@@ -176,11 +176,11 @@ export default function PatientEncountersTab({
 
             {/* Visit Type */}
             <div>
-              <label className="block text-sm font-medium text-[#0A1F3D] mb-1">Visit Type</label>
+              <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Visit Type</label>
               <select
                 value={selectedVisitType}
                 onChange={(e) => setSelectedVisitType(e.target.value)}
-                className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent bg-white"
+                className="w-full px-3 py-2 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent"
               >
                 {VISIT_TYPES[selectedSetting].map((type) => (
                   <option key={type} value={type}>
@@ -192,23 +192,23 @@ export default function PatientEncountersTab({
 
             {/* Date */}
             <div>
-              <label className="block text-sm font-medium text-[#0A1F3D] mb-1">Date</label>
+              <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Date</label>
               <input
                 type="date"
                 value={scheduledDate}
                 onChange={(e) => setScheduledDate(e.target.value)}
-                className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent"
               />
             </div>
 
             {/* Time */}
             <div>
-              <label className="block text-sm font-medium text-[#0A1F3D] mb-1">Time</label>
+              <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Time</label>
               <input
                 type="time"
                 value={scheduledTime}
                 onChange={(e) => setScheduledTime(e.target.value)}
-                className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                className="w-full px-3 py-2 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent"
               />
             </div>
           </div>
@@ -217,14 +217,14 @@ export default function PatientEncountersTab({
           <div className="flex justify-end gap-3 mt-6">
             <button
               onClick={() => setShowCreateForm(false)}
-              className="px-4 py-2 text-[#5A6B7D] hover:text-[#0A1F3D] transition-colors"
+              className="px-4 py-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleCreateEncounter}
               disabled={creating || !scheduledDate || !scheduledTime}
-              className="px-4 py-2 bg-[#0A1F3D] text-white rounded-lg hover:bg-[#0A1F3D]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded hover:bg-[var(--accent-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {creating ? 'Creating...' : 'Create Encounter'}
             </button>
@@ -234,10 +234,10 @@ export default function PatientEncountersTab({
 
       {/* Encounters List */}
       {sortedEncounters.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-12 text-center">
-          <Calendar className="mx-auto text-[#C5A882] mb-4" size={48} />
-          <p className="text-[#5A6B7D]">No encounters scheduled.</p>
-          <p className="text-sm text-[#5A6B7D] mt-1">
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-12 text-center">
+          <Calendar className="mx-auto text-[var(--text-muted)] mb-4" size={48} />
+          <p className="text-[var(--text-secondary)]">No encounters scheduled.</p>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
             Click &quot;Schedule Encounter&quot; to create one.
           </p>
         </div>
@@ -246,7 +246,7 @@ export default function PatientEncountersTab({
           {sortedEncounters.map((encounter) => (
             <div
               key={encounter.id}
-              className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-5 hover:shadow-md transition-shadow"
+              className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-5 hover:bg-[var(--bg-hover)] transition-colors"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -254,12 +254,12 @@ export default function PatientEncountersTab({
                     <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(encounter.status)}`}>
                       {encounter.status}
                     </span>
-                    <span className="text-sm font-medium text-[#0A1F3D]">
+                    <span className="text-sm font-medium text-[var(--text-primary)]">
                       {encounter.visit_type}
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-[#5A6B7D]">
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--text-secondary)]">
                     <div className="flex items-center gap-1.5">
                       <Clock size={14} />
                       {formatDateTime(encounter.scheduled_start)}
@@ -277,7 +277,7 @@ export default function PatientEncountersTab({
                       href={encounter.meet_link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--success-bg)] text-[var(--success-text)] rounded hover:bg-[var(--bg-hover)] transition-colors text-sm"
                     >
                       <Video size={14} />
                       Join Meet
@@ -286,7 +286,7 @@ export default function PatientEncountersTab({
                   )}
                   <button
                     onClick={() => onGenerateNote(encounter.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#E89C8A]/10 text-[#E89C8A] rounded-lg hover:bg-[#E89C8A]/20 transition-colors text-sm"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--accent-warm)]/10 text-[var(--accent-warm)] rounded hover:bg-[var(--accent-warm)]/20 transition-colors text-sm"
                   >
                     <Sparkles size={14} />
                     Generate Note

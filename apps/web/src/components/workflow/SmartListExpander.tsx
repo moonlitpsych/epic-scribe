@@ -52,37 +52,37 @@ export default function SmartListExpander({ epicId, displayText }: SmartListExpa
   const optionCount = smartList?.options.length || '?';
 
   return (
-    <div className="border border-[#C5A882]/30 rounded-lg overflow-hidden">
+    <div className="border border-[var(--border-default)] rounded-[2px] overflow-hidden">
       {/* Header - Always Visible */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 bg-white hover:bg-[#F5F1ED] transition-colors flex items-center justify-between"
+        className="w-full px-4 py-3 bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] transition-colors flex items-center justify-between"
       >
         <div className="flex items-center gap-2">
-          <span className="text-sm font-mono text-[#E89C8A] bg-[#F5F1ED] px-2 py-1 rounded">
+          <span className="text-sm font-mono text-[var(--accent-warm)] bg-[var(--bg-surface-2)] px-2 py-1 rounded">
             {displayText}
           </span>
-          <span className="text-xs text-[#5A6B7D]">
+          <span className="text-xs text-[var(--text-secondary)]">
             {smartList ? `${optionCount} options` : 'View options'}
           </span>
         </div>
-        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        {isExpanded ? <ChevronUp size={16} className="text-[var(--text-secondary)]" /> : <ChevronDown size={16} className="text-[var(--text-secondary)]" />}
       </button>
 
       {/* Expandable Options List */}
       {isExpanded && (
-        <div className="border-t border-[#C5A882]/20 bg-[#F5F1ED] p-4">
+        <div className="border-t border-[var(--border-default)] bg-[var(--bg-surface-2)] p-4">
           {loading && (
-            <p className="text-sm text-[#5A6B7D]">Loading options...</p>
+            <p className="text-sm text-[var(--text-secondary)]">Loading options...</p>
           )}
 
           {error && (
-            <p className="text-sm text-red-600">{error}</p>
+            <p className="text-sm text-[var(--error-text)]">{error}</p>
           )}
 
           {smartList && !loading && (
             <div className="space-y-1">
-              <p className="text-xs font-semibold text-[#0A1F3D] mb-2 uppercase tracking-wide">
+              <p className="text-xs font-semibold text-[var(--text-primary)] mb-2 uppercase tracking-wide">
                 Available Options:
               </p>
               {smartList.options
@@ -92,18 +92,18 @@ export default function SmartListExpander({ epicId, displayText }: SmartListExpa
                     key={idx}
                     className={`
                       flex items-center gap-2 text-sm py-1 px-2 rounded
-                      ${option.is_default ? 'bg-white border border-[#C5A882]/30' : ''}
+                      ${option.is_default ? 'bg-[var(--bg-surface)] border border-[var(--border-default)]' : ''}
                     `}
                   >
                     {option.is_default && (
-                      <CheckCircle2 size={14} className="text-[#E89C8A] flex-shrink-0" />
+                      <CheckCircle2 size={14} className="text-[var(--accent-warm)] flex-shrink-0" />
                     )}
-                    <span className="text-xs text-[#5A6B7D] w-6">
+                    <span className="text-xs text-[var(--text-secondary)] w-6">
                       {option.order}.
                     </span>
-                    <span className="text-[#0A1F3D]">{option.value}</span>
+                    <span className="text-[var(--text-primary)]">{option.value}</span>
                     {option.is_default && (
-                      <span className="text-xs text-[#E89C8A] ml-auto">default</span>
+                      <span className="text-xs text-[var(--accent-warm)] ml-auto">default</span>
                     )}
                   </div>
                 ))}

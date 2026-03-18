@@ -5,11 +5,11 @@ import WorkflowWizard from '@/components/workflow/WorkflowWizard';
 
 function WorkflowContent() {
   return (
-    <div className="min-h-screen bg-[#F5F1ED]">
+    <div className="min-h-screen bg-[var(--bg-base)]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-serif text-[#0A1F3D] mb-2">Note Generation Workflow</h1>
-          <p className="text-[#5A6B7D]">
+          <h1 className="text-3xl font-heading text-[var(--text-primary)] mb-2 tracking-tight">Note Generation Workflow</h1>
+          <p className="text-[var(--text-secondary)]">
             Generate Epic-ready psychiatry notes with SmartTools
           </p>
         </div>
@@ -23,8 +23,8 @@ function WorkflowContent() {
 export default function WorkflowPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#F5F1ED] flex items-center justify-center">
-        <div className="text-[#5A6B7D]">Loading workflow...</div>
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
+        <div className="text-[var(--text-secondary)]">Loading workflow...</div>
       </div>
     }>
       <WorkflowContent />

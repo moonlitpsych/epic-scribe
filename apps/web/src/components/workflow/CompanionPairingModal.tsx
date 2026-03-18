@@ -76,16 +76,16 @@ export default function CompanionPairingModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+      <div className="bg-[var(--bg-surface)] rounded-[2px] max-w-md w-full mx-4 p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <Link2 className="text-[#E89C8A]" size={20} />
-            <h3 className="text-lg font-semibold text-[#0A1F3D]">Link Work Device</h3>
+            <Link2 className="text-[var(--accent-warm)]" size={20} />
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">Link Work Device</h3>
           </div>
           <button
             onClick={onClose}
-            className="text-[#5A6B7D] hover:text-[#0A1F3D] transition-colors"
+            className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
           >
             <X size={20} />
           </button>
@@ -94,17 +94,17 @@ export default function CompanionPairingModal({
         {hasPairedDevice ? (
           // Already paired - show status
           <div className="space-y-4">
-            <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center gap-3 p-4 bg-[var(--success-bg)] border border-[var(--success-border)] rounded-[2px]">
               {isConnected ? (
-                <Wifi className="text-green-600" size={20} />
+                <Wifi className="text-[var(--success-text)]" size={20} />
               ) : (
-                <WifiOff className="text-amber-500" size={20} />
+                <WifiOff className="text-[var(--warning-text)]" size={20} />
               )}
               <div>
-                <p className="text-green-800 font-medium">
+                <p className="text-[var(--success-text)] font-medium">
                   {isConnected ? 'Companion Connected' : 'Companion Paired'}
                 </p>
-                <p className="text-green-600 text-sm">
+                <p className="text-[var(--success-text)] text-sm opacity-80">
                   {isConnected
                     ? 'Real-time sync is active'
                     : 'Waiting for real-time connection...'}
@@ -115,7 +115,7 @@ export default function CompanionPairingModal({
             <button
               onClick={handleDisconnect}
               disabled={isDisconnecting}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-[var(--error-border)] text-[var(--error-text)] rounded hover:bg-[var(--error-bg)] transition-colors disabled:opacity-50"
             >
               {isDisconnecting ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -130,18 +130,18 @@ export default function CompanionPairingModal({
           <div className="space-y-4">
             {pairingCode && timeLeft !== null && timeLeft > 0 ? (
               <>
-                <div className="text-center p-6 bg-[#F5F1ED] rounded-lg">
-                  <p className="text-sm text-[#5A6B7D] mb-2">Enter this code on your work device</p>
-                  <p className="text-4xl font-mono font-bold tracking-[0.3em] text-[#0A1F3D]">
+                <div className="text-center p-6 bg-[var(--bg-surface-2)] rounded-[2px]">
+                  <p className="text-sm text-[var(--text-secondary)] mb-2">Enter this code on your work device</p>
+                  <p className="text-4xl font-mono font-bold tracking-[0.3em] text-[var(--text-primary)]">
                     {pairingCode}
                   </p>
-                  <p className="text-sm text-[#5A6B7D] mt-3">
+                  <p className="text-sm text-[var(--text-secondary)] mt-3">
                     Expires in {formatTime(timeLeft)}
                   </p>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-sm text-blue-700">
+                <div className="bg-[var(--info-bg)] border border-[var(--info-border)] rounded-[2px] p-3">
+                  <p className="text-sm text-[var(--info-text)]">
                     On your work desktop, go to{' '}
                     <span className="font-mono font-medium">epic-scribe.vercel.app/companion</span>
                     {' '}and enter this code.
@@ -150,7 +150,7 @@ export default function CompanionPairingModal({
               </>
             ) : (
               <>
-                <p className="text-[#5A6B7D] text-sm">
+                <p className="text-[var(--text-secondary)] text-sm">
                   Generate a one-time code to link your work desktop. Once linked, you can paste prior notes
                   on your work device and they will appear here instantly. Generated notes will sync back
                   to your work device for pasting into Epic.
@@ -159,7 +159,7 @@ export default function CompanionPairingModal({
                 <button
                   onClick={handleGenerate}
                   disabled={isGenerating}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#E89C8A] text-white rounded-lg hover:bg-[#0A1F3D] transition-colors font-semibold disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded hover:bg-[var(--accent-primary-hover)] transition-colors font-semibold disabled:opacity-50"
                 >
                   {isGenerating ? (
                     <Loader2 size={20} className="animate-spin" />

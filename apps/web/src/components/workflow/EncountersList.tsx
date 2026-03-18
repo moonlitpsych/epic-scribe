@@ -32,10 +32,10 @@ export default function EncountersList({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <h3 className="text-sm font-medium text-gray-700 mb-3">Patient Encounters</h3>
+      <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-4">
+        <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">Patient Encounters</h3>
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent-primary)]"></div>
         </div>
       </div>
     );
@@ -43,9 +43,9 @@ export default function EncountersList({
 
   if (!encounters || encounters.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <h3 className="text-sm font-medium text-gray-700 mb-3">Patient Encounters</h3>
-        <p className="text-sm text-gray-500 text-center py-4">
+      <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-4">
+        <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">Patient Encounters</h3>
+        <p className="text-sm text-[var(--text-muted)] text-center py-4">
           No scheduled encounters for this patient
         </p>
       </div>
@@ -53,8 +53,8 @@ export default function EncountersList({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
-      <h3 className="text-sm font-medium text-gray-700 mb-3">
+    <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-4">
+      <h3 className="text-sm font-medium text-[var(--text-primary)] mb-3">
         Recent & Upcoming Encounters ({encounters.length})
       </h3>
       <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -67,29 +67,29 @@ export default function EncountersList({
               key={encounter.id}
               onClick={() => onSelectEncounter(encounter)}
               className={`
-                p-3 rounded-lg border cursor-pointer transition-all
+                p-3 rounded-[2px] border cursor-pointer transition-all
                 ${isSelected
-                  ? 'border-indigo-500 bg-indigo-50 shadow-sm'
-                  : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'
+                  ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/10'
+                  : 'border-[var(--border-default)] hover:border-[var(--accent-primary)] hover:bg-[var(--bg-hover)]'
                 }
               `}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-medium text-gray-900">
+                    <span className="text-xs font-medium text-[var(--text-primary)]">
                       {formatDateTime(encounter.start)}
                     </span>
                     {isSelected && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]">
                         Selected
                       </span>
                     )}
                   </div>
-                  <div className="text-sm text-gray-700 truncate">
+                  <div className="text-sm text-[var(--text-primary)] truncate">
                     {encounter.setting}
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-[var(--text-muted)]">
                     {encounter.visitType}
                   </div>
                 </div>
@@ -99,7 +99,7 @@ export default function EncountersList({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-indigo-700 bg-indigo-100 rounded hover:bg-indigo-200 transition-colors"
+                    className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 rounded hover:bg-[var(--accent-primary)]/20 transition-colors"
                     title="Open Google Meet"
                   >
                     <svg className="h-3 w-3" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">

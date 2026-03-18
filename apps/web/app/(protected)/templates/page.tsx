@@ -25,10 +25,10 @@ export default function TemplatesPage() {
 
   if (!mounted || status === 'loading') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-gray-900 border-r-transparent"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[var(--accent-primary)] border-r-transparent"></div>
+          <p className="mt-4 text-[var(--text-secondary)]">Loading...</p>
         </div>
       </div>
     );
@@ -39,26 +39,26 @@ export default function TemplatesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-8">
+    <main className="min-h-screen bg-[var(--bg-base)] px-4 py-8">
       <div className="max-w-7xl mx-auto">
         {/* Navigation Header */}
         <div className="mb-6 flex justify-between items-center">
           <div className="flex gap-4">
             <Link
               href="/home"
-              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               Home
             </Link>
             <Link
               href="/workflow"
-              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               Workflow
             </Link>
             <Link
               href="/designated-examiner"
-              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               Designated Examiner
             </Link>
@@ -67,10 +67,10 @@ export default function TemplatesPage() {
         </div>
 
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-heading text-[var(--text-primary)] mb-2">
             Template Manager
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-[var(--text-secondary)]">
             Manage Epic note templates for all settings and visit types
           </p>
         </div>

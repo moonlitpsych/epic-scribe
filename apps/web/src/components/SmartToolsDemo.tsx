@@ -50,10 +50,10 @@ Next appointment: .nextappt
 Provider: .provider`;
 
 const HIGHLIGHT_COLORS = {
-  smartlink: 'bg-blue-100 text-blue-800 border-blue-300',
-  dotphrase: 'bg-green-100 text-green-800 border-green-300',
-  wildcard: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  smartlist: 'bg-purple-100 text-purple-800 border-purple-300',
+  smartlink: 'bg-[var(--info-bg)] text-[var(--info-text)] border-[var(--info-border)]',
+  dotphrase: 'bg-[var(--success-bg)] text-[var(--success-text)] border-[var(--success-border)]',
+  wildcard: 'bg-[var(--warning-bg)] text-[var(--warning-text)] border-[var(--warning-border)]',
+  smartlist: 'bg-[#13101f] text-[#c084fc] border-[#2a2050]',
 };
 
 export function SmartToolsDemo() {
@@ -127,12 +127,12 @@ export function SmartToolsDemo() {
   return (
     <div className="space-y-6">
       {/* Input Section */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold">Input Text</h2>
+          <h2 className="text-2xl font-semibold text-[var(--text-primary)]">Input Text</h2>
           <button
             onClick={() => setInputText(SAMPLE_TEXT)}
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium transition-colors"
+            className="px-4 py-2 bg-[var(--bg-hover)] hover:bg-[var(--border-default)] rounded text-sm font-medium text-[var(--text-primary)] transition-colors"
           >
             Reset to Sample
           </button>
@@ -140,44 +140,44 @@ export function SmartToolsDemo() {
         <textarea
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          className="w-full h-64 p-4 border-2 border-gray-200 rounded-lg font-mono text-sm focus:border-blue-500 focus:outline-none"
+          className="w-full h-64 p-4 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] font-mono text-sm focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent placeholder:text-[var(--text-muted)]"
           placeholder="Enter text with SmartTools elements..."
         />
       </div>
 
       {/* Statistics Panel */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-semibold mb-4">SmartTools Statistics</h2>
+      <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+        <h2 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">SmartTools Statistics</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <div className="text-3xl font-bold text-blue-600">{summary.counts.smartLinks}</div>
-            <div className="text-sm text-gray-600">SmartLinks (@id@)</div>
+          <div className="bg-[var(--info-bg)] border border-[var(--info-border)] p-4 rounded-[2px]">
+            <div className="text-3xl font-bold text-[var(--info-text)]">{summary.counts.smartLinks}</div>
+            <div className="text-sm text-[var(--text-secondary)]">SmartLinks (@id@)</div>
           </div>
-          <div className="bg-green-50 p-4 rounded-lg">
-            <div className="text-3xl font-bold text-green-600">{summary.counts.dotPhrases}</div>
-            <div className="text-sm text-gray-600">DotPhrases (.id)</div>
+          <div className="bg-[var(--success-bg)] border border-[var(--success-border)] p-4 rounded-[2px]">
+            <div className="text-3xl font-bold text-[var(--success-text)]">{summary.counts.dotPhrases}</div>
+            <div className="text-sm text-[var(--text-secondary)]">DotPhrases (.id)</div>
           </div>
-          <div className="bg-yellow-50 p-4 rounded-lg">
-            <div className="text-3xl font-bold text-yellow-600">{summary.counts.wildcards}</div>
-            <div className="text-sm text-gray-600">Wildcards (***)</div>
+          <div className="bg-[var(--warning-bg)] border border-[var(--warning-border)] p-4 rounded-[2px]">
+            <div className="text-3xl font-bold text-[var(--warning-text)]">{summary.counts.wildcards}</div>
+            <div className="text-sm text-[var(--text-secondary)]">Wildcards (***)</div>
           </div>
-          <div className="bg-purple-50 p-4 rounded-lg">
-            <div className="text-3xl font-bold text-purple-600">{summary.counts.smartLists}</div>
-            <div className="text-sm text-gray-600">SmartLists ({`{}`})</div>
+          <div className="bg-[#13101f] border border-[#2a2050] p-4 rounded-[2px]">
+            <div className="text-3xl font-bold text-[#c084fc]">{summary.counts.smartLists}</div>
+            <div className="text-sm text-[var(--text-secondary)]">SmartLists ({`{}`})</div>
           </div>
         </div>
       </div>
 
       {/* Tabs for Parser/Transformer */}
-      <div className="bg-white rounded-lg shadow-lg">
-        <div className="border-b border-gray-200">
+      <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)]">
+        <div className="border-b border-[var(--border-default)]">
           <nav className="flex -mb-px">
             <button
               onClick={() => setActiveTab('parser')}
               className={`py-3 px-6 border-b-2 font-medium text-sm ${
                 activeTab === 'parser'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-[var(--accent-warm)] text-[var(--accent-warm)]'
+                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
             >
               Parser Output
@@ -189,8 +189,8 @@ export function SmartToolsDemo() {
               }}
               className={`py-3 px-6 border-b-2 font-medium text-sm ${
                 activeTab === 'transformer'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-[var(--accent-warm)] text-[var(--accent-warm)]'
+                  : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
             >
               Transformer Output
@@ -202,19 +202,19 @@ export function SmartToolsDemo() {
           {activeTab === 'parser' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Highlighted Text</h3>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">Highlighted Text</h3>
                 <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     checked={highlightEnabled}
                     onChange={(e) => setHighlightEnabled(e.target.checked)}
-                    className="rounded text-blue-600"
+                    className="rounded text-[var(--accent-primary)]"
                   />
-                  <span className="text-sm">Enable Highlighting</span>
+                  <span className="text-sm text-[var(--text-secondary)]">Enable Highlighting</span>
                 </label>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg overflow-x-auto">
+              <div className="bg-[var(--bg-surface-2)] p-4 rounded-[2px] overflow-x-auto">
                 {renderHighlightedText(inputText)}
               </div>
 
@@ -224,36 +224,36 @@ export function SmartToolsDemo() {
                   <span className={`px-2 py-1 rounded text-xs ${HIGHLIGHT_COLORS.smartlink}`}>
                     @SmartLink@
                   </span>
-                  <span className="text-sm text-gray-600">SmartLinks</span>
+                  <span className="text-sm text-[var(--text-secondary)]">SmartLinks</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className={`px-2 py-1 rounded text-xs ${HIGHLIGHT_COLORS.dotphrase}`}>
                     .DotPhrase
                   </span>
-                  <span className="text-sm text-gray-600">DotPhrases</span>
+                  <span className="text-sm text-[var(--text-secondary)]">DotPhrases</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className={`px-2 py-1 rounded text-xs ${HIGHLIGHT_COLORS.wildcard}`}>
                     ***
                   </span>
-                  <span className="text-sm text-gray-600">Wildcards</span>
+                  <span className="text-sm text-[var(--text-secondary)]">Wildcards</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className={`px-2 py-1 rounded text-xs ${HIGHLIGHT_COLORS.smartlist}`}>
                     {`{List:ID}`}
                   </span>
-                  <span className="text-sm text-gray-600">SmartLists</span>
+                  <span className="text-sm text-[var(--text-secondary)]">SmartLists</span>
                 </div>
               </div>
 
               {/* Detailed Lists */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                 {summary.smartLinks.length > 0 && (
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-blue-800 mb-2">SmartLinks Found:</h4>
+                  <div className="bg-[var(--info-bg)] border border-[var(--info-border)] p-4 rounded-[2px]">
+                    <h4 className="font-semibold text-[var(--info-text)] mb-2">SmartLinks Found:</h4>
                     <ul className="space-y-1">
                       {[...new Set(summary.smartLinks)].map((id, idx) => (
-                        <li key={idx} className="text-sm font-mono text-blue-600">
+                        <li key={idx} className="text-sm font-mono text-[var(--info-text)]">
                           @{id}@ → .{id}
                         </li>
                       ))}
@@ -262,11 +262,11 @@ export function SmartToolsDemo() {
                 )}
 
                 {summary.smartLists.length > 0 && (
-                  <div className="bg-purple-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-purple-800 mb-2">SmartLists Found:</h4>
+                  <div className="bg-[#13101f] border border-[#2a2050] p-4 rounded-[2px]">
+                    <h4 className="font-semibold text-[#c084fc] mb-2">SmartLists Found:</h4>
                     <ul className="space-y-1">
                       {summary.smartLists.map((list, idx) => (
-                        <li key={idx} className="text-sm font-mono text-purple-600">
+                        <li key={idx} className="text-sm font-mono text-[#c084fc]">
                           {list.display} (ID: {list.epicId})
                         </li>
                       ))}
@@ -279,10 +279,10 @@ export function SmartToolsDemo() {
 
           {activeTab === 'transformer' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Transformed Output</h3>
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Transformed Output</h3>
+              <div className="bg-[var(--bg-surface-2)] p-4 rounded-[2px]">
                 <div className="mb-4">
-                  <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                  <span className="inline-block px-3 py-1 bg-[var(--success-bg)] text-[var(--success-text)] rounded-full text-sm font-medium">
                     SmartLinks → DotPhrases Conversion
                   </span>
                 </div>
@@ -291,15 +291,15 @@ export function SmartToolsDemo() {
                 </div>
               </div>
 
-              <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
+              <div className="bg-[var(--info-bg)] border-l-4 border-[var(--info-border)] p-4 rounded-[2px]">
                 <div className="flex">
                   <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                    <svg className="h-5 w-5 text-[var(--info-text)]" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm text-blue-700">
+                    <p className="text-sm text-[var(--info-text)]">
                       All @SmartLinks@ have been converted to .DotPhrases for Epic compatibility.
                       This transformed text is ready to be pasted into Epic.
                     </p>

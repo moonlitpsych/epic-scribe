@@ -62,24 +62,24 @@ export function UtahCriteriaChecklist({
   return (
     <div className="space-y-4">
       {/* Overall Assessment Banner */}
-      <div className={`p-4 rounded-lg border-2 ${
-        allMet ? 'bg-red-50 border-red-300' :
-        noneMet ? 'bg-green-50 border-green-300' :
-        'bg-yellow-50 border-yellow-300'
+      <div className={`p-4 rounded-[2px] border-2 ${
+        allMet ? 'bg-[var(--error-bg)] border-[var(--error-border)]' :
+        noneMet ? 'bg-[var(--success-bg)] border-[var(--success-border)]' :
+        'bg-[var(--warning-bg)] border-[var(--warning-border)]'
       }`}>
         <div className="flex items-center gap-3">
           {allMet ? (
-            <AlertCircle className="h-5 w-5 text-red-600" />
+            <AlertCircle className="h-5 w-5 text-[var(--error-text)]" />
           ) : noneMet ? (
-            <Check className="h-5 w-5 text-green-600" />
+            <Check className="h-5 w-5 text-[var(--success-text)]" />
           ) : (
-            <AlertCircle className="h-5 w-5 text-yellow-600" />
+            <AlertCircle className="h-5 w-5 text-[var(--warning-text)]" />
           )}
           <div>
-            <h3 className="font-semibold text-gray-900">
+            <h3 className="font-semibold text-[var(--text-primary)]">
               Overall Assessment: {metCriteria}/5 Criteria Met
             </h3>
-            <p className="text-sm text-gray-600 mt-0.5">
+            <p className="text-sm text-[var(--text-secondary)] mt-0.5">
               {allMet
                 ? 'All criteria for involuntary commitment are met'
                 : noneMet
@@ -99,8 +99,8 @@ export function UtahCriteriaChecklist({
           return (
             <div
               key={criterion.key}
-              className={`border rounded-lg p-4 transition-colors ${
-                isMet ? 'border-red-200 bg-red-50/30' : 'border-gray-200 bg-white'
+              className={`border rounded-[2px] p-4 transition-colors ${
+                isMet ? 'border-[var(--error-border)] bg-[var(--error-bg)]' : 'border-[var(--border-default)] bg-[var(--bg-surface)]'
               }`}
             >
               {/* Criterion Header */}
@@ -113,29 +113,29 @@ export function UtahCriteriaChecklist({
                   disabled={readOnly}
                   className={`mt-0.5 p-1 rounded border-2 transition-colors ${
                     isMet
-                      ? 'bg-red-500 border-red-500'
-                      : 'bg-white border-gray-300 hover:border-gray-400'
+                      ? 'bg-[var(--error-text)] border-[var(--error-text)]'
+                      : 'bg-[var(--bg-surface)] border-[var(--border-default)] hover:border-[var(--border-default)]'
                   } ${readOnly ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
                 >
                   {isMet && <Check className="h-4 w-4 text-white" />}
                 </button>
 
                 <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900">
+                  <h4 className="font-semibold text-[var(--text-primary)]">
                     {criterion.label}
                   </h4>
-                  <p className="text-sm text-gray-600 mt-0.5">
+                  <p className="text-sm text-[var(--text-secondary)] mt-0.5">
                     {criterion.full}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1 italic">
+                  <p className="text-xs text-[var(--text-muted)] mt-1 italic">
                     {criterion.guidance}
                   </p>
                 </div>
 
                 <div className={`px-2 py-1 rounded text-xs font-medium ${
                   isMet
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-gray-100 text-gray-600'
+                    ? 'bg-[var(--error-bg)] text-[var(--error-text)]'
+                    : 'bg-[var(--bg-surface-2)] text-[var(--text-secondary)]'
                 }`}>
                   {isMet ? 'MET' : 'NOT MET'}
                 </div>
@@ -143,7 +143,7 @@ export function UtahCriteriaChecklist({
 
               {/* Evidence Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                   Supporting Evidence
                 </label>
                 <textarea
@@ -153,14 +153,14 @@ export function UtahCriteriaChecklist({
                     e.target.value
                   )}
                   disabled={readOnly}
-                  className={`w-full px-3 py-2 border rounded-lg text-sm ${
+                  className={`w-full px-3 py-2 border rounded-[2px] text-sm bg-[var(--bg-surface-2)] text-[var(--text-primary)] ${
                     readOnly
-                      ? 'bg-gray-50 cursor-not-allowed'
-                      : 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                      ? 'bg-[var(--bg-surface-2)] cursor-not-allowed'
+                      : 'focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent'
                   } ${
                     isMet && !evidenceValue
-                      ? 'border-yellow-400 bg-yellow-50'
-                      : 'border-gray-300'
+                      ? 'border-[var(--warning-border)] bg-[var(--warning-bg)]'
+                      : 'border-[var(--border-default)]'
                   }`}
                   rows={2}
                   placeholder={
@@ -170,7 +170,7 @@ export function UtahCriteriaChecklist({
                   }
                 />
                 {isMet && !evidenceValue && (
-                  <p className="text-xs text-yellow-700 mt-1">
+                  <p className="text-xs text-[var(--warning-text)] mt-1">
                     ⚠️ Evidence recommended for met criteria
                   </p>
                 )}
@@ -181,8 +181,8 @@ export function UtahCriteriaChecklist({
       </div>
 
       {/* Summary Statistics */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <h4 className="font-medium text-gray-900 mb-2">Quick Summary</h4>
+      <div className="bg-[var(--bg-surface-2)] rounded-[2px] p-4">
+        <h4 className="font-medium text-[var(--text-primary)] mb-2">Quick Summary</h4>
         <div className="grid grid-cols-5 gap-2">
           {CRITERIA_DETAILS.map((criterion, index) => {
             const isMet = assessment[criterion.assessmentKey as keyof DECriteriaAssessment];
@@ -190,14 +190,14 @@ export function UtahCriteriaChecklist({
               <div
                 key={criterion.key}
                 className={`text-center py-2 px-1 rounded ${
-                  isMet ? 'bg-red-100' : 'bg-green-100'
+                  isMet ? 'bg-[var(--error-bg)]' : 'bg-[var(--success-bg)]'
                 }`}
               >
                 <div className="text-lg font-bold">
                   {index + 1}
                 </div>
                 <div className={`text-xs ${
-                  isMet ? 'text-red-700' : 'text-green-700'
+                  isMet ? 'text-[var(--error-text)]' : 'text-[var(--success-text)]'
                 }`}>
                   {isMet ? 'MET' : 'NOT MET'}
                 </div>

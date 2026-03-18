@@ -281,8 +281,8 @@ export default function PatientSelector({
   return (
     <div className="space-y-4">
       {/* Patient Selection Card */}
-      <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-6">
-        <h3 className="text-lg font-semibold text-[#0A1F3D] mb-4">
+      <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">
           Select Patient
         </h3>
 
@@ -290,39 +290,39 @@ export default function PatientSelector({
           <>
             {/* Search Bar */}
             <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#5A6B7D]" size={18} />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name or MRN..."
-                className="w-full pl-10 pr-4 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
               />
             </div>
 
             {/* Patient List */}
-            <div className="max-h-60 overflow-y-auto border border-[#C5A882]/20 rounded-lg">
+            <div className="max-h-60 overflow-y-auto border border-[var(--border-default)] rounded-[2px]">
               {loading ? (
-                <div className="p-4 text-center text-[#5A6B7D]">Searching...</div>
+                <div className="p-4 text-center text-[var(--text-secondary)]">Searching...</div>
               ) : searchResults.length > 0 ? (
                 searchResults.map((patient) => (
                   <button
                     key={patient.id}
                     onClick={() => onPatientSelect(patient)}
-                    className="w-full text-left p-3 hover:bg-[#F5F1ED] transition-colors border-b border-[#C5A882]/10 last:border-b-0"
+                    className="w-full text-left p-3 hover:bg-[var(--bg-hover)] transition-colors border-b border-[var(--border-subtle)] last:border-b-0"
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-[#0A1F3D]">
+                        <p className="font-medium text-[var(--text-primary)]">
                           {patient.last_name}, {patient.first_name}
                         </p>
-                        <p className="text-sm text-[#5A6B7D]">
+                        <p className="text-sm text-[var(--text-secondary)]">
                           {formatPatientAge(patient) || 'No DOB/Age'}
                           {patient.medicaid_id && ` • Medicaid ID: ${patient.medicaid_id}`}
                         </p>
                       </div>
                       {patient.encounter_count !== undefined && (
-                        <span className="text-xs bg-[#F5F1ED] text-[#5A6B7D] px-2 py-1 rounded">
+                        <span className="text-xs bg-[var(--bg-surface-2)] text-[var(--text-secondary)] px-2 py-1 rounded">
                           {patient.encounter_count} encounters
                         </span>
                       )}
@@ -330,7 +330,7 @@ export default function PatientSelector({
                   </button>
                 ))
               ) : (
-                <div className="p-4 text-center text-[#5A6B7D]">
+                <div className="p-4 text-center text-[var(--text-secondary)]">
                   No patients found
                 </div>
               )}
@@ -339,7 +339,7 @@ export default function PatientSelector({
             {/* Add New Patient Button */}
             <button
               onClick={() => setShowCreateModal(true)}
-              className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#E89C8A] text-white rounded-lg hover:bg-[#d88777] transition-colors"
+              className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded-[2px] hover:bg-[var(--accent-primary-hover)] transition-colors"
             >
               <Plus size={18} />
               Add New Patient
@@ -348,15 +348,15 @@ export default function PatientSelector({
         ) : (
           <>
             {/* Selected Patient Display */}
-            <div className="bg-[#F5F1ED] rounded-lg p-4 mb-4">
+            <div className="bg-[var(--bg-surface-2)] rounded-[2px] p-4 mb-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
-                  <User className="text-[#5A6B7D]" size={24} />
+                  <User className="text-[var(--text-secondary)]" size={24} />
                   <div>
-                    <p className="font-semibold text-[#0A1F3D]">
+                    <p className="font-semibold text-[var(--text-primary)]">
                       {selectedPatient.last_name}, {selectedPatient.first_name}
                     </p>
-                    <p className="text-sm text-[#5A6B7D]">
+                    <p className="text-sm text-[var(--text-secondary)]">
                       {formatPatientAge(selectedPatient) || 'No DOB/Age'}
                       {selectedPatient.medicaid_id && ` • Medicaid ID: ${selectedPatient.medicaid_id}`}
                     </p>
@@ -364,13 +364,13 @@ export default function PatientSelector({
                 </div>
                 <button
                   onClick={() => onPatientSelect(null as any)}
-                  className="text-sm text-[#5A6B7D] hover:text-[#0A1F3D]"
+                  className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 >
                   Change
                 </button>
               </div>
               {selectedPatient.notes && (
-                <p className="text-sm text-[#5A6B7D] mt-2 italic">
+                <p className="text-sm text-[var(--text-secondary)] mt-2 italic">
                   {selectedPatient.notes}
                 </p>
               )}
@@ -378,14 +378,14 @@ export default function PatientSelector({
 
             {/* Quick Actions for Appointments */}
             {setting && visitType && (
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-lg p-4">
+              <div className="bg-[var(--bg-surface-2)] border border-[var(--border-default)] rounded-[2px] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Video className="text-emerald-600" size={20} />
-                  <h4 className="text-sm font-semibold text-emerald-900">
+                  <Video className="text-[var(--accent-primary)]" size={20} />
+                  <h4 className="text-sm font-semibold text-[var(--accent-primary)]">
                     Ready for Appointment
                   </h4>
                 </div>
-                <p className="text-xs text-emerald-700 mb-3">
+                <p className="text-xs text-[var(--accent-primary)] mb-3">
                   {setting} • {visitType}
                 </p>
 
@@ -393,7 +393,7 @@ export default function PatientSelector({
                 <button
                   onClick={handleStartNow}
                   disabled={isStartingNow}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white text-base font-semibold rounded-lg hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none mb-2"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[var(--accent-primary)] text-[var(--text-inverse)] text-base font-semibold rounded-[2px] hover:bg-[var(--accent-primary-hover)] transition-all disabled:opacity-70 disabled:cursor-not-allowed mb-2"
                 >
                   {isStartingNow ? (
                     <>
@@ -407,14 +407,14 @@ export default function PatientSelector({
                     </>
                   )}
                 </button>
-                <p className="text-xs text-emerald-600 text-center mb-3">
+                <p className="text-xs text-[var(--accent-primary)] text-center mb-3">
                   One click: creates 60-min appointment and opens Google Meet
                 </p>
 
                 {/* Secondary: Schedule for Later */}
                 <button
                   onClick={() => setShowEncounterModal(true)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-emerald-400 text-emerald-700 text-sm rounded-lg hover:bg-emerald-100 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-[var(--border-default)] text-[var(--accent-primary)] text-sm rounded-[2px] hover:bg-[var(--bg-hover)] transition-colors"
                 >
                   <Calendar size={16} />
                   Schedule for Later
@@ -427,53 +427,53 @@ export default function PatientSelector({
 
       {/* Create Patient Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-semibold text-[#0A1F3D] mb-4">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-[var(--bg-surface)] rounded-[2px] p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-4">
               Add New Patient
             </h3>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                   First Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={newPatient.firstName}
                   onChange={(e) => setNewPatient({ ...newPatient, firstName: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A]"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                   Last Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={newPatient.lastName}
                   onChange={(e) => setNewPatient({ ...newPatient, lastName: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A]"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
-                    Date of Birth <span className="text-xs text-[#5A6B7D]">(Optional)</span>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+                    Date of Birth <span className="text-xs text-[var(--text-secondary)]">(Optional)</span>
                   </label>
                   <input
                     type="date"
                     value={newPatient.dateOfBirth}
                     onChange={(e) => setNewPatient({ ...newPatient, dateOfBirth: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A]"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
-                    Age <span className="text-xs text-[#5A6B7D]">(Optional)</span>
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+                    Age <span className="text-xs text-[var(--text-secondary)]">(Optional)</span>
                   </label>
                   <input
                     type="number"
@@ -482,32 +482,32 @@ export default function PatientSelector({
                     value={newPatient.age}
                     onChange={(e) => setNewPatient({ ...newPatient, age: e.target.value })}
                     placeholder="e.g., 35"
-                    className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A]"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
-                  MRN <span className="text-xs text-[#5A6B7D]">(Optional)</span>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+                  MRN <span className="text-xs text-[var(--text-secondary)]">(Optional)</span>
                 </label>
                 <input
                   type="text"
                   value={newPatient.mrn}
                   onChange={(e) => setNewPatient({ ...newPatient, mrn: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A]"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                   Clinical Notes (Optional)
                 </label>
                 <textarea
                   value={newPatient.notes}
                   onChange={(e) => setNewPatient({ ...newPatient, notes: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A]"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                   placeholder="Any relevant clinical context..."
                 />
               </div>
@@ -516,13 +516,13 @@ export default function PatientSelector({
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="flex-1 px-4 py-2 border border-[#C5A882] text-[#0A1F3D] rounded-lg hover:bg-[#F5F1ED]"
+                className="flex-1 px-4 py-2 border border-[var(--border-default)] text-[var(--text-primary)] rounded-[2px] hover:bg-[var(--bg-hover)]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreatePatient}
-                className="flex-1 px-4 py-2 bg-[#E89C8A] text-white rounded-lg hover:bg-[#d88777]"
+                className="flex-1 px-4 py-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded-[2px] hover:bg-[var(--accent-primary-hover)]"
               >
                 Create Patient
               </button>
@@ -533,56 +533,56 @@ export default function PatientSelector({
 
       {/* Create Encounter Modal */}
       {showEncounterModal && selectedPatient && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-semibold text-[#0A1F3D] mb-4">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-[var(--bg-surface)] rounded-[2px] p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-4">
               Schedule Encounter
             </h3>
 
-            <div className="bg-[#F5F1ED] rounded-lg p-3 mb-4">
-              <p className="text-sm text-[#5A6B7D]">Patient:</p>
-              <p className="font-medium text-[#0A1F3D]">
+            <div className="bg-[var(--bg-surface-2)] rounded-[2px] p-3 mb-4">
+              <p className="text-sm text-[var(--text-secondary)]">Patient:</p>
+              <p className="font-medium text-[var(--text-primary)]">
                 {selectedPatient.last_name}, {selectedPatient.first_name}
               </p>
-              <p className="text-sm text-[#5A6B7D] mt-1">
+              <p className="text-sm text-[var(--text-secondary)] mt-1">
                 {setting} • {visitType}
               </p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                   Date
                 </label>
                 <input
                   type="date"
                   value={encounterDate}
                   onChange={(e) => setEncounterDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A]"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                     Start Time
                   </label>
                   <input
                     type="time"
                     value={encounterTime}
                     onChange={(e) => setEncounterTime(e.target.value)}
-                    className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A]"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
                     Duration (min)
                   </label>
                   <select
                     value={encounterDuration}
                     onChange={(e) => setEncounterDuration(e.target.value)}
-                    className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A]"
+                    className="w-full px-3 py-2 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] bg-[var(--bg-surface-2)] text-[var(--text-primary)]"
                   >
                     <option value="30">30</option>
                     <option value="45">45</option>
@@ -593,12 +593,12 @@ export default function PatientSelector({
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
-              <div className="flex items-center gap-2 text-blue-800">
+            <div className="bg-[var(--info-bg)] border border-[var(--info-border)] rounded-[2px] p-3 mt-4">
+              <div className="flex items-center gap-2 text-[var(--info-text)]">
                 <Video size={18} />
                 <p className="text-sm font-medium">Google Meet link will be created</p>
               </div>
-              <p className="text-xs text-blue-600 mt-1">
+              <p className="text-xs text-[var(--info-text)] mt-1">
                 The encounter will be added to your Google Calendar with a Meet link
               </p>
             </div>
@@ -606,13 +606,13 @@ export default function PatientSelector({
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowEncounterModal(false)}
-                className="flex-1 px-4 py-2 border border-[#C5A882] text-[#0A1F3D] rounded-lg hover:bg-[#F5F1ED]"
+                className="flex-1 px-4 py-2 border border-[var(--border-default)] text-[var(--text-primary)] rounded-[2px] hover:bg-[var(--bg-hover)]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateEncounter}
-                className="flex-1 px-4 py-2 bg-[#0A1F3D] text-white rounded-lg hover:bg-[#0A1F3D]/90"
+                className="flex-1 px-4 py-2 bg-[var(--bg-surface-2)] text-[var(--text-primary)] rounded-[2px] hover:bg-[var(--bg-hover)]"
               >
                 Create & Open Meet
               </button>

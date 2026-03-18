@@ -88,41 +88,41 @@ export default function ManualNotePanel({ patient, onNoteSaved }: ManualNotePane
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 overflow-hidden">
+    <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] overflow-hidden">
       {/* Collapsible Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 hover:bg-[#F5F1ED]/50 transition-colors"
+        className="w-full flex items-center justify-between p-4 hover:bg-[var(--bg-hover)] transition-colors"
       >
         <div className="flex items-center gap-3">
           {isExpanded ? (
-            <ChevronDown className="text-[#5A6B7D]" size={20} />
+            <ChevronDown className="text-[var(--text-secondary)]" size={20} />
           ) : (
-            <ChevronRight className="text-[#5A6B7D]" size={20} />
+            <ChevronRight className="text-[var(--text-secondary)]" size={20} />
           )}
-          <FileText className="text-[#E89C8A]" size={20} />
-          <span className="font-medium text-[#0A1F3D]">Add Manual Note</span>
+          <FileText className="text-[var(--accent-warm)]" size={20} />
+          <span className="font-medium text-[var(--text-primary)]">Add Manual Note</span>
         </div>
-        <span className="text-sm text-[#5A6B7D]">
+        <span className="text-sm text-[var(--text-secondary)]">
           {isExpanded ? 'Click to collapse' : 'Click to expand'}
         </span>
       </button>
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="border-t border-[#C5A882]/20 p-4 space-y-4">
+        <div className="border-t border-[var(--border-default)] p-4 space-y-4">
           {/* Note Type Selection */}
           <div>
-            <label className="block text-sm font-medium text-[#0A1F3D] mb-2">
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
               Note Type
             </label>
             <div className="flex gap-3">
               <button
                 onClick={() => setNoteType('quick_memo')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded border transition-all ${
                   noteType === 'quick_memo'
-                    ? 'border-[#E89C8A] bg-[#E89C8A]/10 text-[#E89C8A]'
-                    : 'border-[#C5A882]/30 text-[#5A6B7D] hover:border-[#C5A882]'
+                    ? 'border-[var(--accent-warm)] bg-[var(--accent-warm)]/10 text-[var(--accent-warm)]'
+                    : 'border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--accent-warm)]'
                 }`}
               >
                 <StickyNote size={18} />
@@ -130,17 +130,17 @@ export default function ManualNotePanel({ patient, onNoteSaved }: ManualNotePane
               </button>
               <button
                 onClick={() => setNoteType('clinical_note')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded border transition-all ${
                   noteType === 'clinical_note'
-                    ? 'border-[#0A1F3D] bg-[#0A1F3D]/10 text-[#0A1F3D]'
-                    : 'border-[#C5A882]/30 text-[#5A6B7D] hover:border-[#C5A882]'
+                    ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]'
+                    : 'border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--accent-primary)]'
                 }`}
               >
                 <FileText size={18} />
                 Clinical Note
               </button>
             </div>
-            <p className="text-xs text-[#5A6B7D] mt-2">
+            <p className="text-xs text-[var(--text-secondary)] mt-2">
               {noteType === 'quick_memo'
                 ? 'Quick informal notes for reference (reminders, to-dos, brief observations)'
                 : 'Formal clinical documentation (assessments, observations, treatment notes)'}
@@ -149,22 +149,22 @@ export default function ManualNotePanel({ patient, onNoteSaved }: ManualNotePane
 
           {/* Title (optional) */}
           <div>
-            <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
-              Title <span className="text-[#5A6B7D] font-normal">(optional)</span>
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+              Title <span className="text-[var(--text-secondary)] font-normal">(optional)</span>
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={noteType === 'quick_memo' ? 'e.g., Follow-up reminder' : 'e.g., Treatment Progress Note'}
-              className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent"
               disabled={saving}
             />
           </div>
 
           {/* Content */}
           <div>
-            <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
               Note Content <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -176,22 +176,22 @@ export default function ManualNotePanel({ patient, onNoteSaved }: ManualNotePane
                   : 'Enter clinical documentation...'
               }
               rows={noteType === 'quick_memo' ? 4 : 8}
-              className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent font-mono text-sm"
               disabled={saving}
             />
-            <p className="text-xs text-[#5A6B7D] mt-1">
+            <p className="text-xs text-[var(--text-secondary)] mt-1">
               {content.length} characters
             </p>
           </div>
 
           {/* Error/Success Messages */}
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <div className="p-3 bg-[var(--error-bg)] border border-[var(--error-border)] rounded-[2px] text-sm text-[var(--error-text)]">
               {error}
             </div>
           )}
           {success && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+            <div className="p-3 bg-[var(--success-bg)] border border-[var(--success-border)] rounded-[2px] text-sm text-[var(--success-text)]">
               Note saved successfully!
             </div>
           )}
@@ -201,7 +201,7 @@ export default function ManualNotePanel({ patient, onNoteSaved }: ManualNotePane
             <button
               onClick={handleCancel}
               disabled={saving}
-              className="flex items-center gap-2 px-4 py-2 text-[#5A6B7D] hover:text-[#0A1F3D] transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors disabled:opacity-50"
             >
               <X size={16} />
               Cancel
@@ -209,7 +209,7 @@ export default function ManualNotePanel({ patient, onNoteSaved }: ManualNotePane
             <button
               onClick={handleSave}
               disabled={saving || !content.trim()}
-              className="flex items-center gap-2 px-4 py-2 bg-[#0A1F3D] text-white rounded-lg hover:bg-[#0A1F3D]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded hover:bg-[var(--accent-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save size={16} />
               {saving ? 'Saving...' : 'Save Note'}

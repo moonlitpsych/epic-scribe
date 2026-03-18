@@ -118,16 +118,16 @@ export default function TranscriptSelector({
   }
 
   return (
-    <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4">
+    <div className="bg-[#13101f] border border-[#2a2050] rounded-[2px] p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <FileText className="text-purple-600" size={20} />
-          <h4 className="font-semibold text-purple-900">Google Drive Transcripts</h4>
+          <FileText className="text-[#c084fc]" size={20} />
+          <h4 className="font-semibold text-[#c084fc]">Google Drive Transcripts</h4>
         </div>
         <button
           onClick={fetchTranscripts}
           disabled={loading || disabled}
-          className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-800 disabled:opacity-50"
+          className="flex items-center gap-1 text-sm text-[#c084fc] hover:text-[#d4a5fd] disabled:opacity-50"
         >
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           Refresh
@@ -135,19 +135,19 @@ export default function TranscriptSelector({
       </div>
 
       {loading && transcripts.length === 0 ? (
-        <div className="flex items-center gap-2 text-purple-700 py-4">
+        <div className="flex items-center gap-2 text-[#c084fc] py-4">
           <Loader2 size={16} className="animate-spin" />
           <span className="text-sm">Searching Google Drive for transcripts...</span>
         </div>
       ) : error ? (
-        <div className="text-sm text-red-600 py-2">{error}</div>
+        <div className="text-sm text-[var(--error-text)] py-2">{error}</div>
       ) : transcripts.length === 0 ? (
-        <p className="text-sm text-purple-700 py-2">
+        <p className="text-sm text-[#c084fc] py-2">
           No transcripts found for this encounter. Make sure the Google Meet recording has finished processing.
         </p>
       ) : (
         <div className="space-y-2">
-          <p className="text-xs text-purple-600 mb-2">
+          <p className="text-xs text-[#c084fc]/70 mb-2">
             Found {transcripts.length} transcript{transcripts.length !== 1 ? 's' : ''}. Click to load into the transcript field.
           </p>
           <div className="max-h-48 overflow-y-auto space-y-2">
@@ -157,33 +157,33 @@ export default function TranscriptSelector({
                 onClick={() => loadTranscript(file.id)}
                 disabled={disabled || loadingFileId === file.id}
                 className={`
-                  w-full text-left p-3 rounded-lg border transition-all
+                  w-full text-left p-3 rounded-[2px] border transition-all
                   ${loadedFileId === file.id
-                    ? 'bg-green-50 border-green-300'
-                    : 'bg-white border-purple-200 hover:border-purple-400 hover:bg-purple-50'
+                    ? 'bg-[var(--success-bg)] border-[var(--success-border)]'
+                    : 'bg-[var(--bg-surface)] border-[var(--border-default)] hover:border-[#2a2050] hover:bg-[var(--bg-hover)]'
                   }
                   disabled:opacity-50 disabled:cursor-not-allowed
                 `}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate text-sm">
+                    <p className="font-medium text-[var(--text-primary)] truncate text-sm">
                       {formatName(file.name)}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
-                      <Clock size={12} className="text-gray-400" />
-                      <span className="text-xs text-gray-500">
+                      <Clock size={12} className="text-[var(--text-muted)]" />
+                      <span className="text-xs text-[var(--text-muted)]">
                         {formatDate(file.modifiedTime)}
                       </span>
                     </div>
                   </div>
                   <div className="flex-shrink-0">
                     {loadingFileId === file.id ? (
-                      <Loader2 size={18} className="text-purple-600 animate-spin" />
+                      <Loader2 size={18} className="text-[#c084fc] animate-spin" />
                     ) : loadedFileId === file.id ? (
-                      <CheckCircle size={18} className="text-green-600" />
+                      <CheckCircle size={18} className="text-[var(--success-text)]" />
                     ) : (
-                      <Download size={18} className="text-purple-400" />
+                      <Download size={18} className="text-[var(--text-muted)]" />
                     )}
                   </div>
                 </div>

@@ -77,18 +77,18 @@ export default function TemplateReviewStep({
   return (
     <div className="space-y-6">
       {/* Template Selection Card */}
-      <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-6">
-        <h2 className="text-2xl font-serif text-[#0A1F3D] mb-4">Select Template</h2>
+      <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+        <h2 className="text-2xl font-heading text-[var(--text-primary)] mb-4 tracking-tight">Select Template</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-[#0A1F3D] mb-2">
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
               Setting
             </label>
             <select
               value={setting || ''}
               onChange={handleSettingChange}
-              className="w-full px-4 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+              className="w-full px-4 py-2 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent"
             >
               <option value="">Select a setting...</option>
               {SETTINGS.map((s) => (
@@ -100,14 +100,14 @@ export default function TemplateReviewStep({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#0A1F3D] mb-2">
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
               Visit Type
             </label>
             <select
               value={visitType || ''}
               onChange={handleVisitTypeChange}
               disabled={!setting}
-              className="w-full px-4 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent disabled:bg-gray-100"
+              className="w-full px-4 py-2 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent disabled:bg-[var(--bg-surface)] disabled:text-[var(--text-muted)]"
             >
               <option value="">Select visit type...</option>
               {setting &&
@@ -121,12 +121,12 @@ export default function TemplateReviewStep({
         </div>
 
         {template && (
-          <div className="mt-4 p-3 bg-[#F5F1ED] rounded-lg">
-            <p className="text-sm text-[#0A1F3D]">
+          <div className="mt-4 p-3 bg-[var(--bg-surface-2)] rounded-[2px]">
+            <p className="text-sm text-[var(--text-primary)]">
               <span className="font-semibold">Template:</span> {template.name}
             </p>
-            <p className="text-sm text-[#5A6B7D] mt-1">
-              {template.sections?.length || 0} sections • Version {template.version}
+            <p className="text-sm text-[var(--text-secondary)] mt-1">
+              {template.sections?.length || 0} sections - Version {template.version}
             </p>
           </div>
         )}
@@ -134,27 +134,27 @@ export default function TemplateReviewStep({
 
       {/* Template Preview */}
       {loading && (
-        <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 p-6">
-          <p className="text-center text-[#5A6B7D]">Loading template...</p>
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+          <p className="text-center text-[var(--text-secondary)]">Loading template...</p>
         </div>
       )}
 
       {template && !loading && (
-        <div className="bg-white rounded-lg shadow-sm border border-[#C5A882]/20 overflow-hidden">
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] overflow-hidden">
           {/* Collapsible Header */}
           <button
             onClick={() => setShowTemplatePreview(!showTemplatePreview)}
-            className="w-full p-6 flex items-center justify-between hover:bg-[#F5F1ED]/50 transition-colors"
+            className="w-full p-6 flex items-center justify-between hover:bg-[var(--bg-hover)] transition-colors"
           >
             <div className="flex items-center gap-3">
               {showTemplatePreview ? (
-                <ChevronDown size={20} className="text-[#5A6B7D]" />
+                <ChevronDown size={20} className="text-[var(--text-secondary)]" />
               ) : (
-                <ChevronRight size={20} className="text-[#5A6B7D]" />
+                <ChevronRight size={20} className="text-[var(--text-secondary)]" />
               )}
               <div className="text-left">
-                <h2 className="text-xl font-serif text-[#0A1F3D]">Template Preview</h2>
-                <p className="text-sm text-[#5A6B7D]">
+                <h2 className="text-xl font-heading text-[var(--text-primary)]">Template Preview</h2>
+                <p className="text-sm text-[var(--text-secondary)]">
                   {showTemplatePreview ? 'Click to collapse' : 'Click to review template structure and SmartLists'}
                 </p>
               </div>
@@ -164,7 +164,7 @@ export default function TemplateReviewStep({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-2 text-sm text-[#E89C8A] hover:text-[#0A1F3D] transition-colors"
+              className="flex items-center gap-2 text-sm text-[var(--accent-warm)] hover:text-[var(--text-primary)] transition-colors"
             >
               <ExternalLink size={16} />
               Edit template
@@ -173,8 +173,8 @@ export default function TemplateReviewStep({
 
           {/* Collapsible Content */}
           {showTemplatePreview && (
-            <div className="px-6 pb-6 border-t border-[#C5A882]/20">
-              <p className="text-sm text-[#5A6B7D] my-4">
+            <div className="px-6 pb-6 border-t border-[var(--border-default)]">
+              <p className="text-sm text-[var(--text-secondary)] my-4">
                 Review the template structure and SmartList options below. This template will be used to generate your note.
               </p>
 
@@ -188,24 +188,24 @@ export default function TemplateReviewStep({
                     return (
                       <div
                         key={section.order}
-                        className="border border-[#C5A882]/20 rounded-lg p-4 bg-[#F5F1ED]"
+                        className="border border-[var(--border-default)] rounded-[2px] p-4 bg-[var(--bg-surface-2)]"
                       >
                         <div className="flex items-center gap-2 mb-3">
-                          <span className="text-xs font-semibold text-[#E89C8A] bg-white px-2 py-1 rounded">
+                          <span className="text-xs font-semibold text-[var(--accent-warm)] bg-[var(--bg-surface)] px-2 py-1 rounded">
                             Section {section.order}
                           </span>
-                          <h3 className="text-lg font-semibold text-[#0A1F3D]">
+                          <h3 className="text-lg font-semibold text-[var(--text-primary)]">
                             {section.name}
                           </h3>
                         </div>
 
-                        <pre className="text-sm font-mono bg-white p-3 rounded border border-[#C5A882]/20 whitespace-pre-wrap overflow-x-auto mb-3">
+                        <pre className="text-sm font-mono bg-[var(--bg-surface)] p-3 rounded border border-[var(--border-default)] whitespace-pre-wrap overflow-x-auto mb-3 text-[var(--text-secondary)]">
                           {section.content}
                         </pre>
 
                         {hasSmartLists && (
                           <div className="mt-3 space-y-2">
-                            <p className="text-sm font-medium text-[#0A1F3D]">SmartLists in this section:</p>
+                            <p className="text-sm font-medium text-[var(--text-primary)]">SmartLists in this section:</p>
                             {parsed.smartLists.map((sl, idx) => (
                               <SmartListExpander
                                 key={`${sl.epicId}-${idx}`}
@@ -229,7 +229,7 @@ export default function TemplateReviewStep({
         <div className="flex justify-end">
           <button
             onClick={onNext}
-            className="flex items-center gap-2 px-6 py-3 bg-[#E89C8A] text-white rounded-lg hover:bg-[#0A1F3D] transition-colors font-semibold"
+            className="flex items-center gap-2 px-6 py-3 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded hover:bg-[var(--accent-primary-hover)] transition-colors font-semibold"
           >
             Next: Generate Note
             <ChevronRight size={20} />

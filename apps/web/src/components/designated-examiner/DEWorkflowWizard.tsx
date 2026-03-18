@@ -248,10 +248,10 @@ export function DEWorkflowWizard({ initialWorkflowId }: DEWorkflowWizardProps) {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F5F1ED] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-[#C5A882] border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-[#5A6B7D]">Loading workflow...</p>
+          <div className="animate-spin h-8 w-8 border-4 border-[var(--accent-warm)] border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-[var(--text-secondary)]">Loading workflow...</p>
         </div>
       </div>
     );
@@ -260,17 +260,17 @@ export function DEWorkflowWizard({ initialWorkflowId }: DEWorkflowWizardProps) {
   // Landing page with in-progress workflows
   if (showWorkflowList && !workflowId) {
     return (
-      <div className="min-h-screen bg-[#F5F1ED]">
+      <div className="min-h-screen bg-[var(--bg-base)]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
-              <Scale className="h-8 w-8 text-[#E89C8A]" />
-              <h1 className="text-3xl font-serif text-[#0A1F3D]">
+              <Scale className="h-8 w-8 text-[var(--accent-warm)]" />
+              <h1 className="text-3xl font-heading text-[var(--text-primary)]">
                 Designated Examiner Workflow
               </h1>
             </div>
-            <p className="text-[#5A6B7D]">
+            <p className="text-[var(--text-secondary)]">
               Involuntary Commitment Assessment — Utah Mental Health Court
             </p>
           </div>
@@ -278,7 +278,7 @@ export function DEWorkflowWizard({ initialWorkflowId }: DEWorkflowWizardProps) {
           {/* Start New Button */}
           <button
             onClick={handleStartNewWorkflow}
-            className="w-full mb-8 flex items-center justify-center gap-3 px-6 py-5 bg-gradient-to-r from-[#C5A882] to-[#B39770] text-white rounded-xl hover:from-[#B39770] hover:to-[#A38660] transition-all shadow-md hover:shadow-lg"
+            className="w-full mb-8 flex items-center justify-center gap-3 px-6 py-5 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded-[2px] hover:bg-[var(--accent-primary-hover)] transition-all"
           >
             <Plus size={24} />
             <span className="text-lg font-medium">Start New Assessment</span>
@@ -286,35 +286,35 @@ export function DEWorkflowWizard({ initialWorkflowId }: DEWorkflowWizardProps) {
 
           {/* In-Progress Workflows */}
           {inProgressWorkflows.length > 0 && (
-            <div className="bg-white rounded-xl border border-[#C5A882]/20 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
+            <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] overflow-hidden">
+              <div className="px-6 py-4 border-b border-[var(--border-default)] bg-[var(--bg-surface-2)]">
                 <div className="flex items-center gap-2">
-                  <Clock size={18} className="text-[#E89C8A]" />
-                  <h2 className="font-semibold text-[#0A1F3D]">In-Progress Assessments</h2>
-                  <span className="text-sm text-[#5A6B7D]">({inProgressWorkflows.length})</span>
+                  <Clock size={18} className="text-[var(--accent-warm)]" />
+                  <h2 className="font-semibold text-[var(--text-primary)]">In-Progress Assessments</h2>
+                  <span className="text-sm text-[var(--text-secondary)]">({inProgressWorkflows.length})</span>
                 </div>
               </div>
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-[var(--border-default)]">
                 {inProgressWorkflows.map((wf) => (
                   <button
                     key={wf.id}
                     onClick={() => handleResumeWorkflow(wf.id)}
-                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-[#F5F1ED]/50 transition-colors text-left"
+                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-[var(--bg-hover)] transition-colors text-left"
                   >
                     <div className="flex-1">
-                      <p className="font-medium text-[#0A1F3D]">{wf.patient_name}</p>
+                      <p className="font-medium text-[var(--text-primary)]">{wf.patient_name}</p>
                       <div className="flex items-center gap-4 mt-1">
-                        <span className="text-sm text-[#5A6B7D]">
+                        <span className="text-sm text-[var(--text-secondary)]">
                           Step {wf.workflow_step}: {WORKFLOW_STEP_LABELS[wf.workflow_step as WorkflowStep]}
                         </span>
                         {wf.hearing_date && (
-                          <span className="text-sm text-[#5A6B7D]">
+                          <span className="text-sm text-[var(--text-secondary)]">
                             Hearing: {new Date(wf.hearing_date).toLocaleDateString()}
                           </span>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 text-[#C5A882]">
+                    <div className="flex items-center gap-2 text-[var(--accent-warm)]">
                       <span className="text-sm font-medium">Resume</span>
                       <ChevronRight size={18} />
                     </div>
@@ -326,7 +326,7 @@ export function DEWorkflowWizard({ initialWorkflowId }: DEWorkflowWizardProps) {
 
           {/* Empty State */}
           {inProgressWorkflows.length === 0 && (
-            <div className="text-center py-12 text-[#5A6B7D]">
+            <div className="text-center py-12 text-[var(--text-secondary)]">
               <Scale className="h-12 w-12 mx-auto mb-4 opacity-30" />
               <p>No in-progress assessments.</p>
               <p className="text-sm mt-1">Click &quot;Start New Assessment&quot; to begin.</p>
@@ -338,47 +338,47 @@ export function DEWorkflowWizard({ initialWorkflowId }: DEWorkflowWizardProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F1ED]">
+    <div className="min-h-screen bg-[var(--bg-base)]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <Scale className="h-8 w-8 text-[#E89C8A]" />
-              <h1 className="text-3xl font-serif text-[#0A1F3D]">
+              <Scale className="h-8 w-8 text-[var(--accent-warm)]" />
+              <h1 className="text-3xl font-heading text-[var(--text-primary)]">
                 Designated Examiner Workflow
               </h1>
             </div>
             <Link
               href="/workflow"
-              className="text-[#5A6B7D] hover:text-[#0A1F3D] transition-colors text-sm"
+              className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors text-sm"
             >
               ← Back to Clinical Notes
             </Link>
           </div>
-          <p className="text-[#5A6B7D]">
+          <p className="text-[var(--text-secondary)]">
             Involuntary Commitment Assessment — Utah Mental Health Court
           </p>
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-8 bg-white rounded-lg border border-[#C5A882]/20 p-6">
+        <div className="mb-8 bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
           <StepProgressBar currentStep={currentStep} isProcessing={isProcessing} />
         </div>
 
         {/* Error Display */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-            <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
+          <div className="mb-6 p-4 bg-[var(--error-bg)] border border-[var(--error-border)] rounded-[2px] flex items-start gap-3">
+            <AlertCircle className="text-[var(--error-text)] flex-shrink-0 mt-0.5" size={20} />
             <div>
-              <p className="font-medium text-red-700">Error</p>
-              <p className="text-sm text-red-600">{error}</p>
+              <p className="font-medium text-[var(--error-text)]">Error</p>
+              <p className="text-sm text-[var(--error-text)]">{error}</p>
             </div>
           </div>
         )}
 
         {/* Step Content */}
-        <div className="bg-white rounded-lg border border-[#C5A882]/20 shadow-sm p-6">
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
           {currentStep === 1 && (
             <Step1DocumentationInput
               initialData={workflow || undefined}

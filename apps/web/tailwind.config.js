@@ -19,6 +19,27 @@ module.exports = {
           800: '#1e40af',
           900: '#1e3a8a',
         },
+        surface: {
+          base: 'var(--bg-base)',
+          DEFAULT: 'var(--bg-surface)',
+          2: 'var(--bg-surface-2)',
+          hover: 'var(--bg-hover)',
+        },
+        border: {
+          DEFAULT: 'var(--border-default)',
+          subtle: 'var(--border-subtle)',
+        },
+        accent: {
+          primary: 'var(--accent-primary)',
+          'primary-hover': 'var(--accent-primary-hover)',
+          warm: 'var(--accent-warm)',
+          'warm-hover': 'var(--accent-warm-hover)',
+        },
+      },
+      fontFamily: {
+        heading: ['Space Grotesk', 'sans-serif'],
+        body: ['IBM Plex Sans', 'sans-serif'],
+        mono: ['IBM Plex Mono', 'monospace'],
       },
     },
   },

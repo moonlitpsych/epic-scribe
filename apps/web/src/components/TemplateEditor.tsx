@@ -14,15 +14,15 @@ const transformer = new SmartToolsTransformer();
 
 // Color scheme for sections
 const SECTION_COLORS = [
-  'bg-blue-50 border-blue-200',
-  'bg-green-50 border-green-200',
-  'bg-yellow-50 border-yellow-200',
-  'bg-purple-50 border-purple-200',
-  'bg-pink-50 border-pink-200',
-  'bg-indigo-50 border-indigo-200',
-  'bg-red-50 border-red-200',
-  'bg-orange-50 border-orange-200',
-  'bg-teal-50 border-teal-200',
+  'bg-[#0f1328] border-[#1e2850]',
+  'bg-[#0f2920] border-[#15503d]',
+  'bg-[#1f1a0f] border-[#4d3a14]',
+  'bg-[#13101f] border-[#2a2050]',
+  'bg-[#1f0f14] border-[#4d1428]',
+  'bg-[#0f1228] border-[#1e2450]',
+  'bg-[#1f0f0f] border-[#4d1414]',
+  'bg-[#1f150f] border-[#4d2e14]',
+  'bg-[#0f1f1f] border-[#144d4d]',
 ];
 
 export function TemplateEditor() {
@@ -294,30 +294,30 @@ export function TemplateEditor() {
     const colorClass = SECTION_COLORS[index % SECTION_COLORS.length];
 
     return (
-      <div key={section.name} className={`border-2 rounded-lg p-4 ${colorClass} transition-all`}>
+      <div key={section.name} className={`border-2 rounded-[2px] p-4 ${colorClass} transition-all`}>
         <div className="flex justify-between items-start mb-2">
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">{section.name}</h3>
-            <span className="text-xs text-gray-500">Section {section.order}</span>
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">{section.name}</h3>
+            <span className="text-xs text-[var(--text-muted)]">Section {section.order}</span>
           </div>
           <div className="flex gap-2">
             {!isEditing ? (
               <>
                 <button
                   onClick={() => handleSectionEdit(section.name)}
-                  className="px-3 py-1 text-sm bg-white hover:bg-gray-50 border border-gray-300 rounded-md transition-colors"
+                  className="px-3 py-1 text-sm bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] border border-[var(--border-default)] rounded-md transition-colors"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleSmartToolsInsert(section.name)}
-                  className="px-3 py-1 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors"
+                  className="px-3 py-1 text-sm bg-[#7c3aed] hover:bg-[#6d28d9] text-white rounded-md transition-colors"
                 >
                   Add SmartTool
                 </button>
                 <button
                   onClick={() => handleCloneClick(section)}
-                  className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+                  className="px-3 py-1 text-sm bg-[var(--info-text)] hover:bg-[#4b8fdb] text-[var(--text-inverse)] rounded-md transition-colors"
                   title="Clone this section to another template"
                 >
                   Clone
@@ -327,13 +327,13 @@ export function TemplateEditor() {
               <>
                 <button
                   onClick={() => handleSectionSave(section.name)}
-                  className="px-3 py-1 text-sm bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
+                  className="px-3 py-1 text-sm bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-[var(--text-inverse)] rounded-md transition-colors"
                 >
                   Save
                 </button>
                 <button
                   onClick={() => handleSectionCancel(section.name)}
-                  className="px-3 py-1 text-sm bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors"
+                  className="px-3 py-1 text-sm bg-[var(--bg-hover)] hover:bg-[var(--border-default)] text-[var(--text-primary)] rounded-md transition-colors"
                 >
                   Cancel
                 </button>
@@ -349,19 +349,19 @@ export function TemplateEditor() {
               ...sectionContent,
               [section.name]: e.target.value
             })}
-            className="w-full h-32 p-3 border border-gray-300 rounded-md font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full h-32 p-3 border border-[var(--border-default)] rounded-md font-mono text-sm bg-[var(--bg-surface-2)] text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent"
           />
         ) : (
           <div>
-            <div className="bg-white p-3 rounded-md border border-gray-200">
-              <pre className="whitespace-pre-wrap font-mono text-sm text-gray-700">
+            <div className="bg-[var(--bg-surface)] p-3 rounded-[2px] border border-[var(--border-default)]">
+              <pre className="whitespace-pre-wrap font-mono text-sm text-[var(--text-primary)]">
                 {renderHighlightedContent(sectionContent[section.name])}
               </pre>
             </div>
             {sectionExamples[section.name] && (
-              <div className="mt-2 p-2 bg-gray-50 rounded-md border border-gray-200">
-                <span className="text-xs font-semibold text-gray-500">Example output:</span>
-                <pre className="text-xs text-gray-600 mt-1 italic whitespace-pre-wrap font-sans">
+              <div className="mt-2 p-2 bg-[var(--bg-surface-2)] rounded-[2px] border border-[var(--border-default)]">
+                <span className="text-xs font-semibold text-[var(--text-muted)]">Example output:</span>
+                <pre className="text-xs text-[var(--text-secondary)] mt-1 italic whitespace-pre-wrap font-sans">
                   {sectionExamples[section.name]}
                 </pre>
               </div>
@@ -372,7 +372,7 @@ export function TemplateEditor() {
         {/* SmartTools in this section */}
         <div className="mt-2 flex flex-wrap gap-1">
           {parser.extractSmartLinkIdentifiers(sectionContent[section.name]).map(id => (
-            <span key={id} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full">
+            <span key={id} className="px-2 py-1 text-xs bg-[#0f1328] text-[var(--info-text)] rounded-full">
               @{id}@
             </span>
           ))}
@@ -393,7 +393,7 @@ export function TemplateEditor() {
               <button
                 key={smartList.epicId}
                 onClick={() => handleSmartListClick(smartList.epicId, smartList.display)}
-                className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-400"
+                className="px-2 py-1 text-xs bg-[#13101f] text-[#c084fc] rounded-full hover:bg-[#1a1530] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-purple-400"
                 title={`Click to view/edit ${smartList.display || 'SmartList'}`}
               >
                 {smartList.display || `List:${smartList.epicId}`}
@@ -401,7 +401,7 @@ export function TemplateEditor() {
             ));
           })()}
           {sectionContent[section.name].includes('***') && (
-            <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded-full">
+            <span className="px-2 py-1 text-xs bg-[#1f1a0f] text-[var(--warning-text)] rounded-full">
               Wildcard
             </span>
           )}
@@ -425,10 +425,10 @@ export function TemplateEditor() {
       }
 
       const colorClass =
-        pos.type === 'smartlink' ? 'text-blue-600 font-semibold' :
-        pos.type === 'dotphrase' ? 'text-green-600 font-semibold' :
-        pos.type === 'wildcard' ? 'text-yellow-600 font-semibold' :
-        'text-purple-600 font-semibold';
+        pos.type === 'smartlink' ? 'text-[var(--info-text)] font-semibold' :
+        pos.type === 'dotphrase' ? 'text-[var(--success-text)] font-semibold' :
+        pos.type === 'wildcard' ? 'text-[var(--warning-text)] font-semibold' :
+        'text-[#c084fc] font-semibold';
 
       elements.push(
         <span key={`highlight-${index}`} className={colorClass}>
@@ -454,7 +454,7 @@ export function TemplateEditor() {
       <div className="flex justify-end gap-2">
         <a
           href="/smartlists"
-          className="inline-flex items-center px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+          className="inline-flex items-center px-3 py-1 text-sm border border-[var(--border-default)] rounded hover:bg-[var(--bg-hover)] text-[var(--text-secondary)]"
         >
           <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
@@ -463,7 +463,7 @@ export function TemplateEditor() {
         </a>
         <a
           href="/demo"
-          className="inline-flex items-center px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+          className="inline-flex items-center px-3 py-1 text-sm border border-[var(--border-default)] rounded hover:bg-[var(--bg-hover)] text-[var(--text-secondary)]"
         >
           <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
@@ -514,17 +514,17 @@ export function TemplateEditor() {
       )}
 
       {/* Template Selector */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-semibold mb-4">Select Template</h2>
+      <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+        <h2 className="text-2xl font-semibold mb-4 text-[var(--text-primary)]">Select Template</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
               Setting
             </label>
             <select
               value={selectedSetting}
               onChange={(e) => setSelectedSetting(e.target.value as Setting)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded-md bg-[var(--bg-surface-2)] text-[var(--text-primary)] focus:ring-[var(--accent-warm)] focus:border-transparent"
             >
               {SETTINGS.map(setting => (
                 <option key={setting} value={setting}>{setting}</option>
@@ -533,13 +533,13 @@ export function TemplateEditor() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
               Visit Type
             </label>
             <select
               value={selectedVisitType}
               onChange={(e) => setSelectedVisitType(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-[var(--border-default)] rounded-md bg-[var(--bg-surface-2)] text-[var(--text-primary)] focus:ring-[var(--accent-warm)] focus:border-transparent"
             >
               {availableVisitTypes.map(type => (
                 <option key={type} value={type}>{type}</option>
@@ -549,14 +549,14 @@ export function TemplateEditor() {
         </div>
 
         {currentTemplate && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+          <div className="mt-4 p-4 bg-[var(--bg-surface-2)] rounded-[2px]">
             <div className="flex justify-between items-center">
               <div>
-                <span className="text-sm font-medium text-gray-600">Template ID:</span>
+                <span className="text-sm font-medium text-[var(--text-secondary)]">Template ID:</span>
                 <span className="ml-2 font-mono text-sm">{currentTemplate.templateId}</span>
               </div>
               <div>
-                <span className="text-sm font-medium text-gray-600">Version:</span>
+                <span className="text-sm font-medium text-[var(--text-secondary)]">Version:</span>
                 <span className="ml-2 font-mono text-sm">v{currentTemplate.version}</span>
               </div>
             </div>
@@ -566,32 +566,32 @@ export function TemplateEditor() {
 
       {/* Template Statistics */}
       {currentTemplate && templateStats && (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">SmartTools Overview</h2>
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+          <h2 className="text-2xl font-semibold mb-4 text-[var(--text-primary)]">SmartTools Overview</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">
+            <div className="text-center p-4 bg-[#0f1328] rounded-[2px]">
+              <div className="text-2xl font-bold text-[var(--info-text)]">
                 {templateStats.counts.smartLinks}
               </div>
-              <div className="text-sm text-gray-600">SmartLinks</div>
+              <div className="text-sm text-[var(--text-secondary)]">SmartLinks</div>
             </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
+            <div className="text-center p-4 bg-[#0f2920] rounded-[2px]">
+              <div className="text-2xl font-bold text-[var(--success-text)]">
                 {templateStats.counts.dotPhrases}
               </div>
-              <div className="text-sm text-gray-600">DotPhrases</div>
+              <div className="text-sm text-[var(--text-secondary)]">DotPhrases</div>
             </div>
-            <div className="text-center p-4 bg-yellow-50 rounded-lg">
-              <div className="text-2xl font-bold text-yellow-600">
+            <div className="text-center p-4 bg-[#1f1a0f] rounded-[2px]">
+              <div className="text-2xl font-bold text-[var(--warning-text)]">
                 {templateStats.counts.wildcards}
               </div>
-              <div className="text-sm text-gray-600">Wildcards</div>
+              <div className="text-sm text-[var(--text-secondary)]">Wildcards</div>
             </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">
+            <div className="text-center p-4 bg-[#13101f] rounded-[2px]">
+              <div className="text-2xl font-bold text-[#c084fc]">
                 {templateStats.counts.smartLists}
               </div>
-              <div className="text-sm text-gray-600">SmartLists</div>
+              <div className="text-sm text-[var(--text-secondary)]">SmartLists</div>
             </div>
           </div>
         </div>
@@ -601,19 +601,19 @@ export function TemplateEditor() {
       {currentTemplate && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-semibold">Template Sections</h2>
+            <h2 className="text-2xl font-semibold text-[var(--text-primary)]">Template Sections</h2>
             <button
               onClick={() => setPreviewMode(!previewMode)}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors"
+              className="px-4 py-2 bg-[#6366f1] hover:bg-[#4f46e5] text-white rounded-md transition-colors"
             >
               {previewMode ? 'Edit Mode' : 'Preview Mode'}
             </button>
           </div>
 
           {previewMode ? (
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Full Template Preview</h3>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+              <h3 className="text-lg font-semibold mb-4 text-[var(--text-primary)]">Full Template Preview</h3>
+              <div className="bg-[var(--bg-surface-2)] p-4 rounded-[2px] border border-[var(--border-default)]">
                 <pre className="whitespace-pre-wrap font-mono text-sm">
                   {currentTemplate.sections.map(s =>
                     `${s.name.toUpperCase()}\n${sectionContent[s.name]}\n`

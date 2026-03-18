@@ -1,78 +1,78 @@
 /**
  * Moonlit Psychiatry Design System
- * Based on the Moonlit Style Guide
+ * Dark mode variant aligned with CSS custom properties
  *
  * Color palette, typography, and design tokens for consistent UI
  */
 
 export const moonlitTheme = {
   colors: {
-    // Primary Colors
-    terracotta: '#E89C8A',      // Logo dots, accent elements
-    navy: '#0A1F3D',             // Headlines, primary text
-    cream: '#F5F1ED',            // Primary background
-    white: '#FFFFFF',            // Secondary background
+    // Primary Colors (dark mode)
+    terracotta: '#E89C8A',      // Accent warm — salmon
+    navy: '#e8eaf0',            // Now used for primary text (light on dark)
+    cream: '#1a1d27',           // Surface-2 background
+    white: '#141720',           // Surface background
 
     // Secondary/Accent Colors
-    tan: '#C5A882',              // Primary buttons, selected states
-    softPeach: '#F5C8B3',        // Highlights, emphasis
-    mintGreen: '#D4F1E8',        // Success, "Accepting New Patients"
-    lightCoral: '#F5D6C8',       // Warnings, "Established Only"
+    tan: '#10b981',             // Primary accent — emerald (CTAs)
+    softPeach: '#E89C8A',      // Accent warm
+    mintGreen: '#0f2920',       // Success background
+    lightCoral: '#1f0f0f',      // Error background
 
-    // Status/Validation Colors (Moonlit-adjusted)
+    // Status/Validation Colors (dark-bg versions)
     success: {
-      bg: '#D4F1E8',             // Mint green background
-      border: '#9FD7C8',         // Slightly darker mint
-      text: '#1B5E4A',           // Dark green text
-      icon: '#2B8066'            // Icon color
+      bg: '#0f2920',
+      border: '#15503d',
+      text: '#34d399',
+      icon: '#34d399'
     },
     warning: {
-      bg: '#F5E6D3',             // Warm cream/peach
-      border: '#E5C4A8',         // Darker tan/peach
-      text: '#8B5A2B',           // Warm brown text
-      icon: '#B67C4E'            // Icon color
+      bg: '#1f1a0f',
+      border: '#4d3a14',
+      text: '#fbbf24',
+      icon: '#fbbf24'
     },
     error: {
-      bg: '#F5D6C8',             // Light coral
-      border: '#E5A890',         // Darker coral
-      text: '#8B3A3A',           // Deep red-brown text
-      icon: '#C65D5D'            // Icon color
+      bg: '#1f0f0f',
+      border: '#4d1414',
+      text: '#f87171',
+      icon: '#f87171'
     },
     info: {
-      bg: '#E8E5F5',             // Light lavender
-      border: '#C4BDE5',         // Darker lavender
-      text: '#4A3F7A',           // Deep purple text
-      icon: '#6B5FA8'            // Icon color
+      bg: '#0f1328',
+      border: '#1e2850',
+      text: '#60a5fa',
+      icon: '#60a5fa'
     },
 
-    // Text Colors
+    // Text Colors (dark mode)
     text: {
-      primary: '#0A1F3D',        // Navy blue
-      secondary: '#4A5568',      // Muted gray-blue
-      muted: '#718096',          // Light gray
-      inverse: '#FFFFFF'         // White text on dark backgrounds
+      primary: '#e8eaf0',
+      secondary: '#8b90a0',
+      muted: '#5a5e68',
+      inverse: '#0f1117'
     },
 
-    // Neutral Colors
+    // Neutral Colors (dark mode)
     gray: {
-      50: '#F9FAFB',
-      100: '#F3F4F6',
-      200: '#E5E7EB',
-      300: '#D1D5DB',
-      400: '#9CA3AF',
-      500: '#6B7280',
-      600: '#4B5563',
-      700: '#374151',
-      800: '#1F2937',
-      900: '#111827'
+      50: '#1e2130',
+      100: '#1a1d27',
+      200: '#1e2130',
+      300: '#1e2130',
+      400: '#5a5e68',
+      500: '#8b90a0',
+      600: '#8b90a0',
+      700: '#e8eaf0',
+      800: '#e8eaf0',
+      900: '#e8eaf0'
     }
   },
 
   typography: {
     fontFamily: {
-      serif: '"Baskerville", "Georgia", "Times New Roman", serif',
-      sans: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      mono: '"SF Mono", "Monaco", "Inconsolata", "Fira Code", monospace'
+      serif: '"Space Grotesk", "Inter", system-ui, sans-serif',
+      sans: '"IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      mono: '"IBM Plex Mono", "SF Mono", "Monaco", "Inconsolata", monospace'
     },
     fontSize: {
       xs: '0.75rem',     // 12px
@@ -110,19 +110,19 @@ export const moonlitTheme = {
 
   borderRadius: {
     none: '0',
-    sm: '0.25rem',   // 4px
-    md: '0.5rem',    // 8px
-    lg: '0.75rem',   // 12px
-    xl: '1rem',      // 16px
+    sm: '2px',       // Minimal radius for dark theme
+    md: '2px',
+    lg: '2px',
+    xl: '2px',
     full: '9999px'   // Pills, circular
   },
 
   shadows: {
-    sm: '0 1px 2px 0 rgba(10, 31, 61, 0.05)',
-    md: '0 4px 6px -1px rgba(10, 31, 61, 0.07), 0 2px 4px -1px rgba(10, 31, 61, 0.04)',
-    lg: '0 10px 15px -3px rgba(10, 31, 61, 0.08), 0 4px 6px -2px rgba(10, 31, 61, 0.03)',
-    xl: '0 20px 25px -5px rgba(10, 31, 61, 0.08), 0 10px 10px -5px rgba(10, 31, 61, 0.02)',
-    inner: 'inset 0 2px 4px 0 rgba(10, 31, 61, 0.04)'
+    sm: 'none',
+    md: 'none',
+    lg: 'none',
+    xl: 'none',
+    inner: 'none'
   },
 
   transitions: {
@@ -138,51 +138,49 @@ export const moonlitComponents = {
   button: {
     primary: {
       base: `
-        bg-[${moonlitTheme.colors.tan}]
-        text-white
-        hover:bg-[#B59872]
+        bg-[var(--accent-primary)]
+        text-[var(--text-inverse)]
+        hover:bg-[var(--accent-primary-hover)]
         focus:outline-none
         focus:ring-2
-        focus:ring-[${moonlitTheme.colors.tan}]
+        focus:ring-[var(--accent-warm)]
         focus:ring-offset-2
         transition-all
         duration-200
-        rounded-lg
+        rounded
         font-medium
-        shadow-sm
-        hover:shadow-md
       `,
       padding: 'px-6 py-3'
     },
     secondary: {
       base: `
         border
-        border-[${moonlitTheme.colors.tan}]
-        text-[${moonlitTheme.colors.tan}]
-        hover:bg-[${moonlitTheme.colors.cream}]
+        border-[var(--border-default)]
+        text-[var(--text-primary)]
+        hover:bg-[var(--bg-hover)]
         focus:outline-none
         focus:ring-2
-        focus:ring-[${moonlitTheme.colors.tan}]
+        focus:ring-[var(--accent-warm)]
         focus:ring-offset-2
         transition-all
         duration-200
-        rounded-lg
+        rounded
         font-medium
       `,
       padding: 'px-6 py-3'
     },
     tertiary: {
       base: `
-        text-[${moonlitTheme.colors.navy}]
-        hover:text-[${moonlitTheme.colors.terracotta}]
-        hover:bg-[${moonlitTheme.colors.cream}]
+        text-[var(--text-primary)]
+        hover:text-[var(--accent-warm)]
+        hover:bg-[var(--bg-hover)]
         focus:outline-none
         focus:ring-2
-        focus:ring-[${moonlitTheme.colors.terracotta}]
+        focus:ring-[var(--accent-warm)]
         focus:ring-offset-2
         transition-all
         duration-200
-        rounded-lg
+        rounded
         font-medium
       `,
       padding: 'px-4 py-2'
@@ -191,23 +189,21 @@ export const moonlitComponents = {
 
   card: {
     base: `
-      bg-white
-      rounded-xl
-      shadow-md
+      bg-[var(--bg-surface)]
+      rounded-[2px]
       border
-      border-gray-100
+      border-[var(--border-default)]
       overflow-hidden
     `,
     padding: 'p-6'
   },
 
   modal: {
-    overlay: 'fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm',
+    overlay: 'fixed inset-0 bg-black/60',
     container: 'fixed inset-0 flex items-center justify-center p-4 z-50',
     content: `
-      bg-white
-      rounded-xl
-      shadow-xl
+      bg-[var(--bg-surface)]
+      rounded-[2px]
       max-w-2xl
       w-full
       max-h-[90vh]
@@ -219,11 +215,11 @@ export const moonlitComponents = {
       px-6
       py-4
       border-b
-      border-gray-200
-      bg-[${moonlitTheme.colors.cream}]
+      border-[var(--border-default)]
+      bg-[var(--bg-surface-2)]
     `,
     body: 'p-6 overflow-y-auto flex-1',
-    footer: 'px-6 py-4 border-t border-gray-200 bg-gray-50'
+    footer: 'px-6 py-4 border-t border-[var(--border-default)] bg-[var(--bg-surface-2)]'
   },
 
   form: {
@@ -231,20 +227,21 @@ export const moonlitComponents = {
       block
       text-sm
       font-medium
-      text-[${moonlitTheme.colors.navy}]
+      text-[var(--text-primary)]
       mb-1
     `,
     input: `
       w-full
       border
-      border-gray-300
-      rounded-lg
+      border-[var(--border-default)]
+      rounded
       px-4
       py-2.5
-      text-gray-900
-      placeholder-gray-400
+      text-[var(--text-primary)]
+      bg-[var(--bg-surface-2)]
+      placeholder:text-[var(--text-muted)]
       focus:ring-2
-      focus:ring-[${moonlitTheme.colors.terracotta}]
+      focus:ring-[var(--accent-warm)]
       focus:border-transparent
       transition-all
       duration-200
@@ -252,36 +249,37 @@ export const moonlitComponents = {
     select: `
       w-full
       border
-      border-gray-300
-      rounded-lg
+      border-[var(--border-default)]
+      rounded
       px-4
       py-2.5
-      text-gray-900
+      text-[var(--text-primary)]
+      bg-[var(--bg-surface-2)]
       focus:ring-2
-      focus:ring-[${moonlitTheme.colors.terracotta}]
+      focus:ring-[var(--accent-warm)]
       focus:border-transparent
       transition-all
       duration-200
-      bg-white
     `,
     textarea: `
       w-full
       border
-      border-gray-300
-      rounded-lg
+      border-[var(--border-default)]
+      rounded
       px-4
       py-2.5
-      text-gray-900
-      placeholder-gray-400
+      text-[var(--text-primary)]
+      bg-[var(--bg-surface-2)]
+      placeholder:text-[var(--text-muted)]
       focus:ring-2
-      focus:ring-[${moonlitTheme.colors.terracotta}]
+      focus:ring-[var(--accent-warm)]
       focus:border-transparent
       transition-all
       duration-200
       resize-y
     `,
-    helper: 'text-xs text-gray-500 mt-1',
-    error: 'text-xs text-red-600 mt-1'
+    helper: 'text-xs text-[var(--text-muted)] mt-1',
+    error: 'text-xs text-[var(--error-text)] mt-1'
   },
 
   badge: {
@@ -293,8 +291,8 @@ export const moonlitComponents = {
       rounded-full
       text-sm
       font-medium
-      bg-[${moonlitTheme.colors.success.bg}]
-      text-[${moonlitTheme.colors.success.text}]
+      bg-[var(--success-bg)]
+      text-[var(--success-text)]
     `,
     warning: `
       inline-flex
@@ -304,8 +302,8 @@ export const moonlitComponents = {
       rounded-full
       text-sm
       font-medium
-      bg-[${moonlitTheme.colors.warning.bg}]
-      text-[${moonlitTheme.colors.warning.text}]
+      bg-[var(--warning-bg)]
+      text-[var(--warning-text)]
     `,
     error: `
       inline-flex
@@ -315,8 +313,8 @@ export const moonlitComponents = {
       rounded-full
       text-sm
       font-medium
-      bg-[${moonlitTheme.colors.error.bg}]
-      text-[${moonlitTheme.colors.error.text}]
+      bg-[var(--error-bg)]
+      text-[var(--error-text)]
     `,
     info: `
       inline-flex
@@ -326,8 +324,8 @@ export const moonlitComponents = {
       rounded-full
       text-sm
       font-medium
-      bg-[${moonlitTheme.colors.info.bg}]
-      text-[${moonlitTheme.colors.info.text}]
+      bg-[var(--info-bg)]
+      text-[var(--info-text)]
     `
   }
 };

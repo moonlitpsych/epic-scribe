@@ -233,24 +233,24 @@ She has never participated in therapy previously and is motivated to begin. She 
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-8">
+    <div className="min-h-screen bg-[var(--bg-base)] p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-8 text-gray-900 dark:text-white">
+        <h1 className="text-4xl font-bold text-center mb-8 text-[var(--text-primary)]">
           Generate Epic Note
         </h1>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+        <div className="bg-[var(--bg-surface)] rounded-[2px] p-6">
           {/* Configuration Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Setting Selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
                 Setting
               </label>
               <select
                 value={setting}
                 onChange={(e) => handleSettingChange(e.target.value as Setting)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full px-4 py-2 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
               >
                 {SETTINGS.map(s => (
                   <option key={s} value={s}>{s}</option>
@@ -260,16 +260,16 @@ She has never participated in therapy previously and is motivated to begin. She 
 
             {/* Visit Type Selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
                 Visit Type
                 {isPreviousNoteRequired() && (
-                  <span className="text-red-500 ml-1">* Previous note required</span>
+                  <span className="text-[var(--error-text)] ml-1">* Previous note required</span>
                 )}
               </label>
               <select
                 value={visitType}
                 onChange={(e) => setVisitType(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full px-4 py-2 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
               >
                 {getVisitTypesForSetting(setting).map(vt => (
                   <option key={vt} value={vt}>{vt}</option>
@@ -280,15 +280,15 @@ She has never participated in therapy previously and is motivated to begin. She 
 
           {/* Transcript Input */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Transcript <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
+              Transcript <span className="text-[var(--error-text)]">*</span>
               {loadingTranscript && (
-                <span className="ml-2 text-sm text-blue-600">Loading from Google Drive...</span>
+                <span className="ml-2 text-sm text-[var(--info-text)]">Loading from Google Drive...</span>
               )}
               <button
                 onClick={loadSampleData}
                 disabled={loadingTranscript}
-                className="ml-4 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 disabled:opacity-50"
+                className="ml-4 text-sm text-[var(--info-text)] disabled:opacity-50"
               >
                 Load Sample Data
               </button>
@@ -299,21 +299,21 @@ She has never participated in therapy previously and is motivated to begin. She 
               rows={10}
               placeholder={loadingTranscript ? "Loading transcript from Google Drive..." : "Paste the session transcript here..."}
               disabled={loadingTranscript}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:opacity-50"
+              className="w-full px-4 py-2 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] disabled:opacity-50"
             />
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-[var(--text-muted)] mt-1">
               {transcript.split(/\s+/).filter(w => w).length} words
             </p>
           </div>
 
           {/* Previous Note (Optional/Required based on visit type) */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
               Previous Note
               {isPreviousNoteRequired() ? (
-                <span className="text-red-500 ml-1">* Required for {visitType}</span>
+                <span className="text-[var(--error-text)] ml-1">* Required for {visitType}</span>
               ) : (
-                <span className="text-gray-500 ml-1">(Optional)</span>
+                <span className="text-[var(--text-muted)] ml-1">(Optional)</span>
               )}
             </label>
             <textarea
@@ -323,12 +323,12 @@ She has never participated in therapy previously and is motivated to begin. She 
               placeholder={isPreviousNoteRequired()
                 ? "Previous note is required for context..."
                 : "Optionally paste a previous note for context..."}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
-                isPreviousNoteRequired() && !previousNote ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+              className={`w-full px-4 py-2 border rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] ${
+                isPreviousNoteRequired() && !previousNote ? 'border-[var(--error-border)]' : 'border-[var(--border-default)]'
               }`}
             />
             {previousNote && (
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-[var(--text-muted)] mt-1">
                 {previousNote.split(/\s+/).filter(w => w).length} words
               </p>
             )}
@@ -337,10 +337,10 @@ She has never participated in therapy previously and is motivated to begin. She 
           {/* BHIDC Staff Intake Note (BHIDC First Visit only) */}
           {isBhidcIntakeNoteAvailable() && (
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
                 BHIDC Staff Intake Note
-                <span className="text-gray-500 ml-1">(Optional)</span>
-                <span className="block text-xs text-gray-500 mt-1">
+                <span className="text-[var(--text-muted)] ml-1">(Optional)</span>
+                <span className="block text-xs text-[var(--text-muted)] mt-1">
                   The screener intake note completed by BHIDC staff before your first session
                 </span>
               </label>
@@ -349,15 +349,15 @@ She has never participated in therapy previously and is motivated to begin. She 
                 onChange={(e) => setBhidcIntakeNote(e.target.value)}
                 rows={6}
                 placeholder="Paste the BHIDC staff screener intake note here (if available)..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full px-4 py-2 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
               />
               {bhidcIntakeNote && (
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-[var(--text-muted)] mt-1">
                   {bhidcIntakeNote.split(/\s+/).filter(w => w).length} words
                 </p>
               )}
-              <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-                💡 Key information will be extracted and summarized in the BHIDC Staff Intake Summary section
+              <p className="text-xs text-[var(--info-text)] mt-2">
+                Key information will be extracted and summarized in the BHIDC Staff Intake Summary section
               </p>
             </div>
           )}
@@ -365,10 +365,10 @@ She has never participated in therapy previously and is motivated to begin. She 
           {/* Staffing Transcript (Davis and Redwood only) */}
           {isStaffingTranscriptAvailable() && (
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
                 Staffing Discussion Transcript
-                <span className="text-gray-500 ml-1">(Optional)</span>
-                <span className="block text-xs text-gray-500 mt-1">
+                <span className="text-[var(--text-muted)] ml-1">(Optional)</span>
+                <span className="block text-xs text-[var(--text-muted)] mt-1">
                   For {setting}: Paste the separate end-of-day staffing conversation with your attending here
                 </span>
               </label>
@@ -377,24 +377,24 @@ She has never participated in therapy previously and is motivated to begin. She 
                 onChange={(e) => setStaffingTranscript(e.target.value)}
                 rows={6}
                 placeholder="Paste the staffing discussion transcript here (recorded separately from patient visit)..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full px-4 py-2 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
               />
               {staffingTranscript && (
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-[var(--text-muted)] mt-1">
                   {staffingTranscript.split(/\s+/).filter(w => w).length} words
                 </p>
               )}
-              <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-                💡 The Plan section will be heavily based on attending recommendations from this transcript
+              <p className="text-xs text-[var(--info-text)] mt-2">
+                The Plan section will be heavily based on attending recommendations from this transcript
               </p>
             </div>
           )}
 
           {/* Error Messages */}
           {errors.length > 0 && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm font-medium text-red-800 mb-1">Please fix the following errors:</p>
-              <ul className="list-disc list-inside text-sm text-red-700">
+            <div className="mb-6 p-4 bg-[var(--error-bg)] border border-[var(--error-border)] rounded-[2px]">
+              <p className="text-sm font-medium text-[var(--error-text)] mb-1">Please fix the following errors:</p>
+              <ul className="list-disc list-inside text-sm text-[var(--error-text)]">
                 {errors.map((error, idx) => (
                   <li key={idx}>{error}</li>
                 ))}
@@ -407,14 +407,14 @@ She has never participated in therapy previously and is motivated to begin. She 
             <button
               onClick={handlePreviewPrompt}
               disabled={isGenerating || isPreviewing || !transcript}
-              className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="px-6 py-2 bg-[var(--bg-hover)] hover:bg-[var(--border-default)] text-[var(--text-primary)] rounded disabled:bg-[var(--bg-hover)] disabled:cursor-not-allowed transition-colors"
             >
               {isPreviewing ? 'Loading...' : 'Preview Prompt'}
             </button>
             <button
               onClick={handleGenerateNote}
               disabled={isGenerating || !transcript || (isPreviousNoteRequired() && !previousNote)}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="px-6 py-2 bg-[var(--accent-primary)] text-white rounded hover:bg-[var(--accent-primary-hover)] disabled:bg-[var(--bg-hover)] disabled:cursor-not-allowed transition-colors"
             >
               {isGenerating ? 'Generating...' : 'Generate Note'}
             </button>
@@ -424,35 +424,35 @@ She has never participated in therapy previously and is motivated to begin. She 
           {generatedNote && (
             <div className="mt-8">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-semibold text-[var(--text-primary)]">
                   Generated Note
                 </h2>
                 <div className="flex gap-2 items-center">
                   {receipt && (
-                    <div className="text-sm bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                      <span className="text-gray-600 dark:text-gray-400">Hash: </span>
-                      <span className="font-mono text-gray-800 dark:text-gray-200">
+                    <div className="text-sm bg-[var(--bg-surface-2)] px-3 py-1 rounded-full">
+                      <span className="text-[var(--text-secondary)]">Hash: </span>
+                      <span className="font-mono text-[var(--text-primary)]">
                         {receipt.promptHash}
                       </span>
                     </div>
                   )}
                   <button
                     onClick={handleCopyToClipboard}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    className="px-4 py-2 bg-[var(--accent-primary)] text-white rounded hover:bg-[var(--accent-primary-hover)] transition-colors"
                   >
-                    {copySuccess ? '✓ Copied!' : 'Copy to Clipboard'}
+                    {copySuccess ? 'Copied!' : 'Copy to Clipboard'}
                   </button>
                 </div>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 font-mono text-sm whitespace-pre-wrap overflow-auto max-h-96">
+              <div className="bg-[var(--bg-surface-2)] rounded-[2px] p-6 font-mono text-sm whitespace-pre-wrap overflow-auto max-h-96">
                 {generatedNote}
               </div>
 
               {/* Comprehensive Validation Results - Moonlit Error Style */}
               {receipt?.validationResult && !receipt.validationResult.valid && (
                 <div
-                  className="mt-4 p-4 rounded-lg"
+                  className="mt-4 p-4 rounded-[2px]"
                   style={{
                     backgroundColor: moonlitTheme.colors.error.bg,
                     border: `1px solid ${moonlitTheme.colors.error.border}`
@@ -490,7 +490,7 @@ She has never participated in therapy previously and is motivated to begin. She 
               {/* Validation Warnings */}
               {receipt?.validationResult?.warnings && receipt.validationResult.warnings.length > 0 && (
                 <div
-                  className="mt-4 p-4 rounded-lg"
+                  className="mt-4 p-4 rounded-[2px]"
                   style={{
                     backgroundColor: moonlitTheme.colors.warning.bg,
                     border: `1px solid ${moonlitTheme.colors.warning.border}`
@@ -528,7 +528,7 @@ She has never participated in therapy previously and is motivated to begin. She 
               {/* Legacy Validation Issues (SmartTools specific) */}
               {receipt?.validationIssues && receipt.validationIssues.length > 0 && (
                 <div
-                  className="mt-4 p-4 rounded-lg"
+                  className="mt-4 p-4 rounded-[2px]"
                   style={{
                     backgroundColor: moonlitTheme.colors.info.bg,
                     border: `1px solid ${moonlitTheme.colors.info.border}`
@@ -559,7 +559,7 @@ She has never participated in therapy previously and is motivated to begin. She 
               {/* Success Message if Valid */}
               {receipt?.validationResult && receipt.validationResult.valid && !receipt?.validationIssues && (
                 <div
-                  className="mt-4 p-4 rounded-lg"
+                  className="mt-4 p-4 rounded-[2px]"
                   style={{
                     backgroundColor: moonlitTheme.colors.success.bg,
                     border: `1px solid ${moonlitTheme.colors.success.border}`
@@ -578,7 +578,7 @@ She has never participated in therapy previously and is motivated to begin. She 
                       className="text-sm font-medium"
                       style={{ color: moonlitTheme.colors.success.text }}
                     >
-                      ✅ Note structure validated successfully - Ready for Epic
+                      Note structure validated successfully - Ready for Epic
                     </p>
                   </div>
                 </div>
@@ -589,34 +589,34 @@ She has never participated in therapy previously and is motivated to begin. She 
 
         {/* Prompt Preview Modal */}
         {showPromptModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col">
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+            <div className="bg-[var(--bg-surface)] rounded-[2px] max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-[var(--border-default)] flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">
                   Compiled Prompt Preview
                 </h3>
                 <button
                   onClick={() => setShowPromptModal(false)}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                 >
                   ✕
                 </button>
               </div>
               <div className="p-4 overflow-auto flex-1">
-                <pre className="text-xs font-mono whitespace-pre-wrap text-gray-700 dark:text-gray-300">
+                <pre className="text-xs font-mono whitespace-pre-wrap text-[var(--text-secondary)]">
                   {promptPreview}
                 </pre>
               </div>
-              <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
+              <div className="p-4 border-t border-[var(--border-default)] flex justify-end gap-2">
                 <button
                   onClick={() => navigator.clipboard.writeText(promptPreview)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  className="px-4 py-2 bg-[var(--bg-hover)] hover:bg-[var(--border-default)] text-[var(--text-primary)] rounded transition-colors"
                 >
                   Copy Prompt
                 </button>
                 <button
                   onClick={() => setShowPromptModal(false)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-[var(--accent-primary)] text-white rounded hover:bg-[var(--accent-primary-hover)] transition-colors"
                 >
                   Close
                 </button>

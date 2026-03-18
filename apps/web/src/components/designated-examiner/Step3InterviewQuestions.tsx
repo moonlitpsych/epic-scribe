@@ -69,10 +69,10 @@ export function Step3InterviewQuestions({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-serif text-[#0A1F3D] mb-2">
+        <h2 className="text-2xl font-heading text-[var(--text-primary)] mb-2">
           Step 3: Patient Interview
         </h2>
-        <p className="text-[#5A6B7D]">
+        <p className="text-[var(--text-secondary)]">
           Ask the patient the following questions and record their responses verbatim.
           These answers will be incorporated into the final commitment determination.
         </p>
@@ -80,34 +80,34 @@ export function Step3InterviewQuestions({
 
       {/* Progress Banner */}
       <div
-        className={`p-4 rounded-lg border ${
-          allAnswered ? 'bg-green-50 border-green-300' : 'bg-amber-50 border-amber-300'
+        className={`p-4 rounded-[2px] border ${
+          allAnswered ? 'bg-[var(--success-bg)] border-[var(--success-border)]' : 'bg-[var(--warning-bg)] border-[var(--warning-border)]'
         }`}
       >
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-medium text-gray-900">
+            <p className="font-medium text-[var(--text-primary)]">
               {answeredCount} of {questions.length} questions answered
             </p>
             {!allAnswered && (
-              <p className="text-sm text-amber-700 mt-1">
+              <p className="text-sm text-[var(--warning-text)] mt-1">
                 Complete all questions for a comprehensive assessment
               </p>
             )}
           </div>
           <div className="flex items-center gap-3">
             {lastSaved && (
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-[var(--text-muted)]">
                 Last saved: {lastSaved.toLocaleTimeString()}
               </span>
             )}
             <button
               onClick={handleSave}
               disabled={isSaving || !hasUnsavedChanges}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-[2px] transition-colors ${
                 hasUnsavedChanges
-                  ? 'bg-[#E89C8A] text-white hover:bg-[#D88A7A]'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  ? 'bg-[var(--accent-warm)] text-[var(--text-inverse)] hover:bg-[var(--accent-warm-hover)]'
+                  : 'bg-[var(--bg-surface-2)] text-[var(--text-muted)] cursor-not-allowed'
               }`}
             >
               <Save size={16} />
@@ -128,13 +128,13 @@ export function Step3InterviewQuestions({
           return (
             <div
               key={criterion}
-              className="bg-white rounded-lg border border-[#C5A882]/20 p-6"
+              className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6"
             >
               <div className="mb-4">
-                <h3 className="text-lg font-semibold text-[#0A1F3D]">
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">
                   Criterion {criterion}: {criterionInfo.label}
                 </h3>
-                <p className="text-sm text-gray-500">{criterionInfo.full}</p>
+                <p className="text-sm text-[var(--text-muted)]">{criterionInfo.full}</p>
               </div>
 
               <div className="space-y-6">
@@ -154,9 +154,9 @@ export function Step3InterviewQuestions({
 
       {/* Warning if not all answered */}
       {!allAnswered && (
-        <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-          <AlertCircle className="text-amber-600 flex-shrink-0" size={20} />
-          <p className="text-sm text-amber-800">
+        <div className="flex items-center gap-3 p-4 bg-[var(--warning-bg)] border border-[var(--warning-border)] rounded-[2px]">
+          <AlertCircle className="text-[var(--warning-text)] flex-shrink-0" size={20} />
+          <p className="text-sm text-[var(--warning-text)]">
             You have {questions.length - answeredCount} unanswered question(s). While you can
             proceed, answering all questions will provide a more comprehensive assessment.
           </p>
@@ -167,7 +167,7 @@ export function Step3InterviewQuestions({
       <button
         onClick={handleContinue}
         disabled={isLoading || answeredCount === 0}
-        className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-[#C5A882] text-white rounded-lg hover:bg-[#B39770] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium"
+        className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded-[2px] hover:bg-[var(--accent-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium"
       >
         {isLoading ? (
           <>
@@ -194,32 +194,32 @@ interface QuestionInputProps {
 
 function QuestionInput({ question, index, value, onChange }: QuestionInputProps) {
   const priorityColors: Record<'high' | 'medium' | 'low', string> = {
-    high: 'bg-red-100 text-red-700 border-red-200',
-    medium: 'bg-amber-100 text-amber-700 border-amber-200',
-    low: 'bg-gray-100 text-gray-600 border-gray-200',
+    high: 'bg-[var(--error-bg)] text-[var(--error-text)] border-[var(--error-border)]',
+    medium: 'bg-[var(--warning-bg)] text-[var(--warning-text)] border-[var(--warning-border)]',
+    low: 'bg-[var(--bg-surface-2)] text-[var(--text-secondary)] border-[var(--border-default)]',
   };
 
   return (
-    <div className="border-l-4 border-[#E89C8A] pl-4">
+    <div className="border-l-4 border-[var(--accent-warm)] pl-4">
       <div className="flex items-start gap-3 mb-2">
-        <span className="flex-shrink-0 w-6 h-6 bg-[#E89C8A] text-white rounded-full flex items-center justify-center text-sm font-medium">
+        <span className="flex-shrink-0 w-6 h-6 bg-[var(--accent-warm)] text-[var(--text-inverse)] rounded-full flex items-center justify-center text-sm font-medium">
           {index}
         </span>
         <div className="flex-1">
-          <p className="text-gray-900 font-medium">{question.question}</p>
+          <p className="text-[var(--text-primary)] font-medium">{question.question}</p>
           <div className="flex items-center gap-2 mt-1">
             <span
               className={`text-xs px-2 py-0.5 rounded border ${priorityColors[question.priority]}`}
             >
               {question.priority} priority
             </span>
-            <span className="text-xs text-gray-500">{question.context}</span>
+            <span className="text-xs text-[var(--text-muted)]">{question.context}</span>
           </div>
         </div>
       </div>
 
       <div className="ml-9">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
           Patient&apos;s Response:
         </label>
         <textarea
@@ -227,7 +227,7 @@ function QuestionInput({ question, index, value, onChange }: QuestionInputProps)
           onChange={(e) => onChange(e.target.value)}
           placeholder="Record the patient's verbatim response..."
           rows={3}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent text-sm resize-none"
+          className="w-full px-4 py-3 border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent text-sm resize-none"
         />
       </div>
     </div>

@@ -241,16 +241,16 @@ export default function PatientGenerateTab({
   return (
     <div className="space-y-6">
       {/* Patient Info Banner */}
-      <div className="bg-[#0A1F3D] rounded-xl p-4 text-white">
+      <div className="bg-[var(--bg-surface-2)] rounded-[2px] p-4 text-[var(--text-primary)]">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-white/70 text-sm">Generating note for</p>
+            <p className="text-[var(--text-secondary)] text-sm">Generating note for</p>
             <p className="text-xl font-semibold">
               {patient.first_name} {patient.last_name}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-white/70 text-sm">Template</p>
+            <p className="text-[var(--text-secondary)] text-sm">Template</p>
             <p className="font-medium">{setting} - {visitType}</p>
           </div>
         </div>
@@ -259,17 +259,17 @@ export default function PatientGenerateTab({
       {currentStep === 'input' && (
         <div className="space-y-6">
           {/* Template Selection */}
-          <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-6">
-            <h3 className="text-lg font-semibold text-[#0A1F3D] mb-4">Template Selection</h3>
+          <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Template Selection</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Setting */}
               <div>
-                <label className="block text-sm font-medium text-[#0A1F3D] mb-1">Setting</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Setting</label>
                 <select
                   value={setting}
                   onChange={(e) => handleSettingChange(e.target.value as Setting)}
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent bg-white"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                 >
                   {SETTINGS.map((s) => (
                     <option key={s} value={s}>{s}</option>
@@ -279,11 +279,11 @@ export default function PatientGenerateTab({
 
               {/* Visit Type */}
               <div>
-                <label className="block text-sm font-medium text-[#0A1F3D] mb-1">Visit Type</label>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Visit Type</label>
                 <select
                   value={visitType}
                   onChange={(e) => setVisitType(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent bg-white"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                 >
                   {VISIT_TYPES[setting].map((vt) => (
                     <option key={vt} value={vt}>{vt}</option>
@@ -295,13 +295,13 @@ export default function PatientGenerateTab({
             {/* Link to Encounter */}
             {encounters.length > 0 && (
               <div className="mt-4">
-                <label className="block text-sm font-medium text-[#0A1F3D] mb-1">
-                  Link to Encounter <span className="text-[#5A6B7D] font-normal">(optional)</span>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">
+                  Link to Encounter <span className="text-[var(--text-secondary)] font-normal">(optional)</span>
                 </label>
                 <select
                   value={selectedEncounterId || ''}
                   onChange={(e) => setSelectedEncounterId(e.target.value || null)}
-                  className="w-full px-3 py-2 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent bg-white"
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                 >
                   <option value="">No encounter linked</option>
                   {encounters.map((enc) => (
@@ -315,47 +315,47 @@ export default function PatientGenerateTab({
           </div>
 
           {/* Transcript Input */}
-          <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-6">
-            <h3 className="text-lg font-semibold text-[#0A1F3D] mb-4">Transcript</h3>
+          <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Transcript</h3>
             <textarea
               value={transcript}
               onChange={(e) => setTranscript(e.target.value)}
               placeholder="Paste your session transcript here..."
-              className="w-full h-64 px-4 py-3 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm"
+              className="w-full h-64 px-4 py-3 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent font-mono text-sm bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
             />
-            <p className="mt-2 text-xs text-[#5A6B7D]">
+            <p className="mt-2 text-xs text-[var(--text-secondary)]">
               {transcript.length} characters
             </p>
           </div>
 
           {/* Previous Note (for TOC/Follow-up) */}
           {needsPreviousNote && (
-            <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-6">
-              <h3 className="text-lg font-semibold text-[#0A1F3D] mb-2">Previous Note</h3>
-              <p className="text-sm text-[#5A6B7D] mb-4">
+            <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">Previous Note</h3>
+              <p className="text-sm text-[var(--text-secondary)] mb-4">
                 For {visitType} visits, paste the most recent note for continuity
               </p>
               <textarea
                 value={previousNote}
                 onChange={(e) => setPreviousNote(e.target.value)}
                 placeholder="Paste the previous note here..."
-                className="w-full h-48 px-4 py-3 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm"
+                className="w-full h-48 px-4 py-3 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent font-mono text-sm bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
               />
             </div>
           )}
 
           {/* Collateral/Staffing Transcript */}
           {needsCollateral && (
-            <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-6">
-              <h3 className="text-lg font-semibold text-[#0A1F3D] mb-2">Staffing Transcript</h3>
-              <p className="text-sm text-[#5A6B7D] mb-4">
+            <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">Staffing Transcript</h3>
+              <p className="text-sm text-[var(--text-secondary)] mb-4">
                 {setting} uses separate staffing recordings
               </p>
               <textarea
                 value={collateralTranscript}
                 onChange={(e) => setCollateralTranscript(e.target.value)}
                 placeholder="Paste the staffing transcript here..."
-                className="w-full h-48 px-4 py-3 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm"
+                className="w-full h-48 px-4 py-3 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent font-mono text-sm bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
               />
             </div>
           )}
@@ -365,7 +365,7 @@ export default function PatientGenerateTab({
             <button
               onClick={handleGenerate}
               disabled={isGenerating || !transcript.trim() || loadingTemplate}
-              className="flex items-center gap-2 px-6 py-3 bg-[#E89C8A] text-white rounded-lg hover:bg-[#D4826F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              className="flex items-center gap-2 px-6 py-3 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded-[2px] hover:bg-[var(--accent-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               {isGenerating ? (
                 <>
@@ -387,19 +387,19 @@ export default function PatientGenerateTab({
         <div className="space-y-6">
           {/* Validation Status */}
           {validationResult && (
-            <div className={`rounded-xl p-4 ${validationResult.valid ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
+            <div className={`rounded-[2px] p-4 ${validationResult.valid ? 'bg-[var(--success-bg)] border border-[var(--success-border)]' : 'bg-[var(--warning-bg)] border border-[var(--warning-border)]'}`}>
               <div className="flex items-start gap-3">
                 {validationResult.valid ? (
-                  <CheckCircle className="text-green-600 mt-0.5" size={20} />
+                  <CheckCircle className="text-[var(--success-text)] mt-0.5" size={20} />
                 ) : (
-                  <AlertCircle className="text-amber-600 mt-0.5" size={20} />
+                  <AlertCircle className="text-[var(--warning-text)] mt-0.5" size={20} />
                 )}
                 <div>
-                  <p className={`font-medium ${validationResult.valid ? 'text-green-800' : 'text-amber-800'}`}>
+                  <p className={`font-medium ${validationResult.valid ? 'text-[var(--success-text)]' : 'text-[var(--warning-text)]'}`}>
                     {validationResult.valid ? 'Note validated successfully' : 'Validation warnings'}
                   </p>
                   {validationResult.warnings.length > 0 && (
-                    <ul className="mt-1 text-sm text-amber-700 list-disc list-inside">
+                    <ul className="mt-1 text-sm text-[var(--warning-text)] list-disc list-inside">
                       {validationResult.warnings.map((w, i) => (
                         <li key={i}>{w}</li>
                       ))}
@@ -411,13 +411,13 @@ export default function PatientGenerateTab({
           )}
 
           {/* Generated Note */}
-          <div className="bg-white rounded-xl shadow-sm border border-[#C5A882]/20 p-6">
+          <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-[#0A1F3D]">Generated Note</h3>
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Generated Note</h3>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleCopy}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-[#5A6B7D] hover:text-[#0A1F3D] transition-colors text-sm"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors text-sm"
                 >
                   {copied ? <CheckCircle size={16} /> : <Copy size={16} />}
                   {copied ? 'Copied!' : 'Copy'}
@@ -428,10 +428,10 @@ export default function PatientGenerateTab({
             <textarea
               value={editedNote}
               onChange={(e) => setEditedNote(e.target.value)}
-              className="w-full h-96 px-4 py-3 border border-[#C5A882]/30 rounded-lg focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent font-mono text-sm"
+              className="w-full h-96 px-4 py-3 border border-[var(--border-default)] rounded focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent font-mono text-sm bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
             />
 
-            <p className="mt-2 text-xs text-[#5A6B7D]">
+            <p className="mt-2 text-xs text-[var(--text-secondary)]">
               {editedNote.length} characters | Edit the note above before saving
             </p>
           </div>
@@ -440,7 +440,7 @@ export default function PatientGenerateTab({
           <div className="flex items-center justify-between">
             <button
               onClick={handleStartOver}
-              className="flex items-center gap-2 px-4 py-2 text-[#5A6B7D] hover:text-[#0A1F3D] transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               <RotateCcw size={18} />
               Start Over
@@ -448,7 +448,7 @@ export default function PatientGenerateTab({
 
             <div className="flex items-center gap-3">
               {saveSuccess && (
-                <span className="text-green-600 text-sm flex items-center gap-1">
+                <span className="text-[var(--success-text)] text-sm flex items-center gap-1">
                   <CheckCircle size={16} />
                   Note saved!
                 </span>
@@ -456,7 +456,7 @@ export default function PatientGenerateTab({
               <button
                 onClick={handleSaveNote}
                 disabled={isSaving || saveSuccess}
-                className="flex items-center gap-2 px-6 py-3 bg-[#0A1F3D] text-white rounded-lg hover:bg-[#0A1F3D]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                className="flex items-center gap-2 px-6 py-3 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded-[2px] hover:bg-[var(--accent-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               >
                 {isSaving ? (
                   <>

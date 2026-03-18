@@ -8,10 +8,10 @@ export default function DesignatedExaminerPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-[#F5F1ED] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-[#C5A882] border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-[#5A6B7D]">Loading...</p>
+          <div className="animate-spin h-8 w-8 border-4 border-[var(--accent-warm)] border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-[var(--text-secondary)]">Loading...</p>
         </div>
       </div>
     );
@@ -19,12 +19,12 @@ export default function DesignatedExaminerPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-[#F5F1ED] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-[#5A6B7D] mb-4">Please sign in to use this feature</p>
+          <p className="text-[var(--text-secondary)] mb-4">Please sign in to use this feature</p>
           <a
             href="/api/auth/signin"
-            className="px-6 py-3 bg-[#C5A882] text-white rounded-lg hover:bg-[#B39770] transition-colors"
+            className="px-6 py-3 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded hover:bg-[var(--accent-primary-hover)] transition-colors"
           >
             Sign In
           </a>
