@@ -48,20 +48,20 @@ export const moonlitTheme = {
     // Text Colors (dark mode)
     text: {
       primary: '#e8eaf0',
-      secondary: '#8b90a0',
-      muted: '#5a5e68',
+      secondary: '#a0a4b4',
+      muted: '#6e7280',
       inverse: '#0f1117'
     },
 
     // Neutral Colors (dark mode)
     gray: {
-      50: '#1e2130',
+      50: '#2a2d3a',
       100: '#1a1d27',
-      200: '#1e2130',
-      300: '#1e2130',
-      400: '#5a5e68',
-      500: '#8b90a0',
-      600: '#8b90a0',
+      200: '#2a2d3a',
+      300: '#2a2d3a',
+      400: '#6e7280',
+      500: '#a0a4b4',
+      600: '#a0a4b4',
       700: '#e8eaf0',
       800: '#e8eaf0',
       900: '#e8eaf0'

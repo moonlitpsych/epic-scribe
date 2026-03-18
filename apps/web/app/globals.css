@@ -12,13 +12,13 @@
   --bg-hover:        #1e2130;
 
   /* Borders */
-  --border-default:  #1e2130;
-  --border-subtle:   #171a23;
+  --border-default:  #2a2d3a;
+  --border-subtle:   #1e2130;
 
   /* Text */
   --text-primary:    #e8eaf0;
-  --text-secondary:  #8b90a0;
-  --text-muted:      #5a5e68;
+  --text-secondary:  #a0a4b4;
+  --text-muted:      #6e7280;
   --text-inverse:    #0f1117;
 
   /* Accents */
