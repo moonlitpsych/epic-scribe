@@ -214,10 +214,10 @@ Comprehensive visual overhaul converting the entire app from light/cream theme t
 | `--bg-surface` | `#141720` | Card backgrounds |
 | `--bg-surface-2` | `#1a1d27` | Nested surfaces, table headers |
 | `--bg-hover` | `#1e2130` | Hover states |
-| `--border-default` | `#1e2130` | Card/input borders |
+| `--border-default` | `#2a2d3a` | Card/input borders |
 | `--text-primary` | `#e8eaf0` | Headings, primary text |
-| `--text-secondary` | `#8b90a0` | Body text |
-| `--text-muted` | `#5a5e68` | Placeholders, timestamps |
+| `--text-secondary` | `#a0a4b4` | Body text |
+| `--text-muted` | `#6e7280` | Placeholders, timestamps |
 | `--accent-primary` | `#10b981` | Emerald — CTAs, generate, save |
 | `--accent-warm` | `#E89C8A` | Salmon — focus rings, active tabs |
 | Status colors | Dark-bg variants | success/warning/error/info with `--*-bg`, `--*-border`, `--*-text` |
