@@ -7,7 +7,7 @@
 
 ---
 
-## Current Status (2026-02-21)
+## Current Status (2026-03-18)
 
 ### Working Features
 - **Note Generation**: Full workflow with Gemini 2.5 Pro API + automatic failover to backup API key
@@ -27,6 +27,7 @@
 - **QR Code Patient Pairing**: Provider shows QR code on screen (patient page or workflow), patient scans with iOS app camera to link health records — zero typing
 - **Background Sync (iOS)**: After one-time setup (authorize + QR scan), app auto-syncs on foreground, on background HealthKit data changes, and immediately after pairing. Patient pairing and auth state persist across launches.
 - **Listening Coder (v0)**: Appends CPT code suggestions after note signature. Currently uses static prompt rules — needs payer-aware intelligence (see Product Vision below).
+- **Dark Mode UI (COMPLETE)**: Full app dark mode redesign — 50 files converted using CSS custom properties. Space Grotesk + IBM Plex fonts, emerald/salmon accents, dark surfaces, minimal border radius. Landing page unchanged.
 
 ### Known Issues
 1. **Google OAuth Token Expiration** - Workaround: Sign out/in to refresh (~1 hour expiry)
@@ -194,7 +195,60 @@ pnpm lint             # Check for issues
 
 ---
 
-## Recent Updates (2026-02-24)
+## Recent Updates (2026-03-18)
+
+### Dark Mode UI Redesign (COMPLETE)
+
+Comprehensive visual overhaul converting the entire app from light/cream theme to dark mode. 50 files changed, purely visual — zero functionality changes. The landing page (`app/page.tsx`) was intentionally left unchanged as it already had the target aesthetic.
+
+**Design System:**
+- CSS custom properties in `globals.css` `:root` — all colors, borders, status tokens
+- Tailwind config maps CSS vars to utility classes (`colors.bg.base`, `colors.accent.primary`, etc.)
+- Fonts via `next/font/google`: Space Grotesk (headings), IBM Plex Sans (body), IBM Plex Mono (code)
+- Custom Tailwind `fontFamily` entries: `font-heading`, `font-body`, `font-mono`
+
+**Color Palette:**
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--bg-base` | `#0f1117` | Page background |
+| `--bg-surface` | `#141720` | Card backgrounds |
+| `--bg-surface-2` | `#1a1d27` | Nested surfaces, table headers |
+| `--bg-hover` | `#1e2130` | Hover states |
+| `--border-default` | `#1e2130` | Card/input borders |
+| `--text-primary` | `#e8eaf0` | Headings, primary text |
+| `--text-secondary` | `#8b90a0` | Body text |
+| `--text-muted` | `#5a5e68` | Placeholders, timestamps |
+| `--accent-primary` | `#10b981` | Emerald — CTAs, generate, save |
+| `--accent-warm` | `#E89C8A` | Salmon — focus rings, active tabs |
+| Status colors | Dark-bg variants | success/warning/error/info with `--*-bg`, `--*-border`, `--*-text` |
+
+**Visual Rules:**
+- Border radius: `rounded-[2px]` for cards, `rounded` (4px) for buttons/inputs, `rounded-full` for pills
+- No shadows on dark surfaces (all `shadow-*` removed)
+- QR codes keep white background container for scanability
+
+**Files Modified (50 total):**
+- Foundation: `globals.css`, `tailwind.config.js`, `layout.tsx`, `(protected)/layout.tsx`
+- Shell: `AppShell.tsx`, `signin/page.tsx`
+- Workflow (8): `WorkflowWizard`, `TemplateReviewStep`, `GenerateInputStep`, `NoteResultsStep`, `PatientSelector`, `AudioRecorder`, `TranscriptSelector`, `workflow/page.tsx`
+- Patients (5): `patients/page.tsx`, `[id]/page.tsx`, `PatientOverviewTab`, `PatientNotesTab`, `PatientProfileTab`
+- Templates: `templates/page.tsx`, `TemplateEditor.tsx`
+- Admin/Batch: `admin/page.tsx`, `batch/page.tsx`
+- Workflow extras (4): `ManualNotePanel`, `EncountersList`, `SmartListExpander`, `CompanionPairingModal`
+- Patient extras (2): `PatientEncountersTab`, `PatientGenerateTab`
+- Modals/editors (4): `SectionCloneModal`, `SmartListEditModal`, `SmartListEditor`, `QuickAddSmartList`
+- DE (9): `designated-examiner/page.tsx`, `DEWorkflowWizard`, `StepProgressBar`, `Step1`–`Step5`, `CriterionStatusCard`, `UtahCriteriaChecklist`
+- Public pages (5): `companion/page.tsx`, `generate/page.tsx`, `demo/page.tsx`, `smartlists/page.tsx`, `test-psychiatric/page.tsx`
+- Other (2): `SmartToolsDemo.tsx`, `moonlit-theme.ts`
+
+**Key files for future UI work:**
+- `apps/web/app/globals.css` — all CSS custom properties (design tokens)
+- `apps/web/tailwind.config.js` — Tailwind ↔ CSS var mapping
+- `apps/web/src/lib/moonlit-theme.ts` — JS theme object (used by SmartListEditModal, QuickAddSmartList for inline styles)
+
+---
+
+### Previous Updates (2026-02-24)
 
 ### Psycho-oncology (HCI) Setting (COMPLETE)
 
