@@ -3,7 +3,7 @@
  * Enhanced prompt building with section-specific instructions and temperature control
  */
 
-import { Template, TemplateSection, PayerFeeSchedule, Setting, StructuredPatientProfile } from '@epic-scribe/types';
+import { Template, TemplateSection, PayerFeeSchedule, Setting, StructuredPatientProfile, OutputMode } from '@epic-scribe/types';
 
 export interface SectionPromptConfig {
   sectionName: string;
@@ -512,7 +512,7 @@ function ensureProperSectionOrdering(template: Template): Template {
 /**
  * Build section-specific prompt instructions with visit type awareness
  */
-export function buildSectionPrompt(section: TemplateSection, visitType?: string, previousMedications?: string, setting?: Setting): string {
+export function buildSectionPrompt(section: TemplateSection, visitType?: string, previousMedications?: string, setting?: Setting, outputMode?: OutputMode): string {
   const isFollowUp = visitType === 'Follow-up' || visitType === 'Transfer of Care';
 
   // Choose the appropriate config based on section name and visit type
@@ -569,6 +569,19 @@ This is a psycho-oncology consultation-liaison setting. In the interval update (
 - Support system: Caregiver burden, family coping, any changes in social support`;
   }
 
+  // Plain text mode: replace Epic-specific references in section instructions
+  if (outputMode === 'plain_text') {
+    instructions = instructions.replace(
+      /Use these placeholders for Epic: \.DATE and \.TIME\n/g,
+      'Write the follow-up date and time as plain text (do not use dotphrases)\n'
+    );
+    instructions = instructions.replace(/[Ll]eave \*\*\* blank/g, 'write "[not discussed]"');
+    instructions = instructions.replace(
+      /In the wildcard \(\*\*\*\) section after each,/g,
+      'After each substance category,'
+    );
+  }
+
   let prompt = `\n=== ${config.sectionName.toUpperCase()} ===\n`;
   prompt += `Temperature Setting: ${config.temperature || 0.4}\n`;
   prompt += `Format: ${config.format}\n\n`;
@@ -602,7 +615,8 @@ export function buildPsychiatricPrompt(
   afterHoursEligible?: boolean,
   questionnairesCompleted?: boolean,
   setting?: Setting,
-  patientProfile?: StructuredPatientProfile
+  patientProfile?: StructuredPatientProfile,
+  outputMode?: OutputMode
 ): string {
   // Check for staffing configuration
   const staffingConfig = template.staffing_config;
@@ -612,7 +626,25 @@ export function buildPsychiatricPrompt(
     staffingConfig.visitTypes.includes(template.visit_type) &&
     staffingTranscript;
 
-  let prompt = `ROLE: You are a HIPAA-compliant psychiatric note generator for Dr. Rufus Sweeney. Generate focused, clinically accurate notes optimized for Epic EMR.
+  const isPlainText = outputMode === 'plain_text';
+
+  let prompt = isPlainText
+    ? `ROLE: You are a HIPAA-compliant psychiatric note generator for Dr. Rufus Sweeney. Generate focused, clinically accurate psychiatric notes.
+
+TASK: Generate a psychiatric note using the provided template, following section-specific instructions precisely.
+
+CRITICAL RULES:
+1. PATIENT DEMOGRAPHICS: Use the actual patient name and age provided in the PATIENT DEMOGRAPHICS section
+   - Use PATIENT_FIRST_NAME and PATIENT_LAST_NAME directly in the note (NOT .FNAME or .LNAME dotphrases)
+   - Use PATIENT_AGE directly (e.g., "47-year-old") (NOT .age dotphrase)
+   - If age is not provided, use "***-year-old"
+2. NO EPIC FORMATTING: Do NOT output any dotphrases (.lastvitals, .provider, .medlist, .DATE, .TIME, .MRN) or SmartLinks (@identifier@). Write all content as plain clinical text.
+3. Clinical Value Sets: Output ONLY the selected value text, not the {Display:ID} wrapper
+4. CONTENT GAPS: If information is not discussed in the transcript, write "[not discussed]" — do NOT use *** wildcards
+5. Format: Use paragraphs only - NO bullets, NO numbered lists except where specified in Plan
+6. Accuracy: Do not invent information not in the transcript
+`
+    : `ROLE: You are a HIPAA-compliant psychiatric note generator for Dr. Rufus Sweeney. Generate focused, clinically accurate notes optimized for Epic EMR.
 
 TASK: Generate a psychiatric note using the provided template, following section-specific instructions precisely.
 
@@ -760,7 +792,7 @@ TEMPLATE SECTIONS:
 
   // Add each section with its specific instructions
   ensuredTemplate.sections.forEach(section => {
-    prompt += buildSectionPrompt(section, visitType, previousMedications, setting);
+    prompt += buildSectionPrompt(section, visitType, previousMedications, setting, outputMode);
     prompt += '\n---\n';
   });
 

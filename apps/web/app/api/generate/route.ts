@@ -81,7 +81,7 @@ function formatHistoricalNotes(notes: any[]): string {
 export async function POST(request: NextRequest) {
   try {
     const body: GenerateNoteRequest = await request.json();
-    const { encounterId, patientId, setting, visitType, transcript, priorNote, staffingTranscript, collateralTranscript, epicChartData, questionnairesCompleted } = body;
+    const { encounterId, patientId, setting, visitType, transcript, priorNote, staffingTranscript, collateralTranscript, epicChartData, questionnairesCompleted, outputMode } = body;
     // Patient demographics can be passed directly or fetched from database
     let { patientFirstName, patientLastName, patientAge } = body as any;
 
@@ -386,7 +386,8 @@ export async function POST(request: NextRequest) {
       // Patient demographics - used directly in note instead of dotphrases
       patientFirstName,
       patientLastName,
-      patientAge
+      patientAge,
+      outputMode
     });
 
     console.log(`[Generate] Compiled prompt: ${compiledPrompt.hash}, ${compiledPrompt.metadata.wordCount} words`);

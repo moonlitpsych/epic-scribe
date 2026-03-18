@@ -272,7 +272,7 @@ export class SmartListService {
   }
 
   // Export for LLM prompt expansion
-  exportForPrompt(smartListId: string): string {
+  exportForPrompt(smartListId: string, plainTextMode?: boolean): string {
     const smartList = this.getSmartList(smartListId);
     if (!smartList) {
       console.log(`[SmartListService] exportForPrompt: SmartList '${smartListId}' not found`);
@@ -282,8 +282,12 @@ export class SmartListService {
     const defaultValue = this.getDefaultValue(smartListId);
     const mostCommon = this.getMostCommonValue(smartListId);
 
-    let prompt = `SmartList: ${smartList.displayName} (Epic ID: ${smartList.epicId})\n`;
-    prompt += `Template placeholder: {${smartList.displayName}:${smartList.epicId}}\n`;
+    let prompt = plainTextMode
+      ? `Clinical Value Set: ${smartList.displayName}\n`
+      : `SmartList: ${smartList.displayName} (Epic ID: ${smartList.epicId})\n`;
+    if (!plainTextMode) {
+      prompt += `Template placeholder: {${smartList.displayName}:${smartList.epicId}}\n`;
+    }
     prompt += `Allowed values (output ONLY the value text, NOT the {placeholder} format):\n`;
 
     smartList.options.forEach(opt => {
@@ -305,19 +309,25 @@ export class SmartListService {
   }
 
   // Bulk export all SmartLists for a template
-  exportAllForPrompt(smartListIds: string[]): string {
+  exportAllForPrompt(smartListIds: string[], plainTextMode?: boolean): string {
     console.log(`[SmartListService] exportAllForPrompt called with: ${smartListIds.join(', ')}`);
-    const sections = smartListIds.map(id => this.exportForPrompt(id)).filter(s => s);
+    const sections = smartListIds.map(id => this.exportForPrompt(id, plainTextMode)).filter(s => s);
 
     console.log(`[SmartListService] Generated ${sections.length}/${smartListIds.length} SmartList definition sections`);
 
     if (sections.length === 0) return '';
 
-    let prompt = '=== SMARTLIST DEFINITIONS ===\n\n';
-    prompt += 'The following SmartLists appear in the template. ';
+    let prompt = plainTextMode
+      ? '=== CLINICAL VALUE SET DEFINITIONS ===\n\n'
+      : '=== SMARTLIST DEFINITIONS ===\n\n';
+    prompt += plainTextMode
+      ? 'The following clinical value sets appear in the template. '
+      : 'The following SmartLists appear in the template. ';
     prompt += 'Select appropriate values based on the transcript content.\n\n';
     prompt += sections.join('\n---\n\n');
-    prompt += '\n=== END SMARTLIST DEFINITIONS ===\n';
+    prompt += plainTextMode
+      ? '\n=== END CLINICAL VALUE SET DEFINITIONS ===\n'
+      : '\n=== END SMARTLIST DEFINITIONS ===\n';
 
     return prompt;
   }

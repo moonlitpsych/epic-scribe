@@ -12,7 +12,9 @@ import {
   TemplateSection,
   HealthKitClinicalData,
   PayerFeeSchedule,
-  StructuredPatientProfile
+  StructuredPatientProfile,
+  OutputMode,
+  getDefaultOutputMode
 } from '@epic-scribe/types';
 import { getSmartListService } from '../smartlists/smartlist-service';
 import { noteParser, ExtractedNoteData } from '../parsers/note-parser';
@@ -41,6 +43,7 @@ export interface PromptBuilderOptions {
   patientFirstName?: string;
   patientLastName?: string;
   patientAge?: number | null;  // If provided, use directly; if null/undefined, use "***-year-old"
+  outputMode?: OutputMode;  // Output format: 'epic' (dotphrases) or 'plain_text' (clean text). Auto-detected from setting if not specified.
 }
 
 export interface CompiledPrompt {
@@ -181,6 +184,10 @@ export class PromptBuilder {
   async build(options: PromptBuilderOptions): Promise<CompiledPrompt> {
     const { template, transcript, previousNote, staffingTranscript, collateralTranscript, epicChartData, longitudinalChartData, healthKitData, feeScheduleData, afterHoursEligible, questionnairesCompleted, patientContext, historicalNotes, patientProfile, setting, visitType, patientFirstName, patientLastName, patientAge } = options;
 
+    // Determine output mode (Epic dotphrases vs plain text)
+    const outputMode: OutputMode = options.outputMode || getDefaultOutputMode(setting);
+    const isPlainText = outputMode === 'plain_text';
+
     // Check if this is a therapy-focused template (BHIDC therapy)
     const isTherapyFocused = template.setting === 'BHIDC therapy' ||
                              template.name?.toLowerCase().includes('therapy');
@@ -197,7 +204,7 @@ export class PromptBuilder {
 
     // Get SmartList definitions from template
     const smartListIds = this.extractSmartListIds(template);
-    const smartListDefinitions = await this.buildSmartListDefinitions(smartListIds);
+    const smartListDefinitions = await this.buildSmartListDefinitions(smartListIds, isPlainText);
 
     let prompt: string;
     let sections: any;
@@ -231,7 +238,7 @@ export class PromptBuilder {
         firstName: patientFirstName,
         lastName: patientLastName,
         age: patientAge
-      }, feeScheduleData, afterHoursEligible, questionnairesCompleted, setting, patientProfile);
+      }, feeScheduleData, afterHoursEligible, questionnairesCompleted, setting, patientProfile, outputMode);
 
       sections = {
         system: 'Psychiatric note generator for Dr. Rufus Sweeney',
@@ -268,7 +275,7 @@ export class PromptBuilder {
       sections = {
         system: this.manifest.system,
         task: this.manifest.task,
-        smarttoolsRules: this.buildSmartToolsRules(examples),
+        smarttoolsRules: this.buildSmartToolsRules(examples, outputMode),
         smartlistDefinitions: smartListDefinitions,
         patientContext: patientContext ? this.buildPatientContextSection(patientContext) : undefined,
         historicalNotes,
@@ -286,7 +293,7 @@ export class PromptBuilder {
         firstName: patientFirstName,
         lastName: patientLastName,
         age: patientAge
-      }, longitudinalChartData, healthKitData, feeScheduleData, afterHoursEligible, questionnairesCompleted, patientProfile);
+      }, longitudinalChartData, healthKitData, feeScheduleData, afterHoursEligible, questionnairesCompleted, patientProfile, outputMode);
     }
 
     // Generate hash
@@ -341,18 +348,52 @@ export class PromptBuilder {
   /**
    * Build SmartList definitions section
    */
-  private async buildSmartListDefinitions(smartListIds: string[]): Promise<string> {
+  private async buildSmartListDefinitions(smartListIds: string[], plainTextMode?: boolean): Promise<string> {
     if (!this.smartListService || smartListIds.length === 0) {
       return '';
     }
 
-    return this.smartListService.exportAllForPrompt(smartListIds);
+    return this.smartListService.exportAllForPrompt(smartListIds, plainTextMode);
   }
 
   /**
    * Build SmartTools rules with examples
    */
-  private buildSmartToolsRules(examples: string[]): string {
+  private buildSmartToolsRules(examples: string[], outputMode?: OutputMode): string {
+    if (outputMode === 'plain_text') {
+      return `FORMATTING INSTRUCTIONS:
+1. PATIENT DEMOGRAPHICS: Use the actual patient name and age provided - NOT dotphrases
+   - Use the provided PATIENT_FIRST_NAME and PATIENT_LAST_NAME directly in the note
+   - Use the provided PATIENT_AGE directly (e.g., "47-year-old")
+   - If age is not provided (shown as ***), output "***-year-old"
+   - NEVER use .FNAME, .LNAME, or .age dotphrases for patient demographics
+
+2. CLINICAL VALUE SETS: Replace template placeholders with ONLY the selected value text
+   - Select ONLY from the provided option list for each value set
+   - Output plain text values only (e.g., "Poor quality", "Depressed")
+   - DO NOT include the {Display:EpicID} wrapper in your output
+   - If unsure, use the DEFAULT option or most contextually appropriate value
+
+3. CONTENT GAPS: If information is not available in the transcript:
+   - Write "[not discussed]" — do NOT use *** wildcards
+   - For history sections, use "Denies", "Not discussed", or "Per intake paperwork" as appropriate
+   - Do NOT leave *** placeholders in the output
+
+4. NO EPIC FORMATTING: Do NOT output any Epic dotphrases or SmartLinks
+   - No .lastvitals, .provider, .medlist, .DATE, .TIME, .MRN, etc.
+   - No @identifier@ format references
+   - Write all content as plain clinical text
+
+5. FORMAT: Use paragraphs only - NO bullets, NO numbered lists
+   - Keep section headers exactly as they appear in the template
+   - Maintain the order of sections
+   - Do not add or remove sections
+
+6. CONTENT: Do not invent data not present in inputs
+   - Use only information from transcript, template, and previous note (if provided)
+   - Do not fabricate vitals, labs, medications, or diagnoses`;
+    }
+
     let rules = this.manifest.smarttools_rules;
 
     if (examples.length > 0) {
@@ -461,7 +502,7 @@ export class PromptBuilder {
     firstName?: string;
     lastName?: string;
     age?: number | null;
-  }, longitudinalChartData?: string, healthKitData?: HealthKitClinicalData, feeScheduleData?: PayerFeeSchedule, afterHoursEligible?: boolean, questionnairesCompleted?: boolean, patientProfile?: StructuredPatientProfile): string {
+  }, longitudinalChartData?: string, healthKitData?: HealthKitClinicalData, feeScheduleData?: PayerFeeSchedule, afterHoursEligible?: boolean, questionnairesCompleted?: boolean, patientProfile?: StructuredPatientProfile, outputMode?: OutputMode): string {
     let prompt = '';
 
     // System prompt
@@ -522,7 +563,9 @@ export class PromptBuilder {
       if (sections.extractedFromPrior.providerName) {
         prompt += `2. Provider: Use the extracted provider name directly (${sections.extractedFromPrior.providerName}) - DO NOT use .provider dotphrase\n`;
       } else {
-        prompt += `2. Provider: Use .provider dotphrase as normal\n`;
+        prompt += outputMode === 'plain_text'
+        ? `2. Provider: Write the provider name or "Treating Psychiatrist"\n`
+        : `2. Provider: Use .provider dotphrase as normal\n`;
       }
       prompt += `3. Date: Use today's actual date in the format shown in the template\n`;
 
@@ -642,7 +685,9 @@ export class PromptBuilder {
 
     // Current Medications carveout
     prompt += `CURRENT MEDICATIONS:\n`;
-    prompt += `After the SmartLink-generated medication list (.medlist or similar), include a carveout section for patient-reported medications:\n`;
+    prompt += outputMode === 'plain_text'
+      ? `List all current medications. Include a carveout section for patient-reported medications:\n`
+      : `After the SmartLink-generated medication list (.medlist or similar), include a carveout section for patient-reported medications:\n`;
     prompt += `  "Patient-reported medications (not reported in chart):"\n`;
     prompt += `    [List any psychiatric medications the patient mentions taking that are not in the EMR medication list]\n`;
     prompt += `  If no additional patient-reported medications, omit this carveout entirely.\n\n`;
@@ -840,7 +885,9 @@ export class PromptBuilder {
       }
     }
 
-    prompt += `Apply all SmartTools transformations. `;
+    if (outputMode !== 'plain_text') {
+      prompt += `Apply all SmartTools transformations. `;
+    }
     prompt += `Maintain clinical prose style matching the exemplars. `;
     prompt += `Include the Risk Assessment section before Formulation. `;
     prompt += `After the signature, append the Listening Coder section with CPT code analysis. `;

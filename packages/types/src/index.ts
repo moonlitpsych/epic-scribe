@@ -160,6 +160,13 @@ export const EPIC_EMR_SETTINGS: Setting[] = [
   'Psycho-oncology (HCI)'
 ];
 
+// Output mode for note generation — controls Epic dotphrase/SmartLink formatting
+export type OutputMode = 'epic' | 'plain_text';
+
+export function getDefaultOutputMode(setting: Setting): OutputMode {
+  return EPIC_EMR_SETTINGS.includes(setting) ? 'epic' : 'plain_text';
+}
+
 // Patient Chart History Types (for longitudinal tracking)
 export interface PatientQuestionnaireHistory {
   id: string;
@@ -217,6 +224,7 @@ export interface GenerateNoteRequest {
   epicChartData?: string; // Optional pasted Epic DotPhrase data (full text - extraction happens server-side)
   healthKitData?: HealthKitClinicalData; // Optional HealthKit clinical data (auto-fetched from DB)
   questionnairesCompleted?: boolean; // Pre-visit PHQ-9/GAD-7 completed (enables 96127 billing)
+  outputMode?: OutputMode; // Output format: 'epic' (dotphrases/SmartLinks) or 'plain_text' (clean clinical text)
 }
 
 export interface GenerateNoteResponse {
