@@ -127,18 +127,88 @@ export const SECTION_PROMPT_CONFIGS: Record<string, SectionPromptConfig> = {
   'Mental Status Examination': {
     sectionName: 'Mental Status Examination',
     temperature: 0.2, // Very low for objective observations
-    instructions: `Select SmartList options based on clinical observations ONLY.
-    Use standard psychiatric terminology:
-    - Appearance: grooming, dress, apparent age
-    - Behavior: cooperation, agitation, psychomotor changes
-    - Speech: rate, volume, tone
-    - Mood: patient's stated mood in quotes if given
-    - Affect: your observation of emotional expression
-    - Thought: process (how they think) and content (what they think)
-    - Perceptual: hallucinations, illusions
-    - Cognition: orientation, memory, concentration
-    - Insight/Judgment: understanding of illness and decision-making
-    Be objective and descriptive.`,
+    instructions: `MENTAL STATUS EXAMINATION — DOMAIN-SPECIFIC SOURCING RULES
+
+This section requires BOTH clinical observations AND transcript analysis.
+You have access to the TRANSCRIPT. You do NOT have access to video.
+
+FOR EACH MSE DOMAIN, follow the specific sourcing rules below:
+
+APPEARANCE:
+⚠️ You CANNOT observe appearance from a transcript alone.
+- If the transcript contains explicit clinician observations (e.g., "OBSERVATION: patient appears disheveled"), use those.
+- If the transcript contains no appearance observations, output: "appropriately dressed and groomed" as the default.
+- NEVER infer appearance from mood or diagnosis (e.g., do not assume "poor hygiene" because the patient is depressed).
+
+BEHAVIOR:
+⚠️ Partially observable from transcript.
+- Cooperation level: Infer from how the patient engages (answers questions, provides details → "cooperative"; short answers, refuses → "guarded")
+- Psychomotor: Can sometimes be inferred from speech patterns (long pauses → possible psychomotor slowing; rapid speech → possible agitation). Be conservative.
+- Eye contact: CANNOT be determined from transcript. Default to "good eye contact" unless clinician observations or visual data is provided.
+
+SPEECH:
+✅ Directly observable from transcript.
+- Rate: Infer from transcript density and flow (normal, rapid, slow)
+- Volume: Can be noted if clinician comments on it; otherwise default to "normal volume"
+- Tone: Infer from content and clinician observations
+- Coherence: Directly observable from transcript quality
+- Latency: Infer from response patterns if timestamps are available
+
+MOOD:
+✅ Directly from patient's own words.
+- Use the patient's EXACT stated mood in quotes if they state it
+- If no explicit mood statement, infer from overall emotional content
+- Common: "depressed," "anxious," "fine," "okay," "irritable," "flat"
+- Format: Patient's stated mood in quotes, e.g., mood is "flat" and "exhausted"
+
+AFFECT:
+⚠️ Partially observable — this is the CLINICIAN'S observation of emotional expression, NOT the patient's report.
+- Range: Can be partially inferred (patient discusses multiple emotional topics with varying responses → "full range"; monotone throughout → "constricted")
+- Reactivity: Infer from whether emotional expression changes in response to content (tears when discussing loss → "reactive")
+- Congruence: Compare stated mood to observed emotional expression
+- If uncertain about range or reactivity, default to "mood-congruent, appropriate to content"
+
+THOUGHT PROCESS:
+✅ Directly observable from transcript.
+- Linear/goal-directed: Patient answers questions directly, stays on topic
+- Tangential: Patient drifts from topic
+- Circumstantial: Patient eventually returns to point but takes detours
+- Disorganized: Responses don't logically connect
+- Flight of ideas: Rapid shifting between loosely connected topics
+
+THOUGHT CONTENT:
+✅ Directly from transcript.
+- Suicidal ideation: ONLY if explicitly discussed. State whether active/passive, with/without plan/intent.
+- Homicidal ideation: ONLY if explicitly discussed.
+- Delusions: ONLY if patient expresses delusional beliefs.
+- Obsessions/preoccupations: Note if patient returns to specific themes repeatedly.
+- If not discussed: "No suicidal or homicidal ideation expressed. No delusional content."
+
+PERCEPTUAL DISTURBANCES:
+✅ Directly from transcript.
+- Hallucinations: ONLY if patient reports them. Specify modality (auditory, visual, etc.)
+- If not discussed: "Denies hallucinations"
+
+COGNITION:
+✅ Partially from transcript.
+- Orientation: Infer from contextual awareness in conversation
+- Attention/concentration: Infer from ability to follow conversation, answer complex questions
+- Memory: Note if patient reports memory concerns; do not formally test via transcript
+
+INSIGHT:
+✅ Inferable from transcript.
+- Good: Patient recognizes they have a problem and need help
+- Fair: Patient partially acknowledges difficulties
+- Poor: Patient denies problems or attributes them entirely to external factors
+- Base this on the patient's OWN statements about their condition
+
+JUDGMENT:
+✅ Inferable from transcript.
+- Intact: Patient makes reasonable decisions (seeking help, following recommendations)
+- Impaired: Patient makes risky decisions or refuses reasonable interventions
+- Base on actual decision-making demonstrated in the encounter
+
+CRITICAL: When you cannot determine an MSE element from the transcript, USE THE DEFAULT/NORMAL VALUE. Do NOT fabricate observations. An MSE that says "normal" where you don't have data is clinically safer than one that guesses wrong.`,
     format: 'smartlist_only'
   },
 

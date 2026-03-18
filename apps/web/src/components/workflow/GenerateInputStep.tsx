@@ -9,6 +9,7 @@ import PatientSelector from './PatientSelector';
 import EncountersList from './EncountersList';
 import ManualNotePanel from './ManualNotePanel';
 import TranscriptSelector from './TranscriptSelector';
+import AudioRecorder from './AudioRecorder';
 import { CalendarEncounter } from '@/google-calendar';
 
 interface Patient {
@@ -768,6 +769,15 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
               disabled={isGenerating}
             />
           </div>
+        )}
+
+        {/* Audio Recorder (when patient selected and in English mode) */}
+        {selectedPatient && !isSpanishTranscript && (
+          <AudioRecorder
+            onTranscriptReady={(text) => setTranscript(text)}
+            disabled={isGenerating}
+            patientName={`${selectedPatient.first_name} ${selectedPatient.last_name}`}
+          />
         )}
 
         {/* English Transcript Input (when in English mode or after translation) */}

@@ -181,17 +181,18 @@ export async function POST(request: NextRequest) {
             console.warn(`[Generate] Could not fetch HealthKit data:`, hkError);
           }
 
-          // Fetch payer fee schedule for Listening Coder
-          if (patient && (patient as any).primary_payer_id) {
-            try {
-              const { getPayerFeeSchedule } = await import('@/lib/db/fee-schedules');
-              feeScheduleData = await getPayerFeeSchedule((patient as any).primary_payer_id);
+          // Fetch payer fee schedule for Listening Coder via patient_insurance
+          try {
+            const { getPatientPayerCode, getPayerFeeSchedule } = await import('@/lib/db/fee-schedules');
+            const payerCode = await getPatientPayerCode(encounter.patient_id);
+            if (payerCode) {
+              feeScheduleData = await getPayerFeeSchedule(payerCode);
               if (feeScheduleData) {
                 console.log(`[Generate] Loaded fee schedule for payer ${feeScheduleData.payerName} (${feeScheduleData.rates.length} rates)`);
               }
-            } catch (fsError) {
-              console.warn(`[Generate] Could not fetch fee schedule:`, fsError);
             }
+          } catch (fsError) {
+            console.warn(`[Generate] Could not fetch fee schedule:`, fsError);
           }
 
           // Fetch structured patient profile
@@ -260,17 +261,18 @@ export async function POST(request: NextRequest) {
           console.warn(`[Generate] Could not fetch HealthKit data:`, hkError);
         }
 
-        // Fetch payer fee schedule for Listening Coder
-        if (patient && (patient as any).primary_payer_id) {
-          try {
-            const { getPayerFeeSchedule } = await import('@/lib/db/fee-schedules');
-            feeScheduleData = await getPayerFeeSchedule((patient as any).primary_payer_id);
+        // Fetch payer fee schedule for Listening Coder via patient_insurance
+        try {
+          const { getPatientPayerCode, getPayerFeeSchedule } = await import('@/lib/db/fee-schedules');
+          const payerCode = await getPatientPayerCode(patientId);
+          if (payerCode) {
+            feeScheduleData = await getPayerFeeSchedule(payerCode);
             if (feeScheduleData) {
               console.log(`[Generate] Loaded fee schedule for payer ${feeScheduleData.payerName} (${feeScheduleData.rates.length} rates)`);
             }
-          } catch (fsError) {
-            console.warn(`[Generate] Could not fetch fee schedule:`, fsError);
           }
+        } catch (fsError) {
+          console.warn(`[Generate] Could not fetch fee schedule:`, fsError);
         }
 
         // Fetch structured patient profile

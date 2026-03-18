@@ -1,422 +1,396 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { useBatchQueue } from '@/hooks/useBatchQueue';
-import TranscriptSelector from '@/components/workflow/TranscriptSelector';
-import {
-  Loader2,
-  ChevronDown,
-  ChevronUp,
-  Play,
-  PlayCircle,
-  FileText,
-  AlertCircle,
-  CheckCircle2,
-  Wifi,
-  WifiOff,
-  ClipboardPaste,
-  Download,
-} from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Search, CheckCircle2, Loader2, ClipboardPaste, FileText, X, AlertCircle } from 'lucide-react';
+import debounce from 'lodash/debounce';
 
-const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-gray-500/20 text-gray-400',
-  ready: 'bg-blue-500/20 text-blue-400',
-  generating: 'bg-amber-500/20 text-amber-400',
-  generated: 'bg-green-500/20 text-green-400',
-  copied: 'bg-green-600/20 text-green-300',
-};
+interface Patient {
+  id: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth?: string | null;
+  age?: number | null;
+  mrn?: string;
+  email?: string;
+}
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: 'Pending',
-  ready: 'Ready',
-  generating: 'Generating...',
-  generated: 'Generated',
-  copied: 'Copied',
-};
+interface PreppedPatient {
+  patient: Patient;
+  noteId: string;
+  savedAt: string;
+  preview: string;
+  isDuplicate: boolean;
+}
 
-export default function BatchPage() {
-  const {
-    batchItems,
-    syncSessionId,
-    isLoading,
-    refreshBatchItems,
-    updateItemTranscript,
-    fetchPriorNote,
-    generateForItem,
-    generateAll,
-    isGenerating,
-    generatingItemId,
-    generationProgress,
-  } = useBatchQueue();
+export default function NotePrep() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Patient[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-  const [transcriptDrafts, setTranscriptDrafts] = useState<Record<string, string>>({});
-  const [savingTranscript, setSavingTranscript] = useState<string | null>(null);
-  const [fetchingPriorNote, setFetchingPriorNote] = useState<Set<string>>(new Set());
-  const [priorNoteErrors, setPriorNoteErrors] = useState<Record<string, string>>({});
-  const fetchedPriorNoteRef = useRef<Set<string>>(new Set());
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [noteText, setNoteText] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'info' | 'error'; text: string } | null>(null);
 
-  const toggleExpanded = (id: string) => {
-    setExpandedItems((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const [existingNote, setExistingNote] = useState<{ id: string; content: string; importedAt: string } | null>(null);
+  const [checkingExisting, setCheckingExisting] = useState(false);
 
-  // Auto-fetch prior notes when expanding an item that needs one
-  const needsPriorNote = useCallback(
-    (item: (typeof batchItems)[0]) =>
-      (item.visit_type === 'Follow-up' || item.visit_type === 'Transfer of Care') &&
-      !item.prior_note_content,
+  const [preppedPatients, setPreppedPatients] = useState<PreppedPatient[]>([]);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  // Debounced patient search
+  const searchPatients = useCallback(
+    debounce(async (query: string) => {
+      if (!query.trim()) {
+        setSearchResults([]);
+        setShowDropdown(false);
+        return;
+      }
+      setSearching(true);
+      try {
+        const response = await fetch(`/api/patients?q=${encodeURIComponent(query)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSearchResults(data.patients || []);
+          setShowDropdown(true);
+        }
+      } catch (error) {
+        console.error('Error searching patients:', error);
+      } finally {
+        setSearching(false);
+      }
+    }, 300),
     []
   );
 
   useEffect(() => {
-    for (const itemId of expandedItems) {
-      const item = batchItems.find((i) => i.id === itemId);
-      if (
-        item &&
-        needsPriorNote(item) &&
-        !fetchingPriorNote.has(itemId) &&
-        !fetchedPriorNoteRef.current.has(itemId)
-      ) {
-        fetchedPriorNoteRef.current.add(itemId);
-        setFetchingPriorNote((prev) => new Set(prev).add(itemId));
+    searchPatients(searchQuery);
+  }, [searchQuery, searchPatients]);
 
-        fetchPriorNote(itemId).then((result) => {
-          setFetchingPriorNote((prev) => {
-            const next = new Set(prev);
-            next.delete(itemId);
-            return next;
-          });
-          if (!result.success && result.message) {
-            setPriorNoteErrors((prev) => ({ ...prev, [itemId]: result.message! }));
-          }
-        });
-      }
+  // Check for existing prior note when patient is selected
+  useEffect(() => {
+    if (!selectedPatient) {
+      setExistingNote(null);
+      return;
     }
-  }, [expandedItems, batchItems, fetchPriorNote, fetchingPriorNote, needsPriorNote]);
 
-  const handleTranscriptSave = useCallback(
-    async (itemId: string) => {
-      const transcript = transcriptDrafts[itemId];
-      if (!transcript?.trim()) return;
-
-      setSavingTranscript(itemId);
+    const checkExisting = async () => {
+      setCheckingExisting(true);
       try {
-        await updateItemTranscript(itemId, transcript);
+        const response = await fetch(`/api/prior-notes/patient/${selectedPatient.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.priorNotes && data.priorNotes.length > 0) {
+            const latest = data.priorNotes[0];
+            setExistingNote({
+              id: latest.id,
+              content: latest.note_content,
+              importedAt: latest.imported_at,
+            });
+          } else {
+            setExistingNote(null);
+          }
+        }
       } catch (error) {
-        console.error('Failed to save transcript:', error);
+        console.error('Error checking existing notes:', error);
       } finally {
-        setSavingTranscript(null);
+        setCheckingExisting(false);
       }
-    },
-    [transcriptDrafts, updateItemTranscript]
-  );
+    };
 
-  const handleDriveTranscriptLoaded = useCallback(
-    async (itemId: string, content: string) => {
-      setTranscriptDrafts((prev) => ({ ...prev, [itemId]: content }));
-      setSavingTranscript(itemId);
-      try {
-        await updateItemTranscript(itemId, content);
-      } catch (error) {
-        console.error('Failed to save Drive transcript:', error);
-      } finally {
-        setSavingTranscript(null);
+    checkExisting();
+  }, [selectedPatient]);
+
+  const handleSelectPatient = (patient: Patient) => {
+    setSelectedPatient(patient);
+    setSearchQuery('');
+    setShowDropdown(false);
+    setNoteText('');
+    setSaveMessage(null);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedPatient(null);
+    setNoteText('');
+    setSaveMessage(null);
+    setExistingNote(null);
+    searchInputRef.current?.focus();
+  };
+
+  const handleSave = async () => {
+    if (!selectedPatient || !noteText.trim()) return;
+
+    setSaving(true);
+    setSaveMessage(null);
+
+    try {
+      const response = await fetch('/api/prior-notes/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientId: selectedPatient.id,
+          noteContent: noteText.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to save');
       }
-    },
-    [updateItemTranscript]
-  );
 
-  const handleGenerateOne = useCallback(
-    async (itemId: string) => {
-      try {
-        await generateForItem(itemId);
-      } catch (error) {
-        console.error('Generation failed:', error);
+      const data = await response.json();
+
+      if (data.isDuplicate) {
+        setSaveMessage({ type: 'info', text: 'This note was already imported for this patient.' });
+      } else {
+        setSaveMessage({ type: 'success', text: 'Prior note saved.' });
       }
-    },
-    [generateForItem]
-  );
 
-  const itemsWithTranscript = batchItems.filter((i) => i.transcript);
-  const itemsGenerable = batchItems.filter(
-    (i) =>
-      i.transcript &&
-      i.status !== 'generated' &&
-      i.status !== 'generating' &&
-      i.status !== 'copied'
-  );
+      // Add to prepped list (avoid duplicates)
+      setPreppedPatients((prev) => {
+        const exists = prev.some((p) => p.patient.id === selectedPatient.id);
+        const entry: PreppedPatient = {
+          patient: selectedPatient,
+          noteId: data.priorNote.id,
+          savedAt: new Date().toISOString(),
+          preview: noteText.trim().slice(0, 120),
+          isDuplicate: data.isDuplicate,
+        };
+        if (exists) {
+          return prev.map((p) => (p.patient.id === selectedPatient.id ? entry : p));
+        }
+        return [entry, ...prev];
+      });
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#0A1F3D] flex items-center justify-center">
-        <Loader2 className="text-[#C5A882] animate-spin" size={32} />
-      </div>
-    );
-  }
+      // Clear for next patient
+      setSelectedPatient(null);
+      setNoteText('');
+      setExistingNote(null);
+      setTimeout(() => searchInputRef.current?.focus(), 100);
+    } catch (error) {
+      setSaveMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Failed to save note',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
-  if (!syncSessionId) {
-    return (
-      <div className="min-h-screen bg-[#0A1F3D] flex items-center justify-center p-4">
-        <div className="text-center space-y-4 max-w-md">
-          <WifiOff className="text-[#C5A882]/50 mx-auto" size={48} />
-          <h1 className="text-xl font-serif text-white">No Companion Connected</h1>
-          <p className="text-[#C5A882]/70 text-sm">
-            Pair a companion device from the workflow page first, then add patients to the batch
-            queue on the companion.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const wordCount = noteText.trim().split(/\s+/).filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-[#0A1F3D] p-4 md:p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="max-w-3xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <FileText className="text-[#E89C8A]" size={24} />
-            <h1 className="text-xl font-serif text-white">Batch Workflow</h1>
+        <div className="flex items-center gap-3">
+          <FileText className="text-[#E89C8A]" size={24} />
+          <h1 className="text-xl font-serif text-white">Note Prep</h1>
+          {preppedPatients.length > 0 && (
             <span className="text-[#C5A882]/50 text-sm">
-              {batchItems.length} patient{batchItems.length !== 1 ? 's' : ''} queued
+              {preppedPatients.length} prepped
             </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Wifi className="text-green-400" size={16} />
-              <span className="text-xs text-green-400">Connected</span>
+          )}
+        </div>
+
+        {/* Add Section */}
+        <div className="bg-white/5 border border-[#C5A882]/20 rounded-xl p-5 space-y-4">
+          {/* Patient Search */}
+          {!selectedPatient ? (
+            <div ref={dropdownRef} className="relative">
+              <label className="block text-sm text-[#C5A882]/70 mb-1">Patient</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#C5A882]/40" size={16} />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => searchQuery.trim() && setShowDropdown(true)}
+                  placeholder="Search patient by name..."
+                  className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-[#C5A882]/20 rounded-lg text-white placeholder-white/30 focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent"
+                  autoFocus
+                />
+                {searching && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#C5A882]/40 animate-spin" size={16} />
+                )}
+              </div>
+
+              {/* Search Results Dropdown */}
+              {showDropdown && searchResults.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-[#0F2847] border border-[#C5A882]/20 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                  {searchResults.map((patient) => (
+                    <button
+                      key={patient.id}
+                      onClick={() => handleSelectPatient(patient)}
+                      className="w-full text-left px-4 py-3 hover:bg-white/10 transition-colors border-b border-[#C5A882]/10 last:border-b-0"
+                    >
+                      <p className="text-white font-medium text-sm">
+                        {patient.last_name}, {patient.first_name}
+                      </p>
+                      {patient.date_of_birth && (
+                        <p className="text-[#C5A882]/50 text-xs mt-0.5">
+                          DOB: {new Date(patient.date_of_birth).toLocaleDateString()}
+                        </p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {showDropdown && searchQuery.trim() && !searching && searchResults.length === 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-[#0F2847] border border-[#C5A882]/20 rounded-lg shadow-xl px-4 py-3">
+                  <p className="text-[#C5A882]/50 text-sm">No patients found</p>
+                </div>
+              )}
             </div>
-            {itemsGenerable.length > 0 && (
+          ) : (
+            <>
+              {/* Selected Patient */}
+              <div className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-3">
+                <div>
+                  <p className="text-white font-medium">
+                    {selectedPatient.last_name}, {selectedPatient.first_name}
+                  </p>
+                  {selectedPatient.date_of_birth && (
+                    <p className="text-[#C5A882]/50 text-xs mt-0.5">
+                      DOB: {new Date(selectedPatient.date_of_birth).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={handleClearSelection}
+                  className="text-[#C5A882]/50 hover:text-white transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Existing Note Info */}
+              {checkingExisting && (
+                <div className="flex items-center gap-2 text-[#C5A882]/50 text-xs">
+                  <Loader2 size={12} className="animate-spin" />
+                  Checking for existing prior note...
+                </div>
+              )}
+
+              {existingNote && !checkingExisting && (
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-3">
+                  <p className="text-blue-400 text-xs font-medium mb-1">Already has a prior note</p>
+                  <pre className="text-white/50 text-xs whitespace-pre-wrap font-mono max-h-24 overflow-y-auto">
+                    {existingNote.content.slice(0, 300)}
+                    {existingNote.content.length > 300 ? '...' : ''}
+                  </pre>
+                  <p className="text-blue-400/50 text-xs mt-1">
+                    Imported {new Date(existingNote.importedAt).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
+
+              {/* Note Textarea */}
+              <div>
+                <label className="block text-sm text-[#C5A882]/70 mb-1">
+                  Paste prior Epic note
+                </label>
+                <textarea
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  placeholder="Paste the patient's last Epic note here..."
+                  rows={10}
+                  className="w-full bg-white/5 border border-[#C5A882]/20 rounded-lg px-3 py-2.5 text-white/90 placeholder-white/20 font-mono text-sm focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent resize-none"
+                />
+                <p className="text-xs text-[#C5A882]/30 mt-1">{wordCount} words</p>
+              </div>
+
+              {/* Save Message */}
+              {saveMessage && (
+                <div
+                  className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg ${
+                    saveMessage.type === 'success'
+                      ? 'bg-green-500/10 text-green-400'
+                      : saveMessage.type === 'info'
+                        ? 'bg-blue-500/10 text-blue-400'
+                        : 'bg-red-500/10 text-red-400'
+                  }`}
+                >
+                  {saveMessage.type === 'error' ? <AlertCircle size={14} /> : <CheckCircle2 size={14} />}
+                  {saveMessage.text}
+                </div>
+              )}
+
+              {/* Save Button */}
               <button
-                onClick={generateAll}
-                disabled={isGenerating}
-                className="flex items-center gap-2 px-4 py-2 bg-[#E89C8A] text-white rounded-lg hover:bg-[#d4887a] transition-colors font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleSave}
+                disabled={saving || !noteText.trim()}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#E89C8A] text-white rounded-lg font-semibold text-sm hover:bg-[#d4887a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isGenerating ? (
+                {saving ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
-                    Generating {generationProgress.current}/{generationProgress.total}...
+                    Saving...
                   </>
                 ) : (
                   <>
-                    <PlayCircle size={16} />
-                    Generate All ({itemsGenerable.length})
+                    <ClipboardPaste size={16} />
+                    Save Prior Note
                   </>
                 )}
               </button>
-            )}
-          </div>
+            </>
+          )}
         </div>
 
-        {/* Empty state */}
-        {batchItems.length === 0 && (
-          <div className="bg-white/5 border border-dashed border-[#C5A882]/20 rounded-xl p-12 text-center space-y-3">
-            <ClipboardPaste className="text-[#C5A882]/30 mx-auto" size={48} />
-            <p className="text-[#C5A882]/50">
-              No patients in queue. Add patients from the companion portal on your work desktop.
-            </p>
+        {/* Prepped Patients List */}
+        {preppedPatients.length > 0 && (
+          <div className="space-y-3">
+            <h2 className="text-sm text-[#C5A882]/50 font-medium">Prepped this session</h2>
+            {preppedPatients.map((pp) => (
+              <div
+                key={pp.noteId}
+                className="bg-white/5 border border-green-500/20 rounded-xl px-4 py-3 flex items-start gap-3"
+              >
+                <CheckCircle2 className="text-green-400 mt-0.5 flex-shrink-0" size={16} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-white font-medium text-sm">
+                    {pp.patient.last_name}, {pp.patient.first_name}
+                  </p>
+                  <p className="text-white/40 text-xs font-mono mt-1 truncate">
+                    {pp.preview}
+                  </p>
+                  <p className="text-[#C5A882]/30 text-xs mt-1">
+                    {pp.isDuplicate ? 'Already imported' : 'Saved'}{' '}
+                    {new Date(pp.savedAt).toLocaleTimeString()}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Batch items list */}
-        <div className="space-y-4">
-          {batchItems.map((item) => {
-            const isExpanded = expandedItems.has(item.id);
-            const isItemGenerating = generatingItemId === item.id;
-            const draft = transcriptDrafts[item.id] ?? item.transcript ?? '';
-            const hasTranscript = !!(item.transcript || draft.trim());
-            const canGenerate =
-              hasTranscript &&
-              item.status !== 'generated' &&
-              item.status !== 'generating' &&
-              item.status !== 'copied';
-
-            return (
-              <div
-                key={item.id}
-                className="bg-white/5 border border-[#C5A882]/20 rounded-xl overflow-hidden"
-              >
-                {/* Item header */}
-                <div
-                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-colors"
-                  onClick={() => toggleExpanded(item.id)}
-                >
-                  <div className="flex items-center gap-3">
-                    <button className="text-[#C5A882]/50">
-                      {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                    </button>
-                    <div>
-                      <p className="text-white font-medium">
-                        {item.patient_first_name} {item.patient_last_name}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs bg-[#C5A882]/20 text-[#C5A882] px-2 py-0.5 rounded">
-                          {item.setting}
-                        </span>
-                        <span className="text-xs bg-[#C5A882]/10 text-[#C5A882]/70 px-2 py-0.5 rounded">
-                          {item.visit_type}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    {item.error_message && (
-                      <span className="text-xs text-red-400 flex items-center gap-1">
-                        <AlertCircle size={12} />
-                        Error
-                      </span>
-                    )}
-                    <span
-                      className={`text-xs px-2 py-1 rounded ${STATUS_COLORS[item.status]} ${
-                        item.status === 'generating' ? 'animate-pulse' : ''
-                      }`}
-                    >
-                      {STATUS_LABELS[item.status]}
-                    </span>
-                    {canGenerate && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleGenerateOne(item.id);
-                        }}
-                        disabled={isGenerating}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-[#E89C8A] text-white rounded-lg text-xs font-semibold hover:bg-[#d4887a] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {isItemGenerating ? (
-                          <Loader2 size={12} className="animate-spin" />
-                        ) : (
-                          <Play size={12} />
-                        )}
-                        Generate
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Expanded content */}
-                {isExpanded && (
-                  <div className="border-t border-[#C5A882]/10 p-4 space-y-4">
-                    {/* Prior note: fetching indicator */}
-                    {fetchingPriorNote.has(item.id) && (
-                      <div className="flex items-center gap-2 text-[#C5A882]/70 text-xs">
-                        <Download size={12} className="animate-bounce" />
-                        Fetching prior note...
-                      </div>
-                    )}
-
-                    {/* Prior note: error/not found message */}
-                    {!fetchingPriorNote.has(item.id) && priorNoteErrors[item.id] && !item.prior_note_content && (
-                      <div className="flex items-center gap-2 text-amber-400/80 text-xs">
-                        <AlertCircle size={12} />
-                        {priorNoteErrors[item.id]}
-                      </div>
-                    )}
-
-                    {/* Prior note preview */}
-                    {item.prior_note_content && (
-                      <div>
-                        <p className="text-xs text-[#C5A882]/50 mb-1">
-                          Prior Note ({item.prior_note_source})
-                        </p>
-                        <div className="bg-white/5 rounded-lg px-3 py-2 max-h-32 overflow-y-auto">
-                          <pre className="text-white/60 text-xs whitespace-pre-wrap font-mono">
-                            {item.prior_note_content.slice(0, 500)}
-                            {item.prior_note_content.length > 500 ? '...' : ''}
-                          </pre>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Google Drive transcript auto-fetch */}
-                    <TranscriptSelector
-                      patientName={`${item.patient_last_name}, ${item.patient_first_name}`}
-                      onTranscriptLoaded={(content) => handleDriveTranscriptLoaded(item.id, content)}
-                      disabled={isGenerating}
-                    />
-
-                    {/* Manual transcript input (fallback) */}
-                    <div>
-                      <p className="text-xs text-[#C5A882]/50 mb-1">Transcript</p>
-                      <textarea
-                        value={draft}
-                        onChange={(e) =>
-                          setTranscriptDrafts((prev) => ({
-                            ...prev,
-                            [item.id]: e.target.value,
-                          }))
-                        }
-                        onBlur={() => {
-                          if (draft !== (item.transcript ?? '')) {
-                            handleTranscriptSave(item.id);
-                          }
-                        }}
-                        placeholder="Paste transcript here..."
-                        rows={6}
-                        className="w-full bg-white/5 border border-[#C5A882]/20 rounded-lg px-3 py-2 text-white/90 placeholder-white/20 font-mono text-sm focus:ring-2 focus:ring-[#E89C8A] focus:border-transparent resize-none"
-                      />
-                      <div className="flex items-center justify-between mt-1">
-                        <p className="text-xs text-[#C5A882]/30">
-                          {draft.trim().split(/\s+/).filter(Boolean).length} words
-                        </p>
-                        {savingTranscript === item.id && (
-                          <span className="text-xs text-[#C5A882]/50 flex items-center gap-1">
-                            <Loader2 size={10} className="animate-spin" />
-                            Saving...
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Error message */}
-                    {item.error_message && (
-                      <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
-                        <p className="text-red-400 text-xs">{item.error_message}</p>
-                      </div>
-                    )}
-
-                    {/* Generated note preview */}
-                    {item.generated_note_content && (
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <CheckCircle2 className="text-green-400" size={14} />
-                          <p className="text-xs text-green-400">Generated Note</p>
-                        </div>
-                        <div className="bg-white/5 border border-green-500/20 rounded-lg px-3 py-2 max-h-48 overflow-y-auto">
-                          <pre className="text-white/80 text-xs whitespace-pre-wrap font-mono">
-                            {item.generated_note_content.slice(0, 1000)}
-                            {item.generated_note_content.length > 1000 ? '...' : ''}
-                          </pre>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Summary footer */}
-        {batchItems.length > 0 && (
-          <div className="bg-white/5 border border-[#C5A882]/20 rounded-lg p-4">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-4 text-[#C5A882]/70">
-                <span>{batchItems.filter((i) => i.status === 'generated' || i.status === 'copied').length}/{batchItems.length} generated</span>
-                <span>{itemsWithTranscript.length}/{batchItems.length} with transcripts</span>
-              </div>
-              {batchItems.every((i) => i.status === 'generated' || i.status === 'copied') && (
-                <span className="text-green-400 flex items-center gap-1 text-xs">
-                  <CheckCircle2 size={14} />
-                  All notes generated — copy from companion
-                </span>
-              )}
-            </div>
+        {/* Empty state hint */}
+        {preppedPatients.length === 0 && !selectedPatient && (
+          <div className="text-center py-8">
+            <ClipboardPaste className="text-[#C5A882]/20 mx-auto mb-3" size={40} />
+            <p className="text-[#C5A882]/40 text-sm">
+              Search for a patient above, paste their last Epic note, and save.
+            </p>
+            <p className="text-[#C5A882]/30 text-xs mt-1">
+              Saved notes auto-populate in the workflow for Follow-up and TOC visits.
+            </p>
           </div>
         )}
       </div>
