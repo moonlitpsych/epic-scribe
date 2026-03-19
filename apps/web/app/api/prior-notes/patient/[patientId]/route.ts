@@ -5,8 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { getPriorNotesForPatient } from '@/lib/db/prior-notes';
 
 export async function GET(
@@ -14,11 +13,7 @@ export async function GET(
   { params }: { params: Promise<{ patientId: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const { patientId } = await params;
 
@@ -29,10 +24,11 @@ export async function GET(
       );
     }
 
-    const priorNotes = await getPriorNotesForPatient(patientId);
+    const priorNotes = await getPriorNotesForPatient(patientId, ps.providerId);
 
     return NextResponse.json({ priorNotes });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error fetching prior notes:', error);
     return NextResponse.json(
       { error: 'Failed to fetch prior notes' },

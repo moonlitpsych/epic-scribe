@@ -9,8 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import {
   getProviderByEmail,
   getProviderIntakeQCredentials,
@@ -19,14 +18,10 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const ps = await requireProviderSession();
 
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get current user's provider
-    const currentProvider = await getProviderByEmail(session.user.email);
+    // Get current user's provider (for IntakeQ credential ownership check)
+    const currentProvider = await getProviderByEmail(ps.email);
 
     if (!currentProvider) {
       return NextResponse.json(
@@ -39,7 +34,7 @@ export async function POST(request: NextRequest) {
     const { providerId, login_email, login_password, default_template_name } = body;
 
     // Validate provider ID matches current user (unless admin)
-    if (providerId !== currentProvider.id && !currentProvider.is_admin) {
+    if (providerId !== currentProvider.id && !ps.isAdmin) {
       return NextResponse.json(
         { error: 'You can only update your own credentials' },
         { status: 403 }
@@ -67,7 +62,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Save credentials
     const saved = await upsertProviderIntakeQCredentials(providerId, {
       login_email,
       login_password: passwordToSave,
@@ -80,6 +74,9 @@ export async function POST(request: NextRequest) {
       credentialsId: saved.id,
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return unauthorizedResponse(error.message);
+    }
     console.error('[Admin] Error saving credentials:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to save credentials' },

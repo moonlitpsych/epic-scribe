@@ -7,8 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { createClient } from '@supabase/supabase-js';
 
 // GET - Fetch a specific report
@@ -17,24 +16,18 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Get user ID from session
-    const userId = session.user.id || session.user.email;
-
     const { data: report, error } = await supabase
       .from('designated_examiner_reports')
       .select('*')
       .eq('id', params.id)
-      .eq('finalized_by', userId)
+      .eq('finalized_by', ps.providerId)
       .single();
 
     if (error || !report) {
@@ -44,6 +37,7 @@ export async function GET(
 
     return NextResponse.json({ report });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('[DE Get] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch report' },
@@ -58,10 +52,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const body = await request.json();
     const { final_argument } = body;
@@ -78,9 +69,6 @@ export async function PUT(
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Get user ID from session
-    const userId = session.user.id || session.user.email;
-
     const { data: report, error } = await supabase
       .from('designated_examiner_reports')
       .update({
@@ -88,7 +76,7 @@ export async function PUT(
         finalized_at: new Date().toISOString(),
       })
       .eq('id', params.id)
-      .eq('finalized_by', userId)
+      .eq('finalized_by', ps.providerId)
       .select()
       .single();
 
@@ -104,6 +92,7 @@ export async function PUT(
 
     return NextResponse.json({ report });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('[DE Update] Error:', error);
     return NextResponse.json(
       { error: 'Failed to update report' },
@@ -118,24 +107,18 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Get user ID from session
-    const userId = session.user.id || session.user.email;
-
     const { error } = await supabase
       .from('designated_examiner_reports')
       .delete()
       .eq('id', params.id)
-      .eq('finalized_by', userId);
+      .eq('finalized_by', ps.providerId);
 
     if (error) {
       console.error('[DE Delete] Error deleting report:', error);
@@ -149,6 +132,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('[DE Delete] Error:', error);
     return NextResponse.json(
       { error: 'Failed to delete report' },

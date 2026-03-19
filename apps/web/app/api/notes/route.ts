@@ -6,8 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import {
   saveGeneratedNote,
   getPatientFinalizedNotes,
@@ -19,20 +18,9 @@ export async function POST(request: NextRequest) {
   try {
     console.log('[POST /api/notes] Request received');
 
-    const session = await getServerSession(authOptions);
+    const ps = await requireProviderSession();
 
-    if (!session) {
-      console.warn('[POST /api/notes] Unauthorized: No session found');
-      return NextResponse.json(
-        {
-          error: 'Unauthorized',
-          message: 'You must be signed in to save notes. Please sign in and try again.',
-        },
-        { status: 401 }
-      );
-    }
-
-    console.log('[POST /api/notes] Session verified:', session.user?.email);
+    console.log('[POST /api/notes] Session verified:', ps.email);
 
     let body;
     try {
@@ -110,8 +98,9 @@ export async function POST(request: NextRequest) {
       generatedContent,
       finalNoteContent,
       isFinal: isFinal || false,
-      finalizedBy: session.user?.email || 'unknown',
+      finalizedBy: ps.email,
       epicChartData: epicChartData || null, // Extracted questionnaire scores and medications
+      providerId: ps.providerId,
     };
 
     console.log('[POST /api/notes] Attempting to save with params:', {
@@ -165,6 +154,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ note: savedNote }, { status: 201 });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('[POST /api/notes] Error saving note:', error);
 
     // Check for specific database schema errors
@@ -205,11 +195,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const { searchParams } = new URL(request.url);
     const patientId = searchParams.get('patientId');
@@ -221,10 +207,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const notes = await getPatientFinalizedNotes(patientId);
+    const notes = await getPatientFinalizedNotes(patientId, ps.providerId);
 
     return NextResponse.json({ notes });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error fetching notes:', error);
     return NextResponse.json(
       {

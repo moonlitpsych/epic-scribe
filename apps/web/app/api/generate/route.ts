@@ -7,6 +7,7 @@ import { getSmartListService } from '@epic-scribe/note-service/src/smartlists/sm
 import { epicChartExtractor } from '@epic-scribe/note-service/src/extractors/epic-chart-extractor';
 import { getLongitudinalChartData, formatLongitudinalDataForPrompt } from '@/lib/db/chart-history';
 import { getClinicalDataForPatient } from '@/lib/db/clinical-data';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import crypto from 'crypto';
 
 /**
@@ -80,6 +81,8 @@ function formatHistoricalNotes(notes: any[]): string {
 
 export async function POST(request: NextRequest) {
   try {
+    const ps = await requireProviderSession();
+
     const body: GenerateNoteRequest = await request.json();
     const { encounterId, patientId, setting, visitType, transcript, priorNote, staffingTranscript, collateralTranscript, epicChartData, questionnairesCompleted, outputMode } = body;
     // Patient demographics can be passed directly or fetched from database
@@ -136,7 +139,7 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          const patient = await getPatientById(encounter.patient_id);
+          const patient = await getPatientById(encounter.patient_id, ps.providerId);
           if (patient) {
             // Get patient demographics if not provided in request
             if (!patientFirstName) patientFirstName = patient.first_name;
@@ -153,7 +156,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Fetch historical notes for this patient
-          const notes = await getPatientFinalizedNotes(encounter.patient_id);
+          const notes = await getPatientFinalizedNotes(encounter.patient_id, ps.providerId);
           if (notes && notes.length > 0) {
             historicalNotes = formatHistoricalNotes(notes);
             console.log(`[Generate] Loaded ${notes.length} historical notes for patient ${encounter.patient_id}`);
@@ -173,7 +176,7 @@ export async function POST(request: NextRequest) {
 
           // Fetch HealthKit clinical data if available
           try {
-            healthKitData = await getClinicalDataForPatient(encounter.patient_id, 'healthkit');
+            healthKitData = await getClinicalDataForPatient(encounter.patient_id, 'healthkit', ps.providerId);
             if (healthKitData) {
               console.log(`[Generate] Loaded HealthKit clinical data for patient ${encounter.patient_id}`);
             }
@@ -198,7 +201,7 @@ export async function POST(request: NextRequest) {
           // Fetch structured patient profile
           try {
             const { getPatientProfile } = await import('@/lib/db/patient-profiles');
-            patientProfile = await getPatientProfile(encounter.patient_id);
+            patientProfile = await getPatientProfile(encounter.patient_id, ps.providerId);
             if (patientProfile) {
               console.log(`[Generate] Loaded patient profile v${patientProfile.sourceNoteCount} for patient ${encounter.patient_id}`);
               // Profile replaces raw historical notes dump
@@ -216,7 +219,7 @@ export async function POST(request: NextRequest) {
       const { getPatientById } = await import('@/lib/db/patients');
       const { getPatientFinalizedNotes } = await import('@/lib/db/notes');
       try {
-        const patient = await getPatientById(patientId);
+        const patient = await getPatientById(patientId, ps.providerId);
         if (patient) {
           // Get patient demographics if not provided in request
           if (!patientFirstName) patientFirstName = patient.first_name;
@@ -233,7 +236,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Fetch historical notes for this patient
-        const notes = await getPatientFinalizedNotes(patientId);
+        const notes = await getPatientFinalizedNotes(patientId, ps.providerId);
         if (notes && notes.length > 0) {
           historicalNotes = formatHistoricalNotes(notes);
           console.log(`[Generate] Loaded ${notes.length} historical notes for patient ${patientId}`);
@@ -253,7 +256,7 @@ export async function POST(request: NextRequest) {
 
         // Fetch HealthKit clinical data if available
         try {
-          healthKitData = await getClinicalDataForPatient(patientId, 'healthkit');
+          healthKitData = await getClinicalDataForPatient(patientId, 'healthkit', ps.providerId);
           if (healthKitData) {
             console.log(`[Generate] Loaded HealthKit clinical data for patient ${patientId}`);
           }
@@ -278,7 +281,7 @@ export async function POST(request: NextRequest) {
         // Fetch structured patient profile
         try {
           const { getPatientProfile } = await import('@/lib/db/patient-profiles');
-          patientProfile = await getPatientProfile(patientId);
+          patientProfile = await getPatientProfile(patientId, ps.providerId);
           if (patientProfile) {
             console.log(`[Generate] Loaded patient profile v${patientProfile.sourceNoteCount} for patient ${patientId}`);
             // Profile replaces raw historical notes dump
@@ -449,6 +452,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response);
 
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error generating note:', error);
     return NextResponse.json(
       {

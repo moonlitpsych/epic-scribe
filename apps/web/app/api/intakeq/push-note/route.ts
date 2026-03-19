@@ -24,8 +24,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { IntakeQApiClient } from '@epic-scribe/intakeq-api';
 import {
   IntakeQAutomation,
@@ -56,30 +55,24 @@ interface PushNoteRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     // Get the current user's provider and credentials
-    const userEmail = session.user?.email;
+    const userEmail = ps.email;
     let intakeqEmail: string | undefined;
     let intakeqPassword: string | undefined;
     let defaultTemplateName: string | undefined;
     let currentProvider: Awaited<ReturnType<typeof getProviderByEmail>> = null;
 
-    if (userEmail) {
-      currentProvider = await getProviderByEmail(userEmail);
+    currentProvider = await getProviderByEmail(userEmail);
 
-      if (currentProvider?.intakeq_credentials) {
-        console.log(`[PushNote] Using DB credentials for provider: ${currentProvider.first_name} ${currentProvider.last_name}`);
-        intakeqEmail = currentProvider.intakeq_credentials.login_email;
-        intakeqPassword = currentProvider.intakeq_credentials.login_password;
-        defaultTemplateName = currentProvider.intakeq_credentials.default_template_name || undefined;
-      } else if (currentProvider) {
-        console.log(`[PushNote] Provider found but no IntakeQ credentials: ${currentProvider.first_name} ${currentProvider.last_name}`);
-      }
+    if (currentProvider?.intakeq_credentials) {
+      console.log(`[PushNote] Using DB credentials for provider: ${currentProvider.first_name} ${currentProvider.last_name}`);
+      intakeqEmail = currentProvider.intakeq_credentials.login_email;
+      intakeqPassword = currentProvider.intakeq_credentials.login_password;
+      defaultTemplateName = currentProvider.intakeq_credentials.default_template_name || undefined;
+    } else if (currentProvider) {
+      console.log(`[PushNote] Provider found but no IntakeQ credentials: ${currentProvider.first_name} ${currentProvider.last_name}`);
     }
 
     // Fallback to environment variables if no DB credentials
@@ -176,7 +169,7 @@ export async function POST(request: NextRequest) {
 
       // Store the GUID on the patient record for future use
       try {
-        await updatePatient(body.patientId, { intakeq_guid: clientGuid });
+        await updatePatient(body.patientId, ps.providerId, { intakeq_guid: clientGuid });
         console.log(`[PushNote] Stored IntakeQ GUID on patient record: ${clientGuid}`);
       } catch (err) {
         // Non-fatal - log but continue
@@ -287,6 +280,8 @@ export async function POST(request: NextRequest) {
       await automation.close();
     }
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
+
     console.error('[PushNote] Error:', error);
     return NextResponse.json(
       {

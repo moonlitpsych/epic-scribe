@@ -4,8 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -18,10 +17,7 @@ const supabase = createClient(
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const body = await request.json();
     const {
@@ -62,7 +58,7 @@ export async function POST(request: NextRequest) {
         adhoc_notes: adhoc_notes || null,
         workflow_step: 1,
         workflow_status: 'in_progress',
-        finalized_by: session.user.id,
+        finalized_by: ps.providerId,
       })
       .select()
       .single();
@@ -77,6 +73,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ workflow }, { status: 201 });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('[DE Workflow] POST error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -90,10 +87,7 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status'); // 'in_progress', 'completed', 'abandoned'
@@ -102,7 +96,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('designated_examiner_reports')
       .select('*')
-      .eq('finalized_by', session.user.id)
+      .eq('finalized_by', ps.providerId)
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -123,6 +117,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ workflows });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('[DE Workflow] GET error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },

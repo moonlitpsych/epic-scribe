@@ -6,17 +6,12 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { getSupabaseClient } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const supabase = getSupabaseClient(true);
 
@@ -36,6 +31,7 @@ export async function GET() {
 
     return NextResponse.json({ payers: data });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error in payers route:', error);
     return NextResponse.json(
       { error: 'Failed to fetch payers' },

@@ -1,6 +1,7 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import { JWT } from 'next-auth/jwt';
+import { getOrCreateProvider } from '../../../../src/lib/auth/provider-lookup';
 
 // Refresh tokens 5 minutes before they expire to avoid edge cases
 const TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000;
@@ -39,6 +40,20 @@ export const authOptions: NextAuthOptions = {
         // Google's expires_at is in seconds, so convert to ms
         token.accessTokenExpires = (account.expires_at as number) * 1000;
         console.log('[Auth] Initial token set, expires at:', new Date(token.accessTokenExpires as number).toISOString());
+
+        // Look up or auto-create es_providers row
+        try {
+          const email = token.email as string;
+          const name = token.name as string;
+          if (email) {
+            const provider = await getOrCreateProvider(email, name);
+            token.providerId = provider.id;
+            token.isAdmin = provider.is_admin;
+            console.log('[Auth] Provider linked:', provider.id, 'admin:', provider.is_admin);
+          }
+        } catch (err) {
+          console.error('[Auth] Failed to lookup/create provider:', err);
+        }
       }
 
       const expiresAt = token.accessTokenExpires as number;
@@ -61,6 +76,11 @@ export const authOptions: NextAuthOptions = {
       // Add user ID from JWT sub claim
       if (session.user && token.sub) {
         session.user.id = token.sub;
+      }
+      // Add provider context
+      if (session.user) {
+        session.user.providerId = token.providerId;
+        session.user.isAdmin = token.isAdmin;
       }
       return session;
     },

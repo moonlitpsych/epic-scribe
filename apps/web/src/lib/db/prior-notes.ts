@@ -7,6 +7,7 @@
 
 import { createHash } from 'crypto';
 import { getSupabaseClient } from '../supabase';
+import { verifyPatientOwnership } from './ownership';
 
 export interface PriorNote {
   id: string;
@@ -46,10 +47,15 @@ export function generateContentHash(content: string): string {
  * Save a prior note for a patient
  * Returns the saved note, or existing note if duplicate
  */
-export async function savePriorNote(params: SavePriorNoteParams): Promise<{
+export async function savePriorNote(params: SavePriorNoteParams, providerId?: string): Promise<{
   priorNote: PriorNote;
   isDuplicate: boolean;
 }> {
+  if (providerId) {
+    const owned = await verifyPatientOwnership(params.patientId, providerId);
+    if (!owned) throw new Error('Patient not found or access denied');
+  }
+
   const supabase = getSupabaseClient(true);
   const contentHash = generateContentHash(params.noteContent);
 
@@ -98,7 +104,11 @@ export async function savePriorNote(params: SavePriorNoteParams): Promise<{
 /**
  * Get all active prior notes for a patient, most recent first
  */
-export async function getPriorNotesForPatient(patientId: string): Promise<PriorNote[]> {
+export async function getPriorNotesForPatient(patientId: string, providerId?: string): Promise<PriorNote[]> {
+  if (providerId) {
+    const owned = await verifyPatientOwnership(patientId, providerId);
+    if (!owned) return [];
+  }
   const supabase = getSupabaseClient(true);
 
   const { data, error } = await supabase
@@ -119,7 +129,11 @@ export async function getPriorNotesForPatient(patientId: string): Promise<PriorN
 /**
  * Get the most recent prior note for a patient
  */
-export async function getMostRecentPriorNote(patientId: string): Promise<PriorNote | null> {
+export async function getMostRecentPriorNote(patientId: string, providerId?: string): Promise<PriorNote | null> {
+  if (providerId) {
+    const owned = await verifyPatientOwnership(patientId, providerId);
+    if (!owned) return null;
+  }
   const supabase = getSupabaseClient(true);
 
   const { data, error } = await supabase
@@ -184,7 +198,8 @@ export async function deletePriorNote(noteId: string): Promise<void> {
 export async function findPatientByNameAndDob(
   firstName: string,
   lastName: string,
-  dateOfBirth?: string | null
+  dateOfBirth?: string | null,
+  providerId?: string
 ): Promise<{
   id: string;
   first_name: string;
@@ -195,14 +210,15 @@ export async function findPatientByNameAndDob(
 
   // If DOB provided, try exact match first
   if (dateOfBirth) {
-    const { data: exactMatch } = await supabase
+    let exactQuery = supabase
       .from('patients')
       .select('id, first_name, last_name, date_of_birth')
       .ilike('first_name', firstName)
       .ilike('last_name', lastName)
-      .eq('date_of_birth', dateOfBirth)
-      .limit(1)
-      .single();
+      .eq('date_of_birth', dateOfBirth);
+    if (providerId) exactQuery = exactQuery.eq('provider_id', providerId);
+
+    const { data: exactMatch } = await exactQuery.limit(1).single();
 
     if (exactMatch) {
       return exactMatch;
@@ -210,11 +226,14 @@ export async function findPatientByNameAndDob(
   }
 
   // Fallback to name-only match (most recently created if multiple)
-  const { data: nameMatch } = await supabase
+  let nameQuery = supabase
     .from('patients')
     .select('id, first_name, last_name, date_of_birth')
     .ilike('first_name', firstName)
-    .ilike('last_name', lastName)
+    .ilike('last_name', lastName);
+  if (providerId) nameQuery = nameQuery.eq('provider_id', providerId);
+
+  const { data: nameMatch } = await nameQuery
     .order('created_at', { ascending: false })
     .limit(1)
     .single();

@@ -6,8 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { searchFiles, DriveFile } from '@/google-drive';
 import { google } from 'googleapis';
 
@@ -146,18 +145,16 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const ps = await requireProviderSession();
 
-    if (!session || !session.accessToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const session = { accessToken: ps.accessToken } as any;
 
     const eventId = params.id;
 
     // Get calendar event to extract patient name and date
     let event;
     try {
-      event = await getCalendarEvent(session.accessToken, eventId);
+      event = await getCalendarEvent(ps.accessToken!, eventId);
     } catch (calError: any) {
       console.error('Error fetching calendar event:', calError?.message);
       // If we can't get the event, still try searching by recent transcripts
@@ -193,6 +190,7 @@ export async function GET(
 
     return NextResponse.json({ transcripts });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error fetching transcripts:', error);
     return NextResponse.json(
       { error: 'Failed to fetch transcripts' },

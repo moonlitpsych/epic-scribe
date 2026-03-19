@@ -8,6 +8,7 @@
 
 import { getSupabaseClient } from '../supabase';
 import { Database } from '../database.types';
+import { verifyPatientOwnership } from './ownership';
 
 type Encounter = Database['public']['Tables']['encounters']['Row'];
 type EncounterInsert = Database['public']['Tables']['encounters']['Insert'];
@@ -16,10 +17,12 @@ type EncounterUpdate = Database['public']['Tables']['encounters']['Update'];
 /**
  * Get all encounters for a specific patient
  */
-export async function getEncountersByPatientId(patientId: string) {
+export async function getEncountersByPatientId(patientId: string, providerId: string) {
+  const owned = await verifyPatientOwnership(patientId, providerId);
+  if (!owned) return [];
+
   const supabase = getSupabaseClient(true);
 
-  // TODO: Re-enable patients(*) join once foreign key relationship is set up
   const { data, error } = await supabase
     .from('encounters')
     .select('*')
@@ -83,17 +86,18 @@ export async function getEncounterById(id: string) {
 /**
  * Get upcoming encounters (next 7 days)
  */
-export async function getUpcomingEncounters() {
+export async function getUpcomingEncounters(providerId: string) {
   const supabase = getSupabaseClient(true);
 
   const now = new Date().toISOString();
   const sevenDaysLater = new Date();
   sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
 
-  // TODO: Re-enable patients(*) join once foreign key relationship is set up
+  // Join through patients to scope by provider
   const { data, error } = await supabase
     .from('encounters')
-    .select('*')
+    .select('*, patients!inner(provider_id)')
+    .eq('patients.provider_id', providerId)
     .gte('scheduled_start', now)
     .lte('scheduled_start', sevenDaysLater.toISOString())
     .order('scheduled_start', { ascending: true });

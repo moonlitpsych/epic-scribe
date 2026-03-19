@@ -1,14 +1,14 @@
 /**
  * Database operations for generated notes
+ *
+ * Provider isolation: child tables (generated_notes, patient_notes) inherit
+ * isolation through patient_id → patients.provider_id. Functions that take
+ * patientId also take providerId for ownership verification.
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { EpicChartData } from '@epic-scribe/types';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { getSupabaseClient } from '../supabase';
+import { verifyPatientOwnership } from './ownership';
 
 export interface GeneratedNote {
   id: string;
@@ -23,12 +23,13 @@ export interface GeneratedNote {
   finalized_at?: string;
   finalized_by?: string;
   edited: boolean;
-  epic_chart_data?: EpicChartData | null; // Extracted questionnaire scores and medications
+  epic_chart_data?: EpicChartData | null;
 }
 
 export interface SaveNoteParams {
   encounterId: string;
   patientId?: string;
+  providerId: string;
   templateId: string;
   promptVersion: string;
   promptHash: string;
@@ -36,7 +37,7 @@ export interface SaveNoteParams {
   finalNoteContent: string;
   isFinal: boolean;
   finalizedBy?: string;
-  epicChartData?: EpicChartData | null; // Extracted questionnaire scores and medications from Epic
+  epicChartData?: EpicChartData | null;
 }
 
 /**
@@ -46,6 +47,7 @@ export async function saveGeneratedNote(params: SaveNoteParams): Promise<Generat
   let {
     encounterId,
     patientId,
+    providerId,
     templateId,
     promptVersion,
     promptHash,
@@ -56,14 +58,23 @@ export async function saveGeneratedNote(params: SaveNoteParams): Promise<Generat
     epicChartData,
   } = params;
 
+  const supabase = getSupabaseClient(true);
+
   console.log('[saveGeneratedNote] Starting with:', {
     hasEncounterId: !!encounterId,
     hasPatientId: !!patientId,
     templateId,
   });
 
+  // Verify patient ownership if patientId provided
+  if (patientId) {
+    const owned = await verifyPatientOwnership(patientId, providerId);
+    if (!owned) {
+      throw new Error('Patient not found or access denied');
+    }
+  }
+
   // Check if encounterId is a UUID or a calendar event ID
-  // UUIDs have format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
   const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(encounterId || '');
 
   // If encounterId looks like a calendar event ID (not a UUID), look up the database encounter
@@ -80,7 +91,6 @@ export async function saveGeneratedNote(params: SaveNoteParams): Promise<Generat
       encounterId = existingEncounter.id;
     } else {
       console.log('[saveGeneratedNote] No database encounter found for calendar event, will create placeholder');
-      // Clear encounterId so we create a placeholder below
       encounterId = '';
     }
   }
@@ -88,7 +98,6 @@ export async function saveGeneratedNote(params: SaveNoteParams): Promise<Generat
   // If encounter doesn't exist, create it
   if (!encounterId && patientId) {
     console.log('[saveGeneratedNote] Creating placeholder encounter for patient:', patientId);
-    // Create a placeholder encounter for standalone note generation
     const { data: encounter, error: encounterError } = await supabase
       .from('encounters')
       .insert({
@@ -107,7 +116,6 @@ export async function saveGeneratedNote(params: SaveNoteParams): Promise<Generat
       console.error('[saveGeneratedNote] Error creating encounter:', encounterError);
       throw encounterError;
     }
-    // Use the new encounter ID
     encounterId = encounter.id;
     console.log('[saveGeneratedNote] Created encounter:', encounterId);
   }
@@ -129,7 +137,7 @@ export async function saveGeneratedNote(params: SaveNoteParams): Promise<Generat
     finalized_at: isFinal ? new Date().toISOString() : null,
     finalized_by: isFinal ? (finalizedBy || null) : null,
     edited: generatedContent !== finalNoteContent,
-    epic_chart_data: epicChartData || null, // Extracted questionnaire scores and medications
+    epic_chart_data: epicChartData || null,
   };
 
   console.log('[saveGeneratedNote] Inserting note with encounter_id:', encounterId);
@@ -149,7 +157,6 @@ export async function saveGeneratedNote(params: SaveNoteParams): Promise<Generat
       hint: error.hint,
     });
 
-    // Check if this is a missing column error
     if (error.message?.includes('column') && (
       error.message.includes('generated_content') ||
       error.message.includes('final_note_content') ||
@@ -179,6 +186,7 @@ export async function updateGeneratedNote(
     finalizedBy?: string;
   }
 ): Promise<GeneratedNote> {
+  const supabase = getSupabaseClient(true);
   const updateData: any = {};
 
   if (updates.finalNoteContent !== undefined) {
@@ -211,7 +219,11 @@ export async function updateGeneratedNote(
 /**
  * Get all finalized notes for a patient (for historical context)
  */
-export async function getPatientFinalizedNotes(patientId: string): Promise<GeneratedNote[]> {
+export async function getPatientFinalizedNotes(patientId: string, providerId: string): Promise<GeneratedNote[]> {
+  const owned = await verifyPatientOwnership(patientId, providerId);
+  if (!owned) return [];
+
+  const supabase = getSupabaseClient(true);
   const { data, error } = await supabase
     .from('generated_notes')
     .select(`
@@ -233,7 +245,11 @@ export async function getPatientFinalizedNotes(patientId: string): Promise<Gener
 /**
  * Get the most recent finalized note for a patient
  */
-export async function getMostRecentFinalizedNote(patientId: string): Promise<GeneratedNote | null> {
+export async function getMostRecentFinalizedNote(patientId: string, providerId: string): Promise<GeneratedNote | null> {
+  const owned = await verifyPatientOwnership(patientId, providerId);
+  if (!owned) return null;
+
+  const supabase = getSupabaseClient(true);
   const { data, error } = await supabase
     .from('generated_notes')
     .select(`
@@ -248,7 +264,6 @@ export async function getMostRecentFinalizedNote(patientId: string): Promise<Gen
 
   if (error) {
     if (error.code === 'PGRST116') {
-      // No rows returned
       return null;
     }
     console.error('[getMostRecentFinalizedNote] Error fetching note:', error);
@@ -262,6 +277,7 @@ export async function getMostRecentFinalizedNote(patientId: string): Promise<Gen
  * Get all notes for a specific encounter
  */
 export async function getEncounterNotes(encounterId: string): Promise<GeneratedNote[]> {
+  const supabase = getSupabaseClient(true);
   const { data, error } = await supabase
     .from('generated_notes')
     .select('*')
@@ -280,6 +296,7 @@ export async function getEncounterNotes(encounterId: string): Promise<GeneratedN
  * Get a specific note by ID
  */
 export async function getNoteById(noteId: string): Promise<GeneratedNote | null> {
+  const supabase = getSupabaseClient(true);
   const { data, error } = await supabase
     .from('generated_notes')
     .select('*')
@@ -301,6 +318,7 @@ export async function getNoteById(noteId: string): Promise<GeneratedNote | null>
  * Delete a note
  */
 export async function deleteNote(noteId: string): Promise<void> {
+  const supabase = getSupabaseClient(true);
   const { error } = await supabase
     .from('generated_notes')
     .delete()
@@ -345,7 +363,11 @@ export interface UpdatePatientNoteParams {
 /**
  * Get all manual notes for a patient
  */
-export async function getPatientNotes(patientId: string): Promise<PatientNote[]> {
+export async function getPatientNotes(patientId: string, providerId: string): Promise<PatientNote[]> {
+  const owned = await verifyPatientOwnership(patientId, providerId);
+  if (!owned) return [];
+
+  const supabase = getSupabaseClient(true);
   const { data, error } = await supabase
     .from('patient_notes')
     .select('*')
@@ -364,6 +386,7 @@ export async function getPatientNotes(patientId: string): Promise<PatientNote[]>
  * Get a specific patient note by ID
  */
 export async function getPatientNoteById(noteId: string): Promise<PatientNote | null> {
+  const supabase = getSupabaseClient(true);
   const { data, error } = await supabase
     .from('patient_notes')
     .select('*')
@@ -384,7 +407,11 @@ export async function getPatientNoteById(noteId: string): Promise<PatientNote | 
 /**
  * Create a new patient note (clinical note or quick memo)
  */
-export async function createPatientNote(params: CreatePatientNoteParams): Promise<PatientNote> {
+export async function createPatientNote(providerId: string, params: CreatePatientNoteParams): Promise<PatientNote> {
+  const owned = await verifyPatientOwnership(params.patientId, providerId);
+  if (!owned) throw new Error('Patient not found or access denied');
+
+  const supabase = getSupabaseClient(true);
   const { patientId, noteType, title, content, createdBy } = params;
 
   const { data, error } = await supabase
@@ -414,6 +441,7 @@ export async function updatePatientNote(
   noteId: string,
   updates: UpdatePatientNoteParams
 ): Promise<PatientNote> {
+  const supabase = getSupabaseClient(true);
   const updateData: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
   };
@@ -444,6 +472,7 @@ export async function updatePatientNote(
  * Delete a patient note
  */
 export async function deletePatientNote(noteId: string): Promise<void> {
+  const supabase = getSupabaseClient(true);
   const { error } = await supabase
     .from('patient_notes')
     .delete()

@@ -5,7 +5,6 @@
  * and medication history for trend analysis in note generation.
  */
 
-import { createClient } from '@supabase/supabase-js';
 import {
   EpicChartData,
   LongitudinalChartData,
@@ -13,11 +12,7 @@ import {
   PatientMedicationHistory,
   Medication,
 } from '@epic-scribe/types';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { getSupabaseClient } from '../supabase';
 
 /**
  * Calculate PHQ-9 severity from score
@@ -78,6 +73,7 @@ export async function saveQuestionnaireHistory(params: {
     return null;
   }
 
+  const supabase = getSupabaseClient(true);
   const date = encounterDate || new Date();
   const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
 
@@ -150,6 +146,7 @@ export async function saveMedicationHistory(params: {
     return null;
   }
 
+  const supabase = getSupabaseClient(true);
   const date = recordedDate || new Date();
   const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
 
@@ -232,6 +229,7 @@ export async function getQuestionnaireHistory(
   patientId: string,
   limit: number = 10
 ): Promise<PatientQuestionnaireHistory[]> {
+  const supabase = getSupabaseClient(true);
   const { data, error } = await supabase
     .from('patient_questionnaire_history')
     .select('*')
@@ -254,6 +252,7 @@ export async function getMedicationHistory(
   patientId: string,
   limit: number = 10
 ): Promise<PatientMedicationHistory[]> {
+  const supabase = getSupabaseClient(true);
   const { data, error } = await supabase
     .from('patient_medication_history')
     .select('*')

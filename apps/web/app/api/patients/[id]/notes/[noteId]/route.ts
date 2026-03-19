@@ -7,8 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import {
   getPatientNoteById,
   updatePatientNote,
@@ -20,11 +19,7 @@ export async function GET(
   { params }: { params: { id: string; noteId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    await requireProviderSession();
 
     const { noteId } = params;
 
@@ -43,6 +38,7 @@ export async function GET(
 
     return NextResponse.json({ note });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error fetching patient note:', error);
     return NextResponse.json(
       { error: 'Failed to fetch patient note' },
@@ -56,11 +52,7 @@ export async function PATCH(
   { params }: { params: { id: string; noteId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    await requireProviderSession();
 
     const { noteId } = params;
 
@@ -86,6 +78,7 @@ export async function PATCH(
 
     return NextResponse.json({ note });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error updating patient note:', error);
     return NextResponse.json(
       { error: 'Failed to update patient note' },
@@ -99,11 +92,7 @@ export async function DELETE(
   { params }: { params: { id: string; noteId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    await requireProviderSession();
 
     const { noteId } = params;
 
@@ -118,6 +107,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error deleting patient note:', error);
     return NextResponse.json(
       { error: 'Failed to delete patient note' },

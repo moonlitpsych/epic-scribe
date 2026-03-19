@@ -13,8 +13,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import {
   IntakeQApiClient,
   IntakeQApiError,
@@ -23,11 +22,7 @@ import {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     // Check if IntakeQ is configured
     const apiKey = process.env.INTAKEQ_API_KEY;
@@ -98,6 +93,8 @@ export async function GET(request: NextRequest) {
     });
   } catch (err: unknown) {
     console.error('[IntakeQ] Error fetching prior note:', err);
+
+    if (err instanceof UnauthorizedError) return unauthorizedResponse(err.message);
 
     if (err instanceof IntakeQApiError) {
       return NextResponse.json({

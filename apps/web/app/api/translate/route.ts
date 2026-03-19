@@ -1,17 +1,13 @@
 // apps/web/app/api/translate/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { getGeminiClient } from '@epic-scribe/note-service/src/llm/gemini-client';
 
 export async function POST(request: NextRequest) {
     try {
         // Check authentication
-        const session = await getServerSession(authOptions);
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+        const ps = await requireProviderSession();
 
         const body = await request.json();
         const { text, sourceLanguage = 'Spanish', targetLanguage = 'English' } = body;
@@ -65,6 +61,7 @@ TRANSLATION:`;
         });
 
     } catch (error) {
+        if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
         console.error('Translation error:', error);
         return NextResponse.json(
             {

@@ -6,20 +6,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { getUpcomingEncounters, createEncounter } from '@/google-calendar';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     // 1. Get encounters from Google Calendar (source of truth for scheduling)
-    const calendarEncounters = await getUpcomingEncounters(session);
+    const calendarEncounters = await getUpcomingEncounters({ accessToken: ps.accessToken } as any);
 
     // 2. Enrich with Supabase data (patient info, metadata)
     const { getEncounterByCalendarEventId } = await import('@/lib/db');
@@ -55,6 +50,7 @@ export async function GET() {
 
     return NextResponse.json({ encounters: enrichedEncounters });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error fetching encounters:', error);
     return NextResponse.json(
       { error: 'Failed to fetch encounters' },
@@ -65,11 +61,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const body = await request.json();
     const { patientId, setting, visitType, startTime, endTime } = body;
@@ -87,7 +79,7 @@ export async function POST(request: NextRequest) {
     let patientData;
 
     try {
-      patientData = await getPatientById(patientId);
+      patientData = await getPatientById(patientId, ps.providerId);
     } catch (err) {
       return NextResponse.json(
         { error: 'Patient not found' },
@@ -106,7 +98,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Create encounter in Google Calendar with Meet link
-    const calendarEncounter = await createEncounter(session, {
+    const calendarEncounter = await createEncounter({ accessToken: ps.accessToken } as any, {
       patient: patientName,
       setting,
       visitType,
@@ -144,6 +136,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error creating encounter:', error);
     return NextResponse.json(
       { error: 'Failed to create encounter' },

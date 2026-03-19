@@ -6,8 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { ensureMeetLink } from '@/google-calendar';
 
 export async function POST(
@@ -15,17 +14,16 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const ps = await requireProviderSession();
 
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const session = { accessToken: ps.accessToken } as any;
 
     const eventId = params.id;
     const meetLink = await ensureMeetLink(session, eventId);
 
     return NextResponse.json({ meetLink });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error starting Meet:', error);
     return NextResponse.json(
       { error: 'Failed to start Meet session' },

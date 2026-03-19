@@ -2,30 +2,26 @@
  * Patient Database Operations
  *
  * CRUD operations for the patients table.
- * All patient demographic data (PHI) is stored here.
+ * All queries are scoped by provider_id for multi-tenant isolation.
  */
 
 import { getSupabaseClient } from '../supabase';
 import { Database } from '../database.types';
 
 type Patient = Database['public']['Tables']['patients']['Row'];
-type PatientInsert = Database['public']['Tables']['patients']['Insert'];
 type PatientUpdate = Database['public']['Tables']['patients']['Update'];
 
 /**
- * Get all active patients, sorted by last name
+ * Get all active patients for a provider, sorted by last name
  */
-export async function getAllPatients(includeInactive = false) {
-  const supabase = getSupabaseClient(true); // Use service role for server-side
+export async function getAllPatients(providerId: string) {
+  const supabase = getSupabaseClient(true);
 
-  let query = supabase.from('patients').select('*').order('last_name', { ascending: true });
-
-  // TODO: Re-enable active filter once column exists
-  // if (!includeInactive) {
-  //   query = query.eq('active', true);
-  // }
-
-  const { data, error } = await query;
+  const { data, error } = await supabase
+    .from('patients')
+    .select('*')
+    .eq('provider_id', providerId)
+    .order('last_name', { ascending: true });
 
   if (error) {
     console.error('Error fetching patients:', error);
@@ -36,12 +32,17 @@ export async function getAllPatients(includeInactive = false) {
 }
 
 /**
- * Get a single patient by ID
+ * Get a single patient by ID, scoped to provider
  */
-export async function getPatientById(id: string) {
+export async function getPatientById(id: string, providerId: string) {
   const supabase = getSupabaseClient(true);
 
-  const { data, error } = await supabase.from('patients').select('*').eq('id', id).single();
+  const { data, error } = await supabase
+    .from('patients')
+    .select('*')
+    .eq('id', id)
+    .eq('provider_id', providerId)
+    .single();
 
   if (error) {
     console.error('Error fetching patient:', error);
@@ -52,15 +53,15 @@ export async function getPatientById(id: string) {
 }
 
 /**
- * Search patients by name
+ * Search patients by name, scoped to provider
  */
-export async function searchPatients(query: string) {
+export async function searchPatients(query: string, providerId: string) {
   const supabase = getSupabaseClient(true);
 
   const { data, error } = await supabase
     .from('patients')
     .select('*')
-    // .eq('active', true)  // TODO: Re-enable once column exists
+    .eq('provider_id', providerId)
     .or(
       `first_name.ilike.%${query}%,last_name.ilike.%${query}%`
     )
@@ -76,9 +77,9 @@ export async function searchPatients(query: string) {
 }
 
 /**
- * Create a new patient
+ * Create a new patient, assigned to the given provider
  */
-export async function createPatient(patient: {
+export async function createPatient(providerId: string, patient: {
   first_name: string;
   last_name: string;
   date_of_birth?: string | null;
@@ -89,13 +90,12 @@ export async function createPatient(patient: {
 }) {
   const supabase = getSupabaseClient(true);
 
-  // Map to database column names
   const insertData: any = {
     first_name: patient.first_name,
     last_name: patient.last_name,
+    provider_id: providerId,
   };
 
-  // Only add optional fields if they have values
   if (patient.date_of_birth) {
     insertData.date_of_birth = patient.date_of_birth;
   }
@@ -127,15 +127,16 @@ export async function createPatient(patient: {
 }
 
 /**
- * Update an existing patient
+ * Update an existing patient, verifying provider ownership
  */
-export async function updatePatient(id: string, updates: PatientUpdate) {
+export async function updatePatient(id: string, providerId: string, updates: PatientUpdate) {
   const supabase = getSupabaseClient(true);
 
   const { data, error } = await supabase
     .from('patients')
     .update(updates)
     .eq('id', id)
+    .eq('provider_id', providerId)
     .select()
     .single();
 
@@ -148,18 +149,16 @@ export async function updatePatient(id: string, updates: PatientUpdate) {
 }
 
 /**
- * Soft delete a patient (set active = false)
- * TODO: Re-enable once active column exists
+ * Delete a patient, verifying provider ownership
  */
-export async function deletePatient(id: string) {
+export async function deletePatient(id: string, providerId: string) {
   const supabase = getSupabaseClient(true);
 
-  // TODO: Implement soft delete with active column
-  // For now, we'll do a hard delete
   const { error } = await supabase
     .from('patients')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .eq('provider_id', providerId);
 
   if (error) {
     console.error('Error deleting patient:', error);
@@ -168,15 +167,16 @@ export async function deletePatient(id: string) {
 }
 
 /**
- * Get patient with encounter count
+ * Get patient with encounter count, scoped to provider
  */
-export async function getPatientWithEncounterCount(id: string) {
+export async function getPatientWithEncounterCount(id: string, providerId: string) {
   const supabase = getSupabaseClient(true);
 
   const { data, error } = await supabase
     .from('patients')
     .select('*, encounters(count)')
     .eq('id', id)
+    .eq('provider_id', providerId)
     .single();
 
   if (error) {

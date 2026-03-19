@@ -11,8 +11,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import {
   getProviderByEmail,
   getAllLinkedUsers,
@@ -23,15 +22,10 @@ import { getAllTemplates, getTemplatesForProvider } from '@/lib/db/intakeq-templ
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const ps = await requireProviderSession();
 
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get current user's provider
-    const currentProvider = await getProviderByEmail(session.user.email);
-    const isAdmin = currentProvider?.is_admin || false;
+    // Get current user's provider (for IntakeQ credentials lookup)
+    const currentProvider = await getProviderByEmail(ps.email);
 
     // Get templates filtered by provider (or all if no provider)
     const templates = currentProvider
@@ -43,11 +37,9 @@ export async function GET() {
     if (currentProvider) {
       const creds = await getProviderIntakeQCredentials(currentProvider.id);
       if (creds) {
-        // Don't return the actual password
         currentCredentials = {
           login_email: creds.login_email,
           default_template_name: creds.default_template_name,
-          // Password is intentionally omitted
         };
       }
     }
@@ -56,7 +48,7 @@ export async function GET() {
     let linkedUsers: Awaited<ReturnType<typeof getAllLinkedUsers>> = [];
     let allProviders: Awaited<ReturnType<typeof getAllProviders>> = [];
 
-    if (isAdmin) {
+    if (ps.isAdmin) {
       linkedUsers = await getAllLinkedUsers();
       allProviders = await getAllProviders();
     }
@@ -75,9 +67,12 @@ export async function GET() {
           }
         : null,
       currentCredentials,
-      isAdmin,
+      isAdmin: ps.isAdmin,
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return unauthorizedResponse(error.message);
+    }
     console.error('[Admin] Error fetching data:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to fetch admin data' },

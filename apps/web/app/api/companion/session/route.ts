@@ -6,19 +6,14 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { getActiveSessionForUser, revokeSession } from '@/lib/db/sync-sessions';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const ps = await requireProviderSession();
 
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const syncSession = await getActiveSessionForUser(session.user.email);
+    const syncSession = await getActiveSessionForUser(ps.email);
 
     if (!syncSession) {
       return NextResponse.json({ session: null });
@@ -38,6 +33,8 @@ export async function GET() {
       },
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
+
     console.error('[Companion/Session GET] Error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to fetch session' },
@@ -48,19 +45,15 @@ export async function GET() {
 
 export async function DELETE() {
   try {
-    const session = await getServerSession(authOptions);
+    const ps = await requireProviderSession();
 
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const syncSession = await getActiveSessionForUser(session.user.email);
+    const syncSession = await getActiveSessionForUser(ps.email);
 
     if (!syncSession) {
       return NextResponse.json({ error: 'No active session' }, { status: 404 });
     }
 
-    const revoked = await revokeSession(syncSession.id, session.user.email);
+    const revoked = await revokeSession(syncSession.id, ps.email);
 
     if (!revoked) {
       return NextResponse.json({ error: 'Failed to revoke session' }, { status: 500 });
@@ -68,6 +61,8 @@ export async function DELETE() {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
+
     console.error('[Companion/Session DELETE] Error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to revoke session' },

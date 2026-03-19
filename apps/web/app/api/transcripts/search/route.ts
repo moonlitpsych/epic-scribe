@@ -6,8 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { searchFiles, DriveFile } from '@/google-drive';
 
 /**
@@ -106,11 +105,9 @@ async function findTranscriptsByPatient(
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const ps = await requireProviderSession();
 
-    if (!session || !session.accessToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const session = { accessToken: ps.accessToken } as any;
 
     const searchParams = request.nextUrl.searchParams;
     const patientName = searchParams.get('patientName');
@@ -130,6 +127,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ transcripts });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error searching transcripts:', error);
     return NextResponse.json(
       { error: 'Failed to search transcripts' },

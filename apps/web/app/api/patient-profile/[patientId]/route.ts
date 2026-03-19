@@ -6,8 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import {
   getPatientProfile,
   upsertPatientProfile,
@@ -20,23 +19,21 @@ export async function GET(
   { params }: { params: { patientId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const { patientId } = params;
     if (!patientId) {
       return NextResponse.json({ error: 'patientId is required' }, { status: 400 });
     }
 
-    const profile = await getPatientProfile(patientId);
+    const profile = await getPatientProfile(patientId, ps.providerId);
     if (!profile) {
       return NextResponse.json({ profile: null, hasProfile: false });
     }
 
     return NextResponse.json({ profile, hasProfile: true });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('[GET /api/patient-profile] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch patient profile', message: error instanceof Error ? error.message : 'Unknown error' },
@@ -50,10 +47,7 @@ export async function PUT(
   { params }: { params: { patientId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const { patientId } = params;
     if (!patientId) {
@@ -74,6 +68,7 @@ export async function PUT(
 
     return NextResponse.json({ success: true, profile });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('[PUT /api/patient-profile] Error:', error);
     return NextResponse.json(
       { error: 'Failed to update patient profile', message: error instanceof Error ? error.message : 'Unknown error' },

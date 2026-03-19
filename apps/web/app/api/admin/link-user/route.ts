@@ -10,22 +10,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
-import { getProviderByEmail, linkUserToProvider } from '@/lib/db/providers';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
+import { linkUserToProvider } from '@/lib/db/providers';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const ps = await requireProviderSession();
 
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get current user's provider and check admin status
-    const currentProvider = await getProviderByEmail(session.user.email);
-
-    if (!currentProvider?.is_admin) {
+    if (!ps.isAdmin) {
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }
@@ -42,7 +34,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Link the user
     const link = await linkUserToProvider(email, providerId, isAdmin || false);
 
     return NextResponse.json({
@@ -51,6 +42,9 @@ export async function POST(request: NextRequest) {
       linkId: link.id,
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return unauthorizedResponse(error.message);
+    }
     console.error('[Admin] Error linking user:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to link user' },

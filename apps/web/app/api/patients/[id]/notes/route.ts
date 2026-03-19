@@ -6,8 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import {
   getPatientNotes,
   createPatientNote,
@@ -19,11 +18,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const patientId = params.id;
 
@@ -34,10 +29,11 @@ export async function GET(
       );
     }
 
-    const notes = await getPatientNotes(patientId);
+    const notes = await getPatientNotes(patientId, ps.providerId);
 
     return NextResponse.json({ notes });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error fetching patient notes:', error);
     return NextResponse.json(
       { error: 'Failed to fetch patient notes' },
@@ -51,11 +47,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session || !session.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const patientId = params.id;
 
@@ -85,16 +77,17 @@ export async function POST(
       );
     }
 
-    const note = await createPatientNote({
+    const note = await createPatientNote(ps.providerId, {
       patientId,
       noteType: noteType as PatientNoteType,
       title: title || undefined,
       content,
-      createdBy: session.user.email,
+      createdBy: ps.email,
     });
 
     return NextResponse.json({ note }, { status: 201 });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error creating patient note:', error);
     return NextResponse.json(
       { error: 'Failed to create patient note' },

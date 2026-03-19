@@ -7,6 +7,7 @@
 
 import { getSupabaseClient } from '../supabase';
 import type { HealthKitClinicalData } from '@epic-scribe/types';
+import { verifyPatientOwnership } from './ownership';
 
 const DATA_TYPES = ['medications', 'conditions', 'labs', 'vitals', 'notes', 'allergies', 'procedures'] as const;
 type ClinicalDataType = typeof DATA_TYPES[number];
@@ -83,8 +84,13 @@ const DATA_TYPE_TO_KEY: Record<string, keyof HealthKitClinicalData> = {
  */
 export async function getClinicalDataForPatient(
   patientId: string,
-  dataSource?: string
+  dataSource?: string,
+  providerId?: string
 ): Promise<HealthKitClinicalData | null> {
+  if (providerId) {
+    const owned = await verifyPatientOwnership(patientId, providerId);
+    if (!owned) return null;
+  }
   const supabase = getSupabaseClient(true);
 
   let query = supabase
@@ -124,8 +130,13 @@ export async function getClinicalDataForPatient(
  * Get a lightweight summary of clinical data for a patient (for UI badges).
  */
 export async function getClinicalDataSummary(
-  patientId: string
+  patientId: string,
+  providerId?: string
 ): Promise<ClinicalDataSummary> {
+  if (providerId) {
+    const owned = await verifyPatientOwnership(patientId, providerId);
+    if (!owned) return { hasClinicalData: false, lastSyncedAt: null, counts: {} };
+  }
   const supabase = getSupabaseClient(true);
 
   const { data, error } = await supabase

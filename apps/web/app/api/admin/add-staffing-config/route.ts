@@ -10,12 +10,15 @@
  */
 
 import { NextResponse } from 'next/server';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    const ps = await requireProviderSession();
+
     console.log('Starting staffing config migration...');
 
     // Step 1: Find HMHI RCC Intake template
@@ -103,6 +106,7 @@ export async function GET() {
     });
 
   } catch (error: any) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Migration error:', error);
     return NextResponse.json({
       success: false,

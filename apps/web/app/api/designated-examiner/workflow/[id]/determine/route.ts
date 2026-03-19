@@ -6,8 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { createClient } from '@supabase/supabase-js';
 import { getDEFinalPromptBuilder, getGeminiClient } from '@epic-scribe/note-service';
 
@@ -22,10 +21,7 @@ interface RouteParams {
 
 export async function POST(_request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const { id } = await params;
 
@@ -34,7 +30,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       .from('designated_examiner_reports')
       .select('*')
       .eq('id', id)
-      .eq('finalized_by', session.user.id)
+      .eq('finalized_by', ps.providerId)
       .single();
 
     if (fetchError || !workflow) {
@@ -137,7 +133,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
         finalized_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .eq('finalized_by', session.user.id)
+      .eq('finalized_by', ps.providerId)
       .select()
       .single();
 
@@ -168,6 +164,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
       },
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('[DE Determine] Error:', error);
     return NextResponse.json(
       {

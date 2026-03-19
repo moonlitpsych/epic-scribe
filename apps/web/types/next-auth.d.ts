@@ -7,6 +7,8 @@ declare module 'next-auth' {
     error?: string;
     user: {
       id?: string;
+      providerId?: string;
+      isAdmin?: boolean;
     } & DefaultSession['user'];
   }
 }
@@ -17,5 +19,7 @@ declare module 'next-auth/jwt' {
     refreshToken?: string;
     accessTokenExpires?: number;
     error?: string;
+    providerId?: string;
+    isAdmin?: boolean;
   }
 }

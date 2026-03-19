@@ -5,20 +5,15 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { getActiveSessionForUser } from '@/lib/db/sync-sessions';
 import { getBatchItems } from '@/lib/db/batch-queue';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const ps = await requireProviderSession();
 
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const syncSession = await getActiveSessionForUser(session.user.email);
+    const syncSession = await getActiveSessionForUser(ps.email);
 
     if (!syncSession || !syncSession.is_paired) {
       return NextResponse.json({ error: 'No paired session' }, { status: 404 });
@@ -28,6 +23,7 @@ export async function GET() {
 
     return NextResponse.json({ items, syncSessionId: syncSession.id });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('[Companion/Session/Batch GET] Error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to fetch batch items' },

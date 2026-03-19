@@ -5,17 +5,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { getMostRecentFinalizedNote } from '@/lib/db/notes';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const { searchParams } = new URL(request.url);
     const patientId = searchParams.get('patientId');
@@ -27,7 +22,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const note = await getMostRecentFinalizedNote(patientId);
+    const note = await getMostRecentFinalizedNote(patientId, ps.providerId);
 
     if (!note) {
       return NextResponse.json({ found: false });
@@ -47,6 +42,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error fetching most recent note:', error);
     return NextResponse.json(
       {

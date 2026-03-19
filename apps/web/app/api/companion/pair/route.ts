@@ -6,19 +6,14 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { createSyncSession } from '@/lib/db/sync-sessions';
 
 export async function POST() {
   try {
-    const session = await getServerSession(authOptions);
+    const ps = await requireProviderSession();
 
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { session: syncSession, pairingCode } = await createSyncSession(session.user.email);
+    const { session: syncSession, pairingCode } = await createSyncSession(ps.email);
 
     return NextResponse.json({
       sessionId: syncSession.id,
@@ -26,6 +21,8 @@ export async function POST() {
       expiresAt: syncSession.pairing_code_expires_at,
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
+
     console.error('[Companion/Pair] Error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to create pairing code' },

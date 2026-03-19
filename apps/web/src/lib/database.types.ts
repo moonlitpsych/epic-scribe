@@ -20,6 +20,7 @@ export interface Database {
           phone: string | null;
           email: string | null;
           intakeq_guid: string | null; // IntakeQ client GUID for Moonlit patients
+          provider_id: string; // FK to es_providers — multi-tenant isolation
           created_at: string;
           updated_at: string;
         };
@@ -33,6 +34,7 @@ export interface Database {
           phone?: string | null;
           email?: string | null;
           intakeq_guid?: string | null;
+          provider_id: string; // Required for new patients
           created_at?: string;
           updated_at?: string;
         };
@@ -46,6 +48,7 @@ export interface Database {
           phone?: string | null;
           email?: string | null;
           intakeq_guid?: string | null;
+          provider_id?: string;
           created_at?: string;
           updated_at?: string;
         };

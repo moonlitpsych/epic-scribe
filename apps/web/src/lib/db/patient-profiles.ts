@@ -10,13 +10,19 @@
 
 import { getSupabaseClient } from '../supabase';
 import type { StructuredPatientProfile, NoteExtractionResult } from '@epic-scribe/types';
+import { verifyPatientOwnership } from './ownership';
 
 /**
  * Get the cumulative profile for a patient.
  */
 export async function getPatientProfile(
-  patientId: string
+  patientId: string,
+  providerId?: string
 ): Promise<StructuredPatientProfile | null> {
+  if (providerId) {
+    const owned = await verifyPatientOwnership(patientId, providerId);
+    if (!owned) return null;
+  }
   const supabase = getSupabaseClient(true);
 
   const { data, error } = await (supabase as any)
@@ -115,8 +121,13 @@ export async function saveExtractionSnapshot(
  * Lightweight check: does a profile exist for this patient?
  */
 export async function getPatientProfileSummary(
-  patientId: string
+  patientId: string,
+  providerId?: string
 ): Promise<{ hasProfile: boolean; version?: number; lastUpdated?: string } | null> {
+  if (providerId) {
+    const owned = await verifyPatientOwnership(patientId, providerId);
+    if (!owned) return { hasProfile: false };
+  }
   const supabase = getSupabaseClient(true);
 
   const { data, error } = await (supabase as any)

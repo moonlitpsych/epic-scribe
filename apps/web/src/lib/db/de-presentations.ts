@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseClient } from '../supabase';
 import type {
   DEPresentation,
   DEPresentationData,
@@ -6,11 +6,6 @@ import type {
   DEPresentationTemplate,
   PresentationStatus
 } from '@/types/designated-examiner';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // ============ Presentation CRUD Operations ============
 
@@ -39,6 +34,7 @@ export async function createPresentation(params: {
     clinicalNotes
   } = params;
 
+  const supabase = getSupabaseClient(true);
   const { data, error } = await supabase
     .from('designated_examiner_reports')
     .insert({
@@ -96,6 +92,7 @@ export async function updatePresentation(params: {
     aiEnhancedSections
   } = params;
 
+  const supabase = getSupabaseClient(true);
   const updateData: any = {
     updated_at: new Date().toISOString()
   };
@@ -135,6 +132,7 @@ export async function updatePresentation(params: {
 }
 
 export async function getPresentation(presentationId: string, userId: string): Promise<DEPresentation | null> {
+  const supabase = getSupabaseClient(true);
   const { data, error } = await supabase
     .from('designated_examiner_reports')
     .select('*')
@@ -155,6 +153,7 @@ export async function getPresentation(presentationId: string, userId: string): P
 }
 
 export async function getUserPresentations(userId: string): Promise<DEPresentation[]> {
+  const supabase = getSupabaseClient(true);
   const { data, error } = await supabase
     .from('designated_examiner_reports')
     .select('*')
@@ -170,6 +169,7 @@ export async function getUserPresentations(userId: string): Promise<DEPresentati
 }
 
 export async function deletePresentation(presentationId: string, userId: string): Promise<boolean> {
+  const supabase = getSupabaseClient(true);
   const { error } = await supabase
     .from('designated_examiner_reports')
     .delete()
@@ -196,6 +196,7 @@ export async function createTemplate(params: {
 }): Promise<DEPresentationTemplate> {
   const { userId, name, description, templateData, commitmentType, isDefault } = params;
 
+  const supabase = getSupabaseClient(true);
   // If setting as default, unset other defaults for this user
   if (isDefault) {
     await supabase
@@ -226,6 +227,7 @@ export async function createTemplate(params: {
 }
 
 export async function getUserTemplates(userId: string): Promise<DEPresentationTemplate[]> {
+  const supabase = getSupabaseClient(true);
   const { data, error } = await supabase
     .from('de_presentation_templates')
     .select('*')
@@ -242,10 +244,11 @@ export async function getUserTemplates(userId: string): Promise<DEPresentationTe
 }
 
 export async function updateTemplateUsage(templateId: string, userId: string): Promise<void> {
+  const supabase = getSupabaseClient(true);
   await supabase
     .from('de_presentation_templates')
     .update({
-      usage_count: supabase.raw('usage_count + 1'),
+      usage_count: (supabase as any).raw?.('usage_count + 1') ?? 1,
       updated_at: new Date().toISOString()
     })
     .eq('id', templateId)
@@ -253,6 +256,7 @@ export async function updateTemplateUsage(templateId: string, userId: string): P
 }
 
 export async function deleteTemplate(templateId: string, userId: string): Promise<boolean> {
+  const supabase = getSupabaseClient(true);
   const { error } = await supabase
     .from('de_presentation_templates')
     .delete()
@@ -313,6 +317,7 @@ export async function searchPresentations(params: {
 }): Promise<DEPresentation[]> {
   const { userId, searchTerm, status, startDate, endDate } = params;
 
+  const supabase = getSupabaseClient(true);
   let query = supabase
     .from('designated_examiner_reports')
     .select('*')

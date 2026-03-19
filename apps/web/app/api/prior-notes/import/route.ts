@@ -3,13 +3,12 @@
  *
  * Receives parsed note data from the clipboard watcher,
  * matches or creates a patient, and saves the prior note.
- *
- * Note: No auth required for single-user MVP (clipboard watcher uses anon key)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createPatient } from '@/lib/db';
 import { savePriorNote, findPatientByNameAndDob } from '@/lib/db/prior-notes';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 
 interface ImportRequest {
   noteContent: string;
@@ -25,6 +24,8 @@ interface ImportRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    const ps = await requireProviderSession();
+
     const body: ImportRequest = await request.json();
 
     // Validate required fields
@@ -46,14 +47,15 @@ export async function POST(request: NextRequest) {
     let patient = await findPatientByNameAndDob(
       body.patientFirstName,
       body.patientLastName,
-      body.dateOfBirth
+      body.dateOfBirth,
+      ps.providerId
     );
 
     let isNewPatient = false;
 
     if (!patient) {
       // Create new patient
-      const newPatient = await createPatient({
+      const newPatient = await createPatient(ps.providerId, {
         first_name: body.patientFirstName,
         last_name: body.patientLastName,
         date_of_birth: body.dateOfBirth || null,
@@ -77,7 +79,7 @@ export async function POST(request: NextRequest) {
       setting: body.setting,
       providerName: body.providerName,
       importSource: body.importSource || 'clipboard_watcher',
-    });
+    }, ps.providerId);
 
     return NextResponse.json({
       success: true,
@@ -98,6 +100,7 @@ export async function POST(request: NextRequest) {
         : 'Imported note for existing patient',
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error importing prior note:', error);
     return NextResponse.json(
       { error: 'Failed to import prior note' },

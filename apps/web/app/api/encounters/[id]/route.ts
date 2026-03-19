@@ -5,8 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { deleteEncounter } from '@/google-calendar';
 
 export async function DELETE(
@@ -14,11 +13,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const calendarEventId = params.id;
 
@@ -30,7 +25,7 @@ export async function DELETE(
     }
 
     // 1. Delete from Google Calendar
-    await deleteEncounter(session, calendarEventId);
+    await deleteEncounter({ accessToken: ps.accessToken } as any, calendarEventId);
 
     // 2. Delete from Supabase (by calendar_event_id)
     const { deleteEncounterByCalendarEventId } = await import('@/lib/db');
@@ -44,6 +39,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('Error deleting encounter:', error);
     return NextResponse.json(
       { error: 'Failed to delete encounter' },

@@ -6,8 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { getDEPromptBuilder } from '@epic-scribe/note-service';
 import { getGeminiClient } from '@epic-scribe/note-service';
 import { createClient } from '@supabase/supabase-js';
@@ -15,10 +14,7 @@ import { createClient } from '@supabase/supabase-js';
 export async function POST(request: NextRequest) {
   try {
     // Authenticate user
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     // Parse request body
     const body = await request.json();
@@ -107,10 +103,7 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Get user ID from session
-    // Note: This assumes session.user.id exists and is a valid UUID
-    // If using NextAuth with Supabase, you may need to map the user
-    const userId = session.user.id || session.user.email;
+    // Use provider ID as user ID for ownership
 
     const { data: report, error: dbError } = await supabase
       .from('designated_examiner_reports')
@@ -126,7 +119,7 @@ export async function POST(request: NextRequest) {
         generated_argument: result.content,
         final_argument: result.content, // Initialize with generated version
         ...criteriaAssessment,
-        finalized_by: userId,
+        finalized_by: ps.providerId,
       })
       .select()
       .single();
@@ -153,6 +146,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('[DE Generate] Error:', error);
     return NextResponse.json(
       {

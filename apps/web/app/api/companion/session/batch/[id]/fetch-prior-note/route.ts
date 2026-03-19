@@ -8,8 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../../../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { getActiveSessionForUser } from '@/lib/db/sync-sessions';
 import { updateBatchItemPriorNote, getBatchItems } from '@/lib/db/batch-queue';
 import { getPatientById } from '@/lib/db/patients';
@@ -20,13 +19,9 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const ps = await requireProviderSession();
 
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const syncSession = await getActiveSessionForUser(session.user.email);
+    const syncSession = await getActiveSessionForUser(ps.email);
 
     if (!syncSession || !syncSession.is_paired) {
       return NextResponse.json({ error: 'No paired session' }, { status: 404 });
@@ -43,7 +38,7 @@ export async function POST(
     }
 
     // Get full patient record
-    const patient = await getPatientById(item.patient_id);
+    const patient = await getPatientById(item.patient_id, ps.providerId);
 
     // Moonlit Psychiatry + patient has email -> fetch from IntakeQ
     if (item.setting === 'Moonlit Psychiatry' && patient.email) {
@@ -122,6 +117,7 @@ export async function POST(
       item: updated,
     });
   } catch (error) {
+    if (error instanceof UnauthorizedError) return unauthorizedResponse(error.message);
     console.error('[Session/Batch FetchPriorNote] Error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to fetch prior note' },

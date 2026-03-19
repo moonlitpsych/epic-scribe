@@ -1,38 +1,33 @@
 /**
- * GET /api/patients - List all active patients
- * POST /api/patients - Create a new patient
+ * GET /api/patients - List all active patients (scoped to provider)
+ * POST /api/patients - Create a new patient (assigned to provider)
  *
- * Requires authenticated session.
+ * Requires authenticated session with provider context.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { requireProviderSession, unauthorizedResponse, UnauthorizedError } from '@/lib/auth/get-provider-session';
 import { getAllPatients, createPatient, searchPatients } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q');
-    const includeInactive = searchParams.get('includeInactive') === 'true';
 
-    // If search query provided, search patients
     if (query) {
-      const patients = await searchPatients(query);
+      const patients = await searchPatients(query, ps.providerId);
       return NextResponse.json({ patients });
     }
 
-    // Otherwise, get all patients
-    const patients = await getAllPatients(includeInactive);
+    const patients = await getAllPatients(ps.providerId);
 
     return NextResponse.json({ patients });
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return unauthorizedResponse(error.message);
+    }
     console.error('Error fetching patients:', error);
     return NextResponse.json(
       { error: 'Failed to fetch patients' },
@@ -43,21 +38,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const ps = await requireProviderSession();
 
     const body = await request.json();
     const { firstName, lastName, dob, dateOfBirth, age, medicaid_id, mrn, phone, email } = body;
 
-    // Support both old and new field names
     const dobValue = dob || dateOfBirth || null;
     const medicaidIdValue = medicaid_id || mrn;
     const ageValue = age ? parseInt(age, 10) : null;
 
-    // Validate required fields - only first name and last name are required
     if (!firstName || !lastName) {
       return NextResponse.json(
         { error: 'firstName and lastName are required' },
@@ -65,7 +54,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate date format if DOB is provided
     if (dobValue) {
       const dobDate = new Date(dobValue);
       if (isNaN(dobDate.getTime())) {
@@ -76,7 +64,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Validate age if provided
     if (ageValue !== null && (ageValue < 0 || ageValue > 150)) {
       return NextResponse.json(
         { error: 'Invalid age value' },
@@ -84,7 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const patient = await createPatient({
+    const patient = await createPatient(ps.providerId, {
       first_name: firstName,
       last_name: lastName,
       date_of_birth: dobValue,
@@ -96,6 +83,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ patient }, { status: 201 });
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return unauthorizedResponse(error.message);
+    }
     console.error('Error creating patient:', error);
     return NextResponse.json(
       { error: 'Failed to create patient' },
