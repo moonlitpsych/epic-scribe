@@ -1,17 +1,10 @@
-// apps/web/src/components/workflow/GenerateInputStep.tsx
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Template, Setting } from '@epic-scribe/types';
-import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle, CloudDownload, Mail, Save, Link2, Heart, QrCode, X, FileText } from 'lucide-react';
-import QRCode from 'qrcode';
-import PatientSelector from './PatientSelector';
-import EncountersList from './EncountersList';
-import ManualNotePanel from './ManualNotePanel';
-
+import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle, CloudDownload, Mail, Save, Link2, FileText } from 'lucide-react';
 import AudioRecorder from './AudioRecorder';
 import TranscriptSelector from './TranscriptSelector';
-import { CalendarEncounter } from '@/google-calendar';
 
 interface Patient {
   id: string;
@@ -24,53 +17,44 @@ interface Patient {
   notes?: string;
 }
 
-interface GenerateInputStepProps {
+interface ReviewGenerateStepProps {
   setting: Setting;
   visitType: string;
   template: Template;
-  onGenerate: (transcript: string, previousNote: string, patient: Patient | null, encounterId: string | null, epicChartData?: string, questionnairesCompleted?: boolean) => void;
+  patient: Patient;
+  encounterId: string | null;
+  initialTranscript: string;
+  companionPriorNote?: string | null;
+  onGenerate: (transcript: string, previousNote: string, patient: Patient, encounterId: string | null, epicChartData?: string, questionnairesCompleted?: boolean) => void;
   onBack: () => void;
   isGenerating: boolean;
-  initialTranscript?: string;
-  initialPreviousNote?: string;
-  selectedPatient?: Patient | null;
-  encounterId?: string | null;
-  companionPriorNote?: string | null;
 }
 
-export default function GenerateInputStep({
+export default function ReviewGenerateStep({
   setting,
   visitType,
   template,
+  patient,
+  encounterId,
+  initialTranscript,
+  companionPriorNote,
   onGenerate,
   onBack,
   isGenerating,
-  initialTranscript = '',
-  initialPreviousNote = '',
-  selectedPatient: initialPatient = null,
-  encounterId: initialEncounterId = null,
-  companionPriorNote,
-}: GenerateInputStepProps) {
+}: ReviewGenerateStepProps) {
   const [transcript, setTranscript] = useState(initialTranscript);
-  const [previousNote, setPreviousNote] = useState(initialPreviousNote);
+  const [previousNote, setPreviousNote] = useState('');
   const [showPromptPreview, setShowPromptPreview] = useState(false);
   const [promptPreview, setPromptPreview] = useState('');
   const [loadingPreview, setLoadingPreview] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(initialPatient);
-  const [encounterId, setEncounterId] = useState<string | null>(initialEncounterId);
 
-  // Translation-related state
+  // Translation
   const [isSpanishTranscript, setIsSpanishTranscript] = useState(false);
   const [spanishTranscript, setSpanishTranscript] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
   const [hasTranslated, setHasTranslated] = useState(false);
 
-  // Encounters state
-  const [encounters, setEncounters] = useState<CalendarEncounter[]>([]);
-  const [loadingEncounters, setLoadingEncounters] = useState(false);
-  const [selectedEncounterId, setSelectedEncounterId] = useState<string | null>(null);
-
-  // Saved note from generated_notes (highest priority prior note source)
+  // Saved note (highest priority prior note source)
   const [savedNote, setSavedNote] = useState<{
     id: string;
     finalizedAt: string;
@@ -80,14 +64,14 @@ export default function GenerateInputStep({
   } | null>(null);
   const [checkingSavedNotes, setCheckingSavedNotes] = useState(false);
 
-  // Auto-imported prior note state
+  // Clipboard-imported prior note
   const [autoImportedNote, setAutoImportedNote] = useState<{
     id: string;
     importedAt: string;
   } | null>(null);
   const [checkingPriorNotes, setCheckingPriorNotes] = useState(false);
 
-  // IntakeQ prior note state (for Moonlit Psychiatry)
+  // IntakeQ
   const [intakeQEnabled, setIntakeQEnabled] = useState(true);
   const [intakeQNote, setIntakeQNote] = useState<{ content: string; date: string; noteName: string } | null>(null);
   const [intakeQLoading, setIntakeQLoading] = useState(false);
@@ -96,48 +80,45 @@ export default function GenerateInputStep({
   const [pendingEmail, setPendingEmail] = useState('');
   const [savingEmail, setSavingEmail] = useState(false);
 
-  // Companion sync state
+  // Companion sync
   const [companionSynced, setCompanionSynced] = useState(false);
 
-  // HealthKit clinical data summary
+  // HealthKit
   const [clinicalDataSummary, setClinicalDataSummary] = useState<{
     hasClinicalData: boolean;
     lastSyncedAt: string | null;
     counts: Record<string, number>;
   } | null>(null);
 
-  // Payer dropdown state
-  const [payers, setPayers] = useState<{ id: string; name: string }[]>([]);
-  const [patientPayerId, setPatientPayerId] = useState<string>('');
-  const [savingPayer, setSavingPayer] = useState(false);
+  // Questionnaires + Epic chart data
+  const [questionnairesCompleted, setQuestionnairesCompleted] = useState(false);
+  const [epicChartData, setEpicChartData] = useState('');
+  const showEpicChartInput = visitType === 'Intake' || visitType === 'Consultation Visit';
 
-  // QR code state
-  const [showQrModal, setShowQrModal] = useState(false);
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  // Prior note section visibility
+  const hasClinicalData = clinicalDataSummary?.hasClinicalData ?? false;
+  const showPreviousNote = visitType === 'Transfer of Care' || visitType === 'Follow-up';
+  const requiresPreviousNote = showPreviousNote && !hasClinicalData;
 
-  const generateQrCode = useCallback(async () => {
-    if (!selectedPatient) return;
-    const payload = JSON.stringify({
-      id: selectedPatient.id,
-      name: `${selectedPatient.first_name} ${selectedPatient.last_name}`,
-    });
-    const url = await QRCode.toDataURL(payload, {
-      width: 256,
-      margin: 2,
-      color: { dark: '#0A1F3D', light: '#FFFFFF' },
-    });
-    setQrDataUrl(url);
-    setShowQrModal(true);
-  }, [selectedPatient]);
+  // Word count
+  const activeTranscript = isSpanishTranscript ? spanishTranscript : transcript;
+  const wordCount = activeTranscript.trim().split(/\s+/).filter(Boolean).length;
 
-  // Track the patient ID so we can detect actual patient changes (not initial mount)
-  const prevPatientIdRef = useRef(initialPatient?.id || null);
+  // Validation
+  const canTranslate = isSpanishTranscript && spanishTranscript.trim().length > 0 && !hasTranslated;
+  const hasValidPatient = patient && patient.first_name && patient.last_name;
+  const canGenerate = transcript.trim().length > 0 &&
+    (!requiresPreviousNote || previousNote.trim().length > 0) &&
+    (!isSpanishTranscript || hasTranslated) &&
+    hasValidPatient;
 
-  // Clear prior note state when patient changes so the correct note gets fetched
+  // Track patient ID changes
+  const prevPatientIdRef = useRef(patient?.id || null);
+
+  // Clear prior note state when patient changes
   useEffect(() => {
-    const currentId = selectedPatient?.id || null;
+    const currentId = patient?.id || null;
     const prevId = prevPatientIdRef.current;
-
     if (currentId !== prevId) {
       setPreviousNote('');
       setSavedNote(null);
@@ -147,121 +128,40 @@ export default function GenerateInputStep({
       setCompanionSynced(false);
       prevPatientIdRef.current = currentId;
     }
-  }, [selectedPatient?.id]);
+  }, [patient?.id]);
 
-  // Fetch payers list on mount
+  // ─── HealthKit check ───
   useEffect(() => {
-    fetch('/api/payers')
-      .then((res) => res.json())
-      .then((data) => setPayers(data.payers || []))
-      .catch(() => {});
-  }, []);
-
-  // Load patient's current payer when patient changes
-  useEffect(() => {
-    if (selectedPatient) {
-      fetch(`/api/patients/${selectedPatient.id}`)
-        .then((res) => res.json())
-        .then((data) => setPatientPayerId(data.patient?.primary_payer_id || ''))
-        .catch(() => setPatientPayerId(''));
-    } else {
-      setPatientPayerId('');
-    }
-  }, [selectedPatient?.id]);
-
-  const handlePayerChange = async (payerId: string) => {
-    if (!selectedPatient) return;
-    setPatientPayerId(payerId);
-    setSavingPayer(true);
-    try {
-      await fetch(`/api/patients/${selectedPatient.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ primaryPayerId: payerId || null }),
-      });
-    } catch (error) {
-      console.error('Error saving payer:', error);
-    } finally {
-      setSavingPayer(false);
-    }
-  };
-
-  // Pre-visit questionnaire state (for 96127 billing)
-  const [questionnairesCompleted, setQuestionnairesCompleted] = useState(false);
-
-  // Epic chart data - only needed for Intake/Consultation (no copied-forward note)
-  const [epicChartData, setEpicChartData] = useState('');
-  const showEpicChartInput = visitType === 'Intake' || visitType === 'Consultation Visit';
-
-  // Show prior note section for Follow-up/TOC, but HealthKit data can substitute
-  const hasClinicalData = clinicalDataSummary?.hasClinicalData ?? false;
-  const showPreviousNote = visitType === 'Transfer of Care' || visitType === 'Follow-up';
-  const requiresPreviousNote = showPreviousNote && !hasClinicalData;
-
-  // Word count for display
-  const activeTranscript = isSpanishTranscript ? spanishTranscript : transcript;
-  const wordCount = activeTranscript.trim().split(/\s+/).filter(Boolean).length;
-
-  // Can proceed to translation or generation
-  const canTranslate = isSpanishTranscript && spanishTranscript.trim().length > 0 && !hasTranslated;
-  // Patient with first and last name is now required for note generation
-  const hasValidPatient = selectedPatient && selectedPatient.first_name && selectedPatient.last_name;
-  const canGenerate = transcript.trim().length > 0 &&
-    (!requiresPreviousNote || previousNote.trim().length > 0) &&
-    (!isSpanishTranscript || hasTranslated) &&
-    hasValidPatient;
-
-  // Fetch encounters when patient is selected
-  useEffect(() => {
-    if (selectedPatient) {
-      fetchPatientEncounters();
-    } else {
-      setEncounters([]);
-      setSelectedEncounterId(null);
-    }
-  }, [selectedPatient]);
-
-  // Check for HealthKit clinical data when patient is selected
-  useEffect(() => {
-    if (selectedPatient) {
-      fetch(`/api/clinical-data/summary?patientId=${selectedPatient.id}`)
-        .then(res => res.ok ? res.json() : null)
-        .then(data => {
-          if (data?.hasClinicalData) {
-            setClinicalDataSummary(data);
-          } else {
-            setClinicalDataSummary(null);
-          }
+    if (patient) {
+      fetch(`/api/clinical-data/summary?patientId=${patient.id}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.hasClinicalData) setClinicalDataSummary(data);
+          else setClinicalDataSummary(null);
         })
         .catch(() => setClinicalDataSummary(null));
-    } else {
-      setClinicalDataSummary(null);
     }
-  }, [selectedPatient]);
+  }, [patient]);
 
-  // Primary: Check for saved notes from generated_notes (highest priority)
+  // ─── Saved note check (highest priority) ───
   useEffect(() => {
-    if (selectedPatient && showPreviousNote && !previousNote) {
+    if (patient && showPreviousNote && !previousNote) {
       checkForSavedNote();
-    } else if (!selectedPatient) {
-      setSavedNote(null);
-      setAutoImportedNote(null);
     }
-  }, [selectedPatient, showPreviousNote]);
+  }, [patient, showPreviousNote]);
 
-  // Fallback: Check clipboard-imported prior notes when saved note check found nothing
+  // ─── Clipboard-imported fallback ───
   useEffect(() => {
-    if (selectedPatient && showPreviousNote && !previousNote && !checkingSavedNotes && !savedNote) {
+    if (patient && showPreviousNote && !previousNote && !checkingSavedNotes && !savedNote) {
       checkForPriorNotes();
     }
-  }, [selectedPatient, showPreviousNote, checkingSavedNotes, savedNote]);
+  }, [patient, showPreviousNote, checkingSavedNotes, savedNote]);
 
   const checkForSavedNote = async () => {
-    if (!selectedPatient) return;
-
+    if (!patient) return;
     setCheckingSavedNotes(true);
     try {
-      const response = await fetch(`/api/notes/most-recent?patientId=${selectedPatient.id}`);
+      const response = await fetch(`/api/notes/most-recent?patientId=${patient.id}`);
       if (response.ok) {
         const data = await response.json();
         if (data.found) {
@@ -291,20 +191,15 @@ export default function GenerateInputStep({
   };
 
   const checkForPriorNotes = async () => {
-    if (!selectedPatient) return;
-
+    if (!patient) return;
     setCheckingPriorNotes(true);
     try {
-      const response = await fetch(`/api/prior-notes/patient/${selectedPatient.id}`);
+      const response = await fetch(`/api/prior-notes/patient/${patient.id}`);
       if (response.ok) {
         const data = await response.json();
         if (data.priorNotes && data.priorNotes.length > 0) {
           const latestNote = data.priorNotes[0];
-          setAutoImportedNote({
-            id: latestNote.id,
-            importedAt: latestNote.imported_at,
-          });
-          // Auto-populate the previous note field
+          setAutoImportedNote({ id: latestNote.id, importedAt: latestNote.imported_at });
           setPreviousNote(latestNote.note_content);
         }
       }
@@ -320,43 +215,30 @@ export default function GenerateInputStep({
     setPreviousNote('');
   };
 
-  // IntakeQ prior note fetching (for Moonlit Psychiatry patients with email)
+  // ─── IntakeQ prior note ───
   useEffect(() => {
-    // Skip if saved note already loaded (higher priority source)
     if (savedNote) return;
-
-    // Only fetch from IntakeQ for Moonlit Psychiatry patients
     if (setting !== 'Moonlit Psychiatry') {
       setIntakeQNote(null);
       setIntakeQError(null);
       setShowEmailPrompt(false);
       return;
     }
-
-    // Reset state when patient changes
     setIntakeQNote(null);
     setIntakeQError(null);
     setShowEmailPrompt(false);
-
-    // Check if patient has email
-    if (!selectedPatient?.email) {
-      if (selectedPatient && showPreviousNote && intakeQEnabled) {
-        setShowEmailPrompt(true);
-      }
+    if (!patient?.email) {
+      if (patient && showPreviousNote && intakeQEnabled) setShowEmailPrompt(true);
       return;
     }
-
-    // Fetch if enabled and visit type supports previous note
-    if (intakeQEnabled && showPreviousNote && selectedPatient.email) {
-      fetchIntakeQPriorNote(selectedPatient.email);
+    if (intakeQEnabled && showPreviousNote && patient.email) {
+      fetchIntakeQPriorNote(patient.email);
     }
-  }, [selectedPatient, setting, intakeQEnabled, showPreviousNote]);
+  }, [patient, setting, intakeQEnabled, showPreviousNote]);
 
-  // Auto-populate from Companion Portal prior note
+  // ─── Companion sync ───
   useEffect(() => {
-    // Skip if saved note already loaded (higher priority source)
     if (savedNote) return;
-
     if (companionPriorNote && !previousNote && !companionSynced) {
       setPreviousNote(companionPriorNote);
       setCompanionSynced(true);
@@ -371,22 +253,14 @@ export default function GenerateInputStep({
   const fetchIntakeQPriorNote = async (email: string) => {
     setIntakeQLoading(true);
     setIntakeQError(null);
-
     try {
       const response = await fetch(`/api/intakeq/prior-note?email=${encodeURIComponent(email)}`);
       const data = await response.json();
-
       if (data.found) {
-        setIntakeQNote({
-          content: data.priorNote,
-          date: data.noteDate,
-          noteName: data.noteName || 'IntakeQ Note',
-        });
-        // Auto-populate the previous note field
+        setIntakeQNote({ content: data.priorNote, date: data.noteDate, noteName: data.noteName || 'IntakeQ Note' });
         setPreviousNote(data.priorNote);
-        setAutoImportedNote(null); // Clear any Epic auto-import
+        setAutoImportedNote(null);
       } else {
-        // Set appropriate error message
         switch (data.reason) {
           case 'patient_not_found':
             setIntakeQError('Patient not found in IntakeQ. You can paste a note manually below.');
@@ -416,23 +290,17 @@ export default function GenerateInputStep({
   };
 
   const handleSavePatientEmail = async () => {
-    if (!selectedPatient || !pendingEmail.trim()) return;
-
+    if (!patient || !pendingEmail.trim()) return;
     setSavingEmail(true);
     try {
-      const response = await fetch(`/api/patients/${selectedPatient.id}`, {
+      const response = await fetch(`/api/patients/${patient.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: pendingEmail.trim() }),
       });
-
       if (response.ok) {
-        // Update local patient state with email
-        const updatedPatient = { ...selectedPatient, email: pendingEmail.trim() };
-        setSelectedPatient(updatedPatient);
         setShowEmailPrompt(false);
         setPendingEmail('');
-        // Fetch from IntakeQ with new email
         fetchIntakeQPriorNote(pendingEmail.trim());
       } else {
         alert('Failed to save email. Please try again.');
@@ -445,68 +313,20 @@ export default function GenerateInputStep({
     }
   };
 
-  const fetchPatientEncounters = async () => {
-    if (!selectedPatient) return;
-
-    setLoadingEncounters(true);
-    try {
-      const response = await fetch('/api/encounters');
-      if (response.ok) {
-        const data = await response.json();
-        const patientEncounters = data.encounters.filter(
-          (enc: any) => enc.patientId === selectedPatient.id
-        );
-        setEncounters(patientEncounters);
-      }
-    } catch (error) {
-      console.error('Error fetching encounters:', error);
-    } finally {
-      setLoadingEncounters(false);
-    }
-  };
-
-  const handleSelectEncounter = (encounter: CalendarEncounter) => {
-    setSelectedEncounterId(encounter.id);
-    setEncounterId(encounter.id);
-  };
-
-  const handleEncounterCreated = (data: any) => {
-    fetchPatientEncounters();
-    if (data.calendarEncounter) {
-      setSelectedEncounterId(data.calendarEncounter.id);
-      setEncounterId(data.calendarEncounter.id);
-    }
-  };
-
-  const handleCreateEncounter = async (patient: Patient, startTime: Date, endTime: Date) => {
-    // Handled by PatientSelector component
-  };
-
+  // ─── Translation ───
   const handleTranslate = async () => {
     if (!canTranslate) return;
-
     setIsTranslating(true);
     try {
       const response = await fetch('/api/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: spanishTranscript,
-          sourceLanguage: 'Spanish',
-          targetLanguage: 'English',
-        }),
+        body: JSON.stringify({ text: spanishTranscript, sourceLanguage: 'Spanish', targetLanguage: 'English' }),
       });
-
-      if (!response.ok) {
-        throw new Error('Translation failed');
-      }
-
+      if (!response.ok) throw new Error('Translation failed');
       const data = await response.json();
       setTranscript(data.translatedText);
       setHasTranslated(true);
-
-      // Show success message
-      console.log(`Translation completed in ${data.latencyMs}ms`);
     } catch (error) {
       console.error('Error translating transcript:', error);
       alert('Failed to translate transcript. Please try again.');
@@ -517,7 +337,6 @@ export default function GenerateInputStep({
 
   const handleLanguageToggle = () => {
     if (hasTranslated) {
-      // Reset if already translated
       if (confirm('Switching language will reset the translation. Continue?')) {
         setIsSpanishTranscript(!isSpanishTranscript);
         setHasTranslated(false);
@@ -551,7 +370,6 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
       setShowPromptPreview(true);
     } catch (error) {
       console.error('Error previewing prompt:', error);
-      alert('Failed to preview prompt');
     } finally {
       setLoadingPreview(false);
     }
@@ -559,20 +377,21 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
 
   const handleGenerate = () => {
     if (canGenerate) {
-      onGenerate(transcript, previousNote, selectedPatient, encounterId, epicChartData || undefined, questionnairesCompleted || undefined);
+      onGenerate(transcript, previousNote, patient, encounterId, epicChartData || undefined, questionnairesCompleted || undefined);
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Template Summary Card - Compact Header */}
+      {/* ─── Compact Summary Header ─── */}
       <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-[var(--text-secondary)]">Using template:</p>
-            <p className="text-lg font-semibold text-[var(--text-primary)]">{template.name}</p>
+            <p className="text-lg font-semibold text-[var(--text-primary)]">
+              {patient.first_name} {patient.last_name}
+            </p>
             <p className="text-sm text-[var(--text-secondary)]">
-              {setting} • {visitType} • {template.sections?.length || 0} sections
+              {setting} &middot; {visitType} &middot; {template.sections?.length || 0} sections
             </p>
           </div>
           <button
@@ -580,121 +399,22 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
             className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
           >
             <ChevronLeft size={16} />
-            Back to Template
+            Back to Setup
           </button>
         </div>
       </div>
 
-      {/* Patient Selection - FIRST and Prominent */}
-      <div className="bg-[var(--bg-surface-2)] rounded-[2px] border border-[var(--border-default)] p-6">
-        <h2 className="text-xl font-heading text-[var(--text-primary)] mb-3">Step 1: Select or Create Patient</h2>
-        <p className="text-sm text-[var(--text-secondary)] mb-4">
-          Selecting a patient enables note saving and maintains continuity across visits.
-        </p>
-        <PatientSelector
-          selectedPatient={selectedPatient}
-          onPatientSelect={setSelectedPatient}
-          onCreateEncounter={handleCreateEncounter}
-          onEncounterCreated={handleEncounterCreated}
-          setting={setting}
-          visitType={visitType}
-        />
-
-        {/* Encounters List (shown when patient is selected) */}
-        {selectedPatient && (
-          <div className="mt-4">
-            <EncountersList
-              encounters={encounters}
-              selectedEncounterId={selectedEncounterId}
-              onSelectEncounter={handleSelectEncounter}
-              loading={loadingEncounters}
-            />
-          </div>
-        )}
-
-        {/* HealthKit Clinical Data Badge + QR Button */}
-        {selectedPatient && (
-          <div className="mt-3 flex items-center gap-2">
-            {clinicalDataSummary?.hasClinicalData && (
-              <div className="flex-1 flex items-center gap-2 p-2 bg-[var(--success-bg)] border border-[var(--success-border)] rounded-[2px]">
-                <Heart className="text-[var(--success-text)] flex-shrink-0" size={16} />
-                <span className="text-sm text-[var(--success-text)]">
-                  Health Records synced
-                  {clinicalDataSummary.lastSyncedAt && (
-                    <> ({new Date(clinicalDataSummary.lastSyncedAt).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })})</>
-                  )}
-                  {Object.keys(clinicalDataSummary.counts).length > 0 && (
-                    <span className="text-[var(--success-text)]">
-                      {' '}&mdash; {Object.entries(clinicalDataSummary.counts)
-                        .map(([type, count]) => `${count} ${type}`)
-                        .join(', ')}
-                    </span>
-                  )}
-                </span>
-              </div>
-            )}
-            <button
-              onClick={generateQrCode}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[2px] hover:bg-[var(--bg-hover)] transition-colors"
-              title="Show QR code for HealthKit pairing"
-            >
-              <QrCode size={16} />
-              QR
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Payer Selection (shown when patient is selected) */}
-      {selectedPatient && payers.length > 0 && (
-        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-4">
-          <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-[var(--text-primary)] whitespace-nowrap">Primary Payer</label>
-            <select
-              value={patientPayerId}
-              onChange={(e) => handlePayerChange(e.target.value)}
-              disabled={savingPayer}
-              className="flex-1 px-3 py-1.5 text-sm border border-[var(--border-default)] rounded-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent bg-[var(--bg-surface-2)] text-[var(--text-primary)]"
-            >
-              <option value="">No payer</option>
-              {payers.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-            {savingPayer && (
-              <span className="text-xs text-[var(--text-secondary)]">Saving...</span>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Manual Note Panel (collapsible - shown when patient is selected) */}
-      {selectedPatient && (
-        <ManualNotePanel
-          patient={selectedPatient}
-          onNoteSaved={() => {
-            // Could refresh notes list if displayed elsewhere
-            console.log('Manual note saved for patient:', selectedPatient.id);
-          }}
-        />
-      )}
-
-      {/* Document Input Section */}
+      {/* ─── Transcript Section ─── */}
       <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-heading text-[var(--text-primary)]">Step 2: Provide Documentation</h2>
+          <h2 className="text-xl font-heading text-[var(--text-primary)]">Transcript</h2>
           <button
             onClick={handleLanguageToggle}
-            className={`
-              flex items-center gap-2 px-3 py-1.5 text-sm rounded-[2px] transition-all
-              ${isSpanishTranscript
+            className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-[2px] transition-all ${
+              isSpanishTranscript
                 ? 'bg-[var(--accent-primary)] text-[var(--text-inverse)] hover:bg-[var(--accent-primary-hover)]'
-                : 'bg-[var(--bg-surface-2)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'}
-            `}
+                : 'bg-[var(--bg-surface-2)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'
+            }`}
           >
             <Languages size={16} />
             {isSpanishTranscript ? 'Spanish' : 'English'}
@@ -709,13 +429,13 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
                 <p className="text-sm font-semibold text-[var(--info-text)]">Translation Workflow</p>
                 <p className="text-sm text-[var(--info-text)] mt-1">
                   1. Paste your Spanish transcript<br />
-                  2. Click &quot;Translate to English&quot; to convert the transcript<br />
-                  3. Review the translation and proceed with note generation
+                  2. Click &quot;Translate to English&quot;<br />
+                  3. Review and proceed
                 </p>
                 {hasTranslated && (
                   <div className="flex items-center gap-2 mt-2 text-[var(--success-text)]">
                     <CheckCircle size={16} />
-                    <span className="text-sm font-medium">Translation completed successfully</span>
+                    <span className="text-sm font-medium">Translation completed</span>
                   </div>
                 )}
               </div>
@@ -723,7 +443,7 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
           </div>
         )}
 
-        {/* Spanish Transcript Input (when Spanish mode is active and not yet translated) */}
+        {/* Spanish input */}
         {isSpanishTranscript && !hasTranslated && (
           <div className="mb-6">
             <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
@@ -732,21 +452,14 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
             <textarea
               value={spanishTranscript}
               onChange={(e) => setSpanishTranscript(e.target.value)}
-              placeholder="Pegue aquí la transcripción en español..."
+              placeholder="Pegue aqui la transcripcion en espanol..."
               rows={12}
               className="w-full px-4 py-3 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent font-mono text-sm bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
               disabled={isTranslating}
             />
             <div className="flex items-center justify-between mt-2">
-              <p className="text-sm text-[var(--text-secondary)]">
-                {wordCount} palabras
-              </p>
-              {spanishTranscript.trim().length === 0 && (
-                <p className="text-sm text-red-500">Spanish transcript is required</p>
-              )}
+              <p className="text-sm text-[var(--text-secondary)]">{wordCount} palabras</p>
             </div>
-
-            {/* Translation Button */}
             <button
               onClick={handleTranslate}
               disabled={!canTranslate || isTranslating}
@@ -758,37 +471,35 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
           </div>
         )}
 
-        {/* Google Drive Transcript Selector (when patient is selected and in English mode) */}
-        {selectedPatient && !isSpanishTranscript && (
+        {/* Google Drive Transcript Selector */}
+        {!isSpanishTranscript && (
           <div className="mb-6">
             <TranscriptSelector
-              encounterId={selectedEncounterId}
-              patientName={selectedPatient ? `${selectedPatient.last_name}, ${selectedPatient.first_name}` : null}
-              onTranscriptLoaded={(content) => {
-                setTranscript(content);
-              }}
+              encounterId={encounterId}
+              patientName={`${patient.last_name}, ${patient.first_name}`}
+              onTranscriptLoaded={(content) => setTranscript(content)}
               disabled={isGenerating}
             />
           </div>
         )}
 
-        {/* Audio Recorder — primary transcript source (when patient selected and in English mode) */}
-        {selectedPatient && !isSpanishTranscript && (
+        {/* Audio recorder — compact re-record option */}
+        {!isSpanishTranscript && (
           <AudioRecorder
             onTranscriptReady={(text) => setTranscript(text)}
             disabled={isGenerating}
-            patientName={`${selectedPatient.first_name} ${selectedPatient.last_name}`}
+            patientName={`${patient.first_name} ${patient.last_name}`}
           />
         )}
 
-        {/* English Transcript Input (when in English mode or after translation) */}
+        {/* English transcript textarea */}
         {(!isSpanishTranscript || hasTranslated) && (
           <div className="mb-6">
             <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
               {hasTranslated ? 'Translated English Transcript' : 'Transcript'}
               <span className="text-red-500"> *</span>
               {hasTranslated && (
-                <span className="ml-2 text-[var(--success-text)] text-xs">✓ Translated from Spanish</span>
+                <span className="ml-2 text-[var(--success-text)] text-xs">Translated from Spanish</span>
               )}
             </label>
             <textarea
@@ -810,7 +521,7 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
           </div>
         )}
 
-        {/* Previous Note / Copied-forward Last Note Input (conditional) */}
+        {/* ─── Prior Note cascade (Follow-up/TOC only) ─── */}
         {showPreviousNote && (!isSpanishTranscript || hasTranslated) && (
           <div className="mb-6">
             <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
@@ -822,10 +533,9 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
               )}
             </label>
 
-            {/* IntakeQ Integration UI (Moonlit Psychiatry only) */}
+            {/* IntakeQ (Moonlit only) */}
             {setting === 'Moonlit Psychiatry' && (
               <div className="mb-3">
-                {/* IntakeQ Toggle */}
                 <div className="flex items-center gap-3 mb-2">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -840,44 +550,27 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
                     </span>
                   </label>
                 </div>
-
-                {/* IntakeQ Loading */}
                 {intakeQLoading && (
                   <div className="flex items-center gap-2 mb-2 p-2 bg-[#13101f] border border-[#2a2050] rounded-[2px]">
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#c084fc] border-t-transparent"></div>
                     <span className="text-sm text-[#c084fc]">Fetching prior note from IntakeQ...</span>
                   </div>
                 )}
-
-                {/* IntakeQ Success */}
                 {intakeQNote && (
                   <div className="flex items-center gap-2 mb-2 p-2 bg-[#13101f] border border-[#2a2050] rounded-[2px]">
                     <CheckCircle className="text-[#c084fc] flex-shrink-0" size={16} />
                     <span className="text-sm text-[#c084fc]">
-                      Loaded from IntakeQ: {intakeQNote.noteName} ({new Date(intakeQNote.date).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })})
+                      Loaded from IntakeQ: {intakeQNote.noteName} ({new Date(intakeQNote.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })})
                     </span>
-                    <button
-                      onClick={clearIntakeQNote}
-                      className="ml-auto text-xs text-[#c084fc] hover:text-[#e9d5ff] underline"
-                    >
-                      Clear
-                    </button>
+                    <button onClick={clearIntakeQNote} className="ml-auto text-xs text-[#c084fc] hover:text-[#e9d5ff] underline">Clear</button>
                   </div>
                 )}
-
-                {/* IntakeQ Error */}
                 {intakeQError && !intakeQLoading && (
                   <div className="flex items-start gap-2 mb-2 p-2 bg-[var(--warning-bg)] border border-[var(--warning-border)] rounded-[2px]">
                     <AlertCircle className="text-[var(--warning-text)] flex-shrink-0 mt-0.5" size={16} />
                     <span className="text-sm text-[var(--warning-text)]">{intakeQError}</span>
                   </div>
                 )}
-
-                {/* Email Prompt (if patient has no email) */}
                 {showEmailPrompt && intakeQEnabled && !intakeQNote && !intakeQLoading && (
                   <div className="mb-2 p-3 bg-[var(--info-bg)] border border-[var(--info-border)] rounded-[2px]">
                     <div className="flex items-start gap-2 mb-2">
@@ -904,41 +597,30 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
                         {savingEmail ? 'Saving...' : 'Save & Fetch'}
                       </button>
                     </div>
-                    <p className="text-xs text-[var(--info-text)] mt-1">
-                      Or skip and paste a note manually below.
-                    </p>
+                    <p className="text-xs text-[var(--info-text)] mt-1">Or skip and paste a note manually below.</p>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Saved note indicator (highest priority) */}
+            {/* Saved note indicator */}
             {savedNote && (
               <div className="flex items-center gap-2 mb-2 p-2 bg-[var(--info-bg)] border border-[var(--info-border)] rounded-[2px]">
                 <FileText className="text-[var(--info-text)] flex-shrink-0" size={16} />
                 <span className="text-sm text-[var(--info-text)]">
                   Last Patient Note
                   {savedNote.encounterDate && (
-                    <> ({new Date(savedNote.encounterDate).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })})</>
+                    <> ({new Date(savedNote.encounterDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })})</>
                   )}
                   {savedNote.setting && savedNote.visitType && (
                     <span className="text-[var(--info-text)]"> &mdash; {savedNote.setting}, {savedNote.visitType}</span>
                   )}
                 </span>
-                <button
-                  onClick={clearSavedNote}
-                  className="ml-auto text-xs text-[var(--info-text)] hover:text-[var(--text-primary)] underline"
-                >
-                  Clear
-                </button>
+                <button onClick={clearSavedNote} className="ml-auto text-xs text-[var(--info-text)] hover:text-[var(--text-primary)] underline">Clear</button>
               </div>
             )}
 
-            {/* Loading indicator for saved notes check */}
+            {/* Loading saved notes */}
             {checkingSavedNotes && (
               <div className="flex items-center gap-2 mb-2 p-2 bg-[var(--info-bg)] border border-[var(--info-border)] rounded-[2px]">
                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-[var(--info-text)] border-t-transparent"></div>
@@ -950,14 +632,9 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
             {companionSynced && (
               <div className="flex items-center gap-2 mb-2 p-2 bg-[#13101f] border border-[#2a2050] rounded-[2px]">
                 <Link2 className="text-[#a78bfa] flex-shrink-0" size={16} />
-                <span className="text-sm text-[#a78bfa]">
-                  Synced from Companion Portal
-                </span>
+                <span className="text-sm text-[#a78bfa]">Synced from Companion Portal</span>
                 <button
-                  onClick={() => {
-                    setCompanionSynced(false);
-                    setPreviousNote('');
-                  }}
+                  onClick={() => { setCompanionSynced(false); setPreviousNote(''); }}
                   className="ml-auto text-xs text-[#a78bfa] hover:text-[#e9d5ff] underline"
                 >
                   Clear
@@ -965,29 +642,18 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
               </div>
             )}
 
-            {/* Auto-imported note indicator (non-Moonlit settings) */}
+            {/* Auto-imported note (non-Moonlit) */}
             {setting !== 'Moonlit Psychiatry' && autoImportedNote && (
               <div className="flex items-center gap-2 mb-2 p-2 bg-[var(--success-bg)] border border-[var(--success-border)] rounded-[2px]">
                 <CheckCircle className="text-[var(--success-text)] flex-shrink-0" size={16} />
                 <span className="text-sm text-[var(--success-text)]">
-                  Auto-imported from Epic ({new Date(autoImportedNote.importedAt).toLocaleString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    hour12: true
-                  })})
+                  Auto-imported from Epic ({new Date(autoImportedNote.importedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })})
                 </span>
-                <button
-                  onClick={clearAutoImportedNote}
-                  className="ml-auto text-xs text-[var(--success-text)] hover:text-[var(--text-primary)] underline"
-                >
-                  Clear
-                </button>
+                <button onClick={clearAutoImportedNote} className="ml-auto text-xs text-[var(--success-text)] hover:text-[var(--text-primary)] underline">Clear</button>
               </div>
             )}
 
-            {/* Loading indicator (non-Moonlit settings) */}
+            {/* Loading prior notes (non-Moonlit) */}
             {setting !== 'Moonlit Psychiatry' && checkingPriorNotes && (
               <div className="flex items-center gap-2 mb-2 p-2 bg-[var(--info-bg)] border border-[var(--info-border)] rounded-[2px]">
                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-[var(--info-text)] border-t-transparent"></div>
@@ -1000,24 +666,19 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
                 Your last saved note will load automatically, or paste from Epic / use the clipboard watcher.
               </p>
             )}
+
             <textarea
               value={previousNote}
               onChange={(e) => {
                 setPreviousNote(e.target.value);
-                // Clear auto-import indicators if user manually edits
-                if (savedNote) {
-                  setSavedNote(null);
-                }
-                if (autoImportedNote) {
-                  setAutoImportedNote(null);
-                }
-                if (intakeQNote) {
-                  setIntakeQNote(null);
-                }
+                if (savedNote) setSavedNote(null);
+                if (autoImportedNote) setAutoImportedNote(null);
+                if (intakeQNote) setIntakeQNote(null);
               }}
               placeholder={setting === 'Moonlit Psychiatry'
                 ? 'Your last saved note will load automatically, or paste manually here...'
-                : 'Your last saved note will load automatically, or paste from Epic here...'}
+                : 'Your last saved note will load automatically, or paste from Epic here...'
+              }
               rows={10}
               className="w-full px-4 py-3 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent font-mono text-sm bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
             />
@@ -1029,7 +690,7 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
           </div>
         )}
 
-        {/* Pre-visit questionnaires checkbox - Follow-up only */}
+        {/* Questionnaires checkbox */}
         {showPreviousNote && (!isSpanishTranscript || hasTranslated) && (
           <div className="mb-6">
             <label className="flex items-center gap-2 cursor-pointer">
@@ -1046,7 +707,7 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
           </div>
         )}
 
-        {/* Epic Chart Data Input - Only for Intake/Consultation visits */}
+        {/* Epic Chart Data (Intake/Consultation) */}
         {showEpicChartInput && (!isSpanishTranscript || hasTranslated) && (
           <div className="mb-6">
             <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
@@ -1065,13 +726,13 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
             />
             {epicChartData.trim().length > 0 && (
               <p className="text-sm text-[var(--success-text)] mt-2">
-                ✓ Epic chart data provided ({epicChartData.length} characters)
+                Epic chart data provided ({epicChartData.length} characters)
               </p>
             )}
           </div>
         )}
 
-        {/* Action Buttons (shown when ready to generate) */}
+        {/* Action Buttons */}
         {(!isSpanishTranscript || hasTranslated) && (
           <div className="flex items-center gap-4">
             <button
@@ -1082,7 +743,6 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
               <Eye size={16} />
               {loadingPreview ? 'Loading...' : 'Preview Prompt'}
             </button>
-
             <button
               onClick={handleGenerate}
               disabled={!canGenerate || isGenerating}
@@ -1099,10 +759,8 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
             <AlertCircle size={16} className="text-[var(--warning-text)] mt-0.5 flex-shrink-0" />
             <p className="text-sm text-[var(--warning-text)]">
               Please provide{' '}
-              {!hasValidPatient && 'a patient (with first and last name)'}
-              {!hasValidPatient && !transcript.trim() && ', '}
               {!transcript.trim() && 'a transcript'}
-              {((!hasValidPatient || !transcript.trim()) && requiresPreviousNote && !previousNote.trim()) && ', and '}
+              {(!transcript.trim() && requiresPreviousNote && !previousNote.trim()) && ', and '}
               {requiresPreviousNote && !previousNote.trim() && 'a previous note'}{' '}
               to generate the clinical note.
             </p>
@@ -1126,34 +784,6 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
             <pre className="whitespace-pre-wrap font-mono text-sm bg-[var(--bg-surface-2)] text-[var(--text-primary)] p-4 rounded-[2px]">
               {promptPreview}
             </pre>
-          </div>
-        </div>
-      )}
-
-      {/* QR Code Modal */}
-      {showQrModal && qrDataUrl && selectedPatient && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-[var(--bg-surface)] rounded-[2px] p-6 mx-4 max-w-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">HealthKit Pairing</h3>
-              <button
-                onClick={() => setShowQrModal(false)}
-                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="flex flex-col items-center gap-3">
-              <div className="bg-white p-2 rounded-[2px]">
-                <img src={qrDataUrl} alt="Patient QR Code" width={256} height={256} />
-              </div>
-              <p className="text-base font-medium text-[var(--text-primary)]">
-                {selectedPatient.first_name} {selectedPatient.last_name}
-              </p>
-              <p className="text-sm text-[var(--text-secondary)] text-center">
-                Patient scans this with the Epic Scribe iOS app
-              </p>
-            </div>
           </div>
         </div>
       )}

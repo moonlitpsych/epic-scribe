@@ -8,9 +8,9 @@ function WorkflowContent() {
     <div className="min-h-screen bg-[var(--bg-base)]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-heading text-[var(--text-primary)] mb-2 tracking-tight">Note Generation Workflow</h1>
+          <h1 className="text-3xl font-heading text-[var(--text-primary)] mb-2 tracking-tight">Note Generation</h1>
           <p className="text-[var(--text-secondary)]">
-            Generate Epic-ready psychiatry notes with SmartTools
+            Select a patient, record the encounter, and generate your note
           </p>
         </div>
 

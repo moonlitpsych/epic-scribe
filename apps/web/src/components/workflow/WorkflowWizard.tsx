@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { Template, Setting, EpicChartData } from '@epic-scribe/types';
 import { PromptReceipt } from '@/types/prompt';
-import TemplateReviewStep from './TemplateReviewStep';
-import GenerateInputStep from './GenerateInputStep';
+import SetupRecordStep, { SetupData } from './SetupRecordStep';
+import ReviewGenerateStep from './ReviewGenerateStep';
 import NoteResultsStep from './NoteResultsStep';
 import CompanionPairingModal from './CompanionPairingModal';
 import { useSyncSession } from '@/hooks/useSyncSession';
 import { Check, Link2, Wifi } from 'lucide-react';
 
-type Step = 'review' | 'generate' | 'results';
+type Step = 'setup' | 'review-generate' | 'results';
 
 interface ValidationResult {
   valid: boolean;
@@ -29,28 +29,28 @@ interface Patient {
 
 export default function WorkflowWizard() {
   // Step management
-  const [currentStep, setCurrentStep] = useState<Step>('review');
+  const [currentStep, setCurrentStep] = useState<Step>('setup');
 
-  // Template selection (Step 1)
+  // Template selection
   const [setting, setSetting] = useState<Setting>();
   const [visitType, setVisitType] = useState<string>();
   const [template, setTemplate] = useState<Template | null>(null);
 
-  // Patient selection (Step 2)
+  // Patient selection
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [encounterId, setEncounterId] = useState<string | null>(null);
 
-  // Generation inputs (Step 2)
+  // Generation inputs
   const [transcript, setTranscript] = useState('');
   const [previousNote, setPreviousNote] = useState('');
 
-  // Results (Step 3)
+  // Results
   const [generatedNote, setGeneratedNote] = useState('');
   const [editedNote, setEditedNote] = useState('');
   const [receipt, setReceipt] = useState<PromptReceipt | null>(null);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
 
-  // Epic chart data (extracted from user input)
+  // Epic chart data
   const [extractedEpicData, setExtractedEpicData] = useState<EpicChartData | null>(null);
 
   // UI state
@@ -70,23 +70,36 @@ export default function WorkflowWizard() {
     pairingExpiresAt,
   } = useSyncSession();
 
-  // Step navigation handlers
-  const handleTemplateSelected = (sel: Setting, vt: string, tmpl: Template) => {
-    setSetting(sel);
-    setVisitType(vt);
-    setTemplate(tmpl);
+  // ─── Step navigation ───
+
+  const handleSetupComplete = (data: SetupData) => {
+    setSetting(data.setting);
+    setVisitType(data.visitType);
+    setTemplate(data.template);
+    setSelectedPatient(data.patient as any);
+    setEncounterId(data.encounterId);
+    setTranscript(data.transcript);
+    setCurrentStep('review-generate');
   };
 
-  const handleNextToGenerate = () => {
-    if (template) {
-      setCurrentStep('generate');
-    }
+  const handleSkipRecording = (data: Omit<SetupData, 'transcript'>) => {
+    setSetting(data.setting);
+    setVisitType(data.visitType);
+    setTemplate(data.template);
+    setSelectedPatient(data.patient as any);
+    setEncounterId(data.encounterId);
+    setTranscript('');
+    setCurrentStep('review-generate');
+  };
+
+  const handleBackToSetup = () => {
+    setCurrentStep('setup');
   };
 
   const handleGenerate = async (trans: string, prevNote: string, patient: Patient | null, encId: string | null, epicChartDataRaw?: string, questionnairesCompleted?: boolean) => {
     setTranscript(trans);
     setPreviousNote(prevNote);
-    setSelectedPatient(patient);
+    if (patient) setSelectedPatient(patient);
     setEncounterId(encId);
     setIsGenerating(true);
 
@@ -123,16 +136,14 @@ export default function WorkflowWizard() {
 
       const data = await response.json();
       setGeneratedNote(data.note);
-      setEditedNote(data.note); // Initialize editable version
+      setEditedNote(data.note);
       setReceipt(data.receipt);
       setValidationResult(data.receipt?.validationResult || null);
-      // Store extracted Epic chart data for saving
       if (data.receipt?.epicChartData) {
         setExtractedEpicData(data.receipt.epicChartData);
       }
       setCurrentStep('results');
 
-      // Sync generated note to companion device
       if (hasPairedDevice) {
         sendGeneratedNote(data.note);
       }
@@ -144,16 +155,12 @@ export default function WorkflowWizard() {
     }
   };
 
-  const handleBackToReview = () => {
-    setCurrentStep('review');
-  };
-
   const handleBackToGenerate = () => {
-    setCurrentStep('generate');
+    setCurrentStep('review-generate');
   };
 
   const handleStartOver = () => {
-    setCurrentStep('review');
+    setCurrentStep('setup');
     setTranscript('');
     setPreviousNote('');
     setGeneratedNote('');
@@ -172,7 +179,6 @@ export default function WorkflowWizard() {
     }
 
     try {
-      // Database template uses snake_case (template_id), not camelCase (templateId)
       const templateId = (template as any).template_id || (template as any).templateId;
 
       if (!templateId) {
@@ -202,8 +208,8 @@ export default function WorkflowWizard() {
           promptHash: receipt.promptHash,
           generatedContent: generatedNote,
           finalNoteContent: editedNote,
-          isFinal: true, // Mark as finalized when user clicks Save
-          epicChartData: extractedEpicData || undefined, // Include extracted Epic data
+          isFinal: true,
+          epicChartData: extractedEpicData || undefined,
           setting: setting || undefined,
           visitType: visitType || undefined,
         }),
@@ -217,18 +223,16 @@ export default function WorkflowWizard() {
 
       const data = await response.json();
       console.log('[SaveNote] Note saved successfully:', data.note);
-
-      // Note is now saved to database with patient association
     } catch (error) {
       console.error('[SaveNote] Error saving note:', error);
-      throw error; // Re-throw so the button component can handle the error
+      throw error;
     }
   };
 
   // Progress indicator
   const steps = [
-    { key: 'review', label: 'Review Template' },
-    { key: 'generate', label: 'Generate Note' },
+    { key: 'setup', label: 'Setup & Record' },
+    { key: 'review-generate', label: 'Review & Generate' },
     { key: 'results', label: 'Results' },
   ];
 
@@ -295,28 +299,29 @@ export default function WorkflowWizard() {
       </div>
 
       {/* Step Content */}
-      {currentStep === 'review' && (
-        <TemplateReviewStep
-          onTemplateSelected={handleTemplateSelected}
-          onNext={handleNextToGenerate}
+      {currentStep === 'setup' && (
+        <SetupRecordStep
+          onSetupComplete={handleSetupComplete}
+          onSkipRecording={handleSkipRecording}
+          initialPatient={selectedPatient}
           initialSetting={setting}
           initialVisitType={visitType}
+          initialEncounterId={encounterId}
         />
       )}
 
-      {currentStep === 'generate' && template && (
-        <GenerateInputStep
+      {currentStep === 'review-generate' && template && selectedPatient && (
+        <ReviewGenerateStep
           setting={setting!}
           visitType={visitType!}
           template={template}
-          onGenerate={handleGenerate}
-          onBack={handleBackToReview}
-          isGenerating={isGenerating}
-          initialTranscript={transcript}
-          initialPreviousNote={previousNote}
-          selectedPatient={selectedPatient}
+          patient={selectedPatient as any}
           encounterId={encounterId}
+          initialTranscript={transcript}
           companionPriorNote={companionPriorNote}
+          onGenerate={handleGenerate}
+          onBack={handleBackToSetup}
+          isGenerating={isGenerating}
         />
       )}
 
