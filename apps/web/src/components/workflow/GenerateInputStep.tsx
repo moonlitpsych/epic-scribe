@@ -8,7 +8,7 @@ import QRCode from 'qrcode';
 import PatientSelector from './PatientSelector';
 import EncountersList from './EncountersList';
 import ManualNotePanel from './ManualNotePanel';
-import TranscriptSelector from './TranscriptSelector';
+
 import AudioRecorder from './AudioRecorder';
 import { CalendarEncounter } from '@/google-calendar';
 
@@ -707,7 +707,7 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
               <div>
                 <p className="text-sm font-semibold text-[var(--info-text)]">Translation Workflow</p>
                 <p className="text-sm text-[var(--info-text)] mt-1">
-                  1. Paste your Spanish transcript from Google Meet<br />
+                  1. Paste your Spanish transcript<br />
                   2. Click &quot;Translate to English&quot; to convert the transcript<br />
                   3. Review the translation and proceed with note generation
                 </p>
@@ -731,7 +731,7 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
             <textarea
               value={spanishTranscript}
               onChange={(e) => setSpanishTranscript(e.target.value)}
-              placeholder="Pegue aquí la transcripción en español de Google Meet..."
+              placeholder="Pegue aquí la transcripción en español..."
               rows={12}
               className="w-full px-4 py-3 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent font-mono text-sm bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
               disabled={isTranslating}
@@ -757,21 +757,7 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
           </div>
         )}
 
-        {/* Google Drive Transcript Selector (when patient is selected and in English mode) */}
-        {selectedPatient && !isSpanishTranscript && (
-          <div className="mb-6">
-            <TranscriptSelector
-              encounterId={selectedEncounterId}
-              patientName={selectedPatient ? `${selectedPatient.last_name}, ${selectedPatient.first_name}` : null}
-              onTranscriptLoaded={(content) => {
-                setTranscript(content);
-              }}
-              disabled={isGenerating}
-            />
-          </div>
-        )}
-
-        {/* Audio Recorder (when patient selected and in English mode) */}
+        {/* Audio Recorder — primary transcript source (when patient selected and in English mode) */}
         {selectedPatient && !isSpanishTranscript && (
           <AudioRecorder
             onTranscriptReady={(text) => setTranscript(text)}
@@ -789,14 +775,11 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
               {hasTranslated && (
                 <span className="ml-2 text-[var(--success-text)] text-xs">✓ Translated from Spanish</span>
               )}
-              {transcript.trim().length > 0 && !hasTranslated && selectedEncounterId && (
-                <span className="ml-2 text-[#c084fc] text-xs">✓ Loaded from Google Drive</span>
-              )}
             </label>
             <textarea
               value={transcript}
               onChange={(e) => setTranscript(e.target.value)}
-              placeholder="Paste or type the clinical encounter transcript here, or load from Google Drive above..."
+              placeholder="Record with Whisper above, or paste a transcript here..."
               rows={12}
               className="w-full px-4 py-3 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent font-mono text-sm bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
               disabled={isGenerating}
