@@ -7,9 +7,12 @@ Usage:
   python3 scripts/transcribe-visit.py recording.wav --patient-id <uuid>
   python3 scripts/transcribe-visit.py recording.wav --model small
 
-Expects a multi-channel WAV from an Aggregate Device:
-  - Channels 1-2: Built-in Microphone (provider)
-  - Channels 3-4: BlackHole-2ch (patient/system audio)
+Expects a multi-channel WAV from EpicScribeAggregate:
+  - Channel 0: AirPods Pro mic (provider — telehealth)
+  - Channels 1-2: BlackHole 2ch (patient/system audio)
+  - Channel 3: MacBook Air Microphone (provider — in-person)
+
+The script auto-detects which mic has audio and uses it as the provider channel.
 
 Outputs a labeled transcript to stdout and copies to clipboard.
 """
@@ -27,17 +30,91 @@ import time
 os.environ.setdefault("SSL_CERT_FILE", certifi.where())
 
 
+def get_channel_volume(input_file: str, channel: int) -> float:
+    """Get mean volume (dB) of a specific channel. Returns -91.0 for silence."""
+    result = subprocess.run([
+        "ffmpeg", "-i", input_file,
+        "-af", f"pan=mono|c0=c{channel},volumedetect",
+        "-f", "null", "/dev/null"
+    ], capture_output=True, text=True)
+    for line in result.stderr.split('\n'):
+        if 'mean_volume' in line:
+            return float(line.split('mean_volume:')[1].split('dB')[0].strip())
+    return -91.0
+
+
+def detect_channel_roles(input_file: str, total_channels: int) -> tuple:
+    """Auto-detect which channels are provider mic vs patient (BlackHole).
+
+    BlackHole channels always come in stereo pairs with near-identical volume.
+    The provider mic is a mono channel with different volume from BlackHole.
+
+    Returns (provider_channels, patient_channels) as lists of channel indices.
+    """
+    if total_channels < 2:
+        return ([0], [])
+
+    # Measure volume on all channels
+    volumes = []
+    for ch in range(total_channels):
+        vol = get_channel_volume(input_file, ch)
+        volumes.append(vol)
+        print(f"  Channel {ch}: {vol:.1f} dB", file=sys.stderr)
+
+    # Find stereo pairs (BlackHole) — two adjacent channels with near-identical volume
+    blackhole_channels = []
+    mic_channels = []
+
+    i = 0
+    while i < total_channels:
+        if i + 1 < total_channels and abs(volumes[i] - volumes[i + 1]) < 3.0 and volumes[i] > -88.0:
+            # Stereo pair — likely BlackHole
+            blackhole_channels.extend([i, i + 1])
+            i += 2
+        elif i + 1 < total_channels and abs(volumes[i] - volumes[i + 1]) < 3.0 and volumes[i] <= -88.0:
+            # Silent stereo pair — still BlackHole, just no system audio playing
+            blackhole_channels.extend([i, i + 1])
+            i += 2
+        else:
+            mic_channels.append(i)
+            i += 1
+
+    # If detection didn't find BlackHole pairs, fall back to heuristic:
+    # last mono channel is mic, everything else is BlackHole
+    if not blackhole_channels and total_channels >= 3:
+        blackhole_channels = list(range(0, total_channels - 1))
+        mic_channels = [total_channels - 1]
+
+    print(f"  Detected: mic={mic_channels}, blackhole={blackhole_channels}", file=sys.stderr)
+    return (mic_channels, blackhole_channels)
+
+
 def split_channels(input_file: str, total_channels: int) -> tuple:
     """Split multi-channel recording into provider and patient audio files."""
     tmpdir = tempfile.mkdtemp(prefix="visit_transcribe_")
     provider_file = os.path.join(tmpdir, "provider.wav")
     patient_file = os.path.join(tmpdir, "patient.wav")
 
-    if total_channels >= 4:
-        # Aggregate device: channels 1-2 = mic (provider), channels 3-4 = BlackHole (patient)
+    if total_channels >= 3:
+        # Auto-detect channel roles (handles AirPods connected or disconnected)
+        mic_chs, bh_chs = detect_channel_roles(input_file, total_channels)
+
+        # Provider = sum all mic channels
+        if mic_chs:
+            mic_sum = "+".join(f"c{ch}" for ch in mic_chs)
+            provider_filter = f"pan=mono|c0={mic_sum}"
+        else:
+            provider_filter = "pan=mono|c0=c0"
+
+        # Patient = first BlackHole channel (L and R are identical)
+        if bh_chs:
+            patient_filter = f"pan=mono|c0=c{bh_chs[0]}"
+        else:
+            patient_filter = "pan=mono|c0=c1"
+
         subprocess.run([
             "ffmpeg", "-y", "-i", input_file,
-            "-filter_complex", "[0:a]pan=mono|c0=c0[provider];[0:a]pan=mono|c0=c2[patient]",
+            "-filter_complex", f"[0:a]{provider_filter}[provider];[0:a]{patient_filter}[patient]",
             "-map", "[provider]", provider_file,
             "-map", "[patient]", patient_file,
         ], check=True, capture_output=True)
