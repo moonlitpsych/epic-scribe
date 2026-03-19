@@ -3,9 +3,13 @@
 
 ALTER TABLE patients ADD COLUMN provider_id UUID REFERENCES es_providers(id);
 
--- Assign all existing patients to Rufus (hello@trymoonlit.com)
+-- Assign all existing patients to Rufus
+-- Uses rufussweeney@gmail.com (provider email from moonlit-scheduler seed)
+-- or hello@trymoonlit.com (NextAuth login email) — whichever exists
 UPDATE patients SET provider_id = (
-  SELECT id FROM es_providers WHERE email = 'hello@trymoonlit.com' LIMIT 1
+  SELECT id FROM es_providers
+  WHERE email IN ('rufussweeney@gmail.com', 'hello@trymoonlit.com')
+  LIMIT 1
 ) WHERE provider_id IS NULL;
 
 -- Make NOT NULL after backfill
