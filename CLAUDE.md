@@ -28,6 +28,8 @@
 - **Background Sync (iOS)**: After one-time setup (authorize + QR scan), app auto-syncs on foreground, on background HealthKit data changes, and immediately after pairing. Patient pairing and auth state persist across launches.
 - **Listening Coder (v0)**: Appends CPT code suggestions after note signature. Currently uses static prompt rules — needs payer-aware intelligence (see Product Vision below).
 - **Dark Mode UI (COMPLETE)**: Full app dark mode redesign — 50 files converted using CSS custom properties. Space Grotesk + IBM Plex fonts, emerald/salmon accents, dark surfaces, minimal border radius. Landing page unchanged.
+- **Multi-Tenant Provider Isolation (COMPLETE)**: `es_providers` table, `provider_id` on patients, provider-scoped queries across all DB operations and ~50 API routes. Auto-provisioning on sign-in. Each provider sees only their own patients/notes/encounters.
+- **Local Whisper Transcription (v0)**: On-device visit recording + transcription via OpenAI Whisper. HIPAA compliant by architecture (audio never leaves device). Speaker separation via BlackHole for telehealth.
 
 ### Known Issues
 1. **Google OAuth Token Expiration** - Workaround: Sign out/in to refresh (~1 hour expiry)
@@ -195,7 +197,121 @@ pnpm lint             # Check for issues
 
 ---
 
-## Recent Updates (2026-03-18)
+## Recent Updates (2026-03-19)
+
+### Local Whisper Transcription (v0 — IN PROGRESS)
+
+On-device visit recording + transcription using OpenAI's open-source Whisper model. HIPAA compliant by architecture — audio is recorded and transcribed locally, never touches a server. Only the text transcript goes to Epic Scribe.
+
+**Why this replaces Google Meet transcription:**
+- Google Meet transcription requires paid Workspace + BAA per user — blocks SaaS launch
+- Local Whisper is free, requires zero HIPAA paperwork (audio stays on device)
+- Works with ANY telehealth platform (Epic/MyChart, Zoom, FaceTime, Teams)
+- Accuracy is comparable to Meet transcripts; Gemini handles garbled med names either way
+- 1-3 min transcription time for 30-min visit (faster than Meet's ~15 min)
+
+**Architecture:**
+```
+Microphone + BlackHole (system audio) → ffmpeg recording → Whisper (local) → labeled transcript → Epic Scribe workflow
+```
+
+**Speaker Separation (telehealth):**
+- BlackHole-2ch: virtual audio driver that captures system audio (patient's voice from video call)
+- Aggregate Device: combines mic (provider) + BlackHole (patient) into a multi-channel recording
+- Channels are split and transcribed separately → "Provider:" / "Patient:" labels in transcript
+- Better than Meet: clean speaker labels vs Meet's single-speaker blob
+
+**Speaker Separation (in-person):**
+- Single mic captures both voices — no separation currently
+- Future: pyannote.audio (open-source, runs locally) for AI-based speaker diarization
+- Current single-speaker transcript works fine with the AI scribe prompt
+
+**Dependencies:**
+- `ffmpeg` (installed via brew) — audio recording and channel splitting
+- `openai-whisper` (Python package) — on-device transcription
+- `blackhole-2ch` (brew cask) — virtual audio driver for system audio capture
+- Whisper `base` model (~139MB) — stored in `~/.cache/whisper/`
+- `certifi` — SSL cert fix for Python 3.10 on macOS
+
+**macOS Audio Device Setup (one-time, after BlackHole install + reboot):**
+1. Open Audio MIDI Setup
+2. Create **Multi-Output Device** "EpicScribeOutput": MacBook Air Speakers + BlackHole 2ch
+3. Create **Aggregate Device** "EpicScribeAggregate": MacBook Air Microphone + BlackHole 2ch
+4. Before telehealth: set sound output to "EpicScribeOutput"
+
+**Usage:**
+```bash
+# In-person visit (mic only, no speaker labels)
+./scripts/record-visit.sh --device ":1" --model base
+
+# Telehealth visit (mic + system audio, speaker labels)
+./scripts/record-visit.sh --model base
+
+# Just transcribe an existing recording
+SSL_CERT_FILE=$(python3 -c "import certifi; print(certifi.where())") \
+  python3 scripts/transcribe-visit.py recordings/visit_20260319_140000.wav
+
+# List audio devices
+./scripts/record-visit.sh --list-devices
+```
+
+**Files:**
+| File | Purpose |
+|------|---------|
+| `scripts/record-visit.sh` | Shell wrapper: records via ffmpeg, auto-transcribes on Ctrl+C |
+| `scripts/transcribe-visit.py` | Python: splits channels, runs Whisper, merges labeled transcript, copies to clipboard |
+| `recordings/` | Local audio files (gitignored — PHI stays on device) |
+
+**Whisper Model Options:**
+| Model | Size | Speed (30 min, M2) | Accuracy |
+|-------|------|---------------------|----------|
+| tiny | 39MB | ~30s | Rough — usable with Gemini |
+| base | 139MB | ~1 min | Good — comparable to Meet |
+| small | 461MB | ~2-3 min | Better than Meet |
+| medium | 1.5GB | ~5 min | Best — diminishing returns |
+
+**Next Steps:**
+1. Install BlackHole + reboot for telehealth speaker separation
+2. Integration: auto-populate transcript in Epic Scribe workflow (instead of clipboard paste)
+3. iOS companion app: add recording + Whisper transcription on iPhone
+4. In-person diarization: pyannote.audio for speaker separation without BlackHole
+
+---
+
+### Multi-Tenant Provider Isolation (COMPLETE)
+
+Full provider data isolation for SaaS launch. Each provider sees only their own patients, notes, encounters, and clinical data. New providers are auto-provisioned on first Google sign-in.
+
+**Database:**
+- `es_providers` table (migration 025): Epic Scribe's own provider identity, decoupled from moonlit-scheduler
+- `patients.provider_id` (migration 026): FK to `es_providers`, NOT NULL, indexed
+
+**Auth:**
+- `apps/web/src/lib/auth/provider-lookup.ts`: `getOrCreateProvider(email, name)` — auto-provisions on sign-in
+- `apps/web/src/lib/auth/get-provider-session.ts`: `requireProviderSession()` — typed session wrapper returning `{ providerId, email, isAdmin }`
+- NextAuth JWT enriched with `providerId` + `isAdmin` in `[...nextauth]/route.ts`
+
+**Data Scoping:**
+- All DB functions in `apps/web/src/lib/db/*.ts` take `providerId` parameter
+- `patients.ts`: all queries filter by `.eq('provider_id', providerId)`
+- Child tables (notes, encounters, clinical data, profiles): use `verifyPatientOwnership()` from `apps/web/src/lib/db/ownership.ts`
+- ~50 API routes updated: all use `requireProviderSession()` instead of `getServerSession(authOptions)`
+
+**What's shared (NOT provider-scoped):**
+- Templates, SmartLists, Fee Schedules — global across all providers
+- HealthKit bearer token auth — separate from NextAuth
+
+**Key files:**
+| File | Purpose |
+|------|---------|
+| `supabase/migrations/025_es_providers.sql` | Provider table + seed |
+| `supabase/migrations/026_patients_provider_id.sql` | Add provider_id to patients |
+| `apps/web/src/lib/auth/provider-lookup.ts` | Auto-provision providers |
+| `apps/web/src/lib/auth/get-provider-session.ts` | Typed session helper |
+| `apps/web/src/lib/db/ownership.ts` | Patient ownership verification |
+| `apps/web/types/next-auth.d.ts` | Session type augmentation |
+
+---
 
 ### Dark Mode UI Redesign (COMPLETE)
 

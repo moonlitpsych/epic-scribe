@@ -19,7 +19,7 @@ export default withAuth(
 // Protect these routes - require authentication
 export const config = {
   matcher: [
-    '/workflow/:path*',
+    '/flow/:path*',
     '/templates/:path*',
     '/encounters/:path*',
     '/patients/:path*',

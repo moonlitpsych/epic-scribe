@@ -14,7 +14,7 @@ function SignInContent() {
   const handleSignIn = async () => {
     setIsLoading(true);
     try {
-      await signIn('google', { callbackUrl: '/workflow' });
+      await signIn('google', { callbackUrl: '/flow' });
     } catch (error) {
       console.error('Sign in error:', error);
       setIsLoading(false);

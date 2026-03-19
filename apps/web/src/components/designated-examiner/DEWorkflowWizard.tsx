@@ -350,7 +350,7 @@ export function DEWorkflowWizard({ initialWorkflowId }: DEWorkflowWizardProps) {
               </h1>
             </div>
             <Link
-              href="/workflow"
+              href="/flow"
               className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors text-sm"
             >
               ← Back to Clinical Notes

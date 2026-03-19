@@ -182,8 +182,8 @@ export default function AdminPage() {
       <div className="max-w-4xl mx-auto">
         {/* Navigation */}
         <div className="mb-6 flex gap-4">
-          <Link href="/workflow" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-            Workflow
+          <Link href="/flow" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+            Flow
           </Link>
           <Link href="/patients" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
             Patients

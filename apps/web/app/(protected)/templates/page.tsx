@@ -51,10 +51,10 @@ export default function TemplatesPage() {
               Home
             </Link>
             <Link
-              href="/workflow"
+              href="/flow"
               className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
-              Workflow
+              Flow
             </Link>
             <Link
               href="/designated-examiner"

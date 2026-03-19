@@ -797,7 +797,7 @@ export default function StrongWork() {
             Tribune
           </button>
           <a
-            href="/workflow"
+            href="/flow"
             style={{
               fontFamily: "'IBM Plex Mono', monospace",
               fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase",

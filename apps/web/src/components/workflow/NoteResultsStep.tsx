@@ -203,7 +203,7 @@ export default function NoteResultsStep({
               </p>
               <div className="flex gap-3">
                 <a
-                  href="/api/auth/signin?callbackUrl=/workflow"
+                  href="/api/auth/signin?callbackUrl=/flow"
                   className="px-4 py-2 bg-[var(--accent-primary)] text-[var(--text-inverse)] rounded-[2px] hover:bg-[var(--accent-primary-hover)] transition-colors font-semibold"
                 >
                   Sign In Now
