@@ -10,6 +10,8 @@ struct ContentView: View {
     @State private var showManualEntry = false
     @State private var manualPatientId = ""
     @State private var pairedPatient: ScannedPatient? = ScannedPatient.loadSaved()
+    @State private var showSyncSuccess = false
+    @State private var showUnpairConfirmation = false
 
     var body: some View {
         NavigationView {
@@ -145,10 +147,16 @@ struct ContentView: View {
                                 .foregroundColor(.secondary)
                         }
                         Spacer()
-                        Button(action: unpair) {
+                        Button(action: { showUnpairConfirmation = true }) {
                             Text("Unpair")
                                 .font(.caption)
                                 .foregroundColor(.red)
+                        }
+                        .alert("Unpair Patient?", isPresented: $showUnpairConfirmation) {
+                            Button("Cancel", role: .cancel) {}
+                            Button("Unpair", role: .destructive) { unpair() }
+                        } message: {
+                            Text("This will disconnect your health records from \(patient.name). You can re-pair by scanning a new QR code.")
                         }
                     }
                 } label: {
@@ -191,13 +199,33 @@ struct ContentView: View {
                                 Text(summary)
                                     .font(.caption)
                             case .error(let message):
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundColor(.red)
-                                Text(message)
-                                    .font(.caption)
-                                    .foregroundColor(.red)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack(alignment: .top) {
+                                        Image(systemName: "exclamationmark.triangle.fill")
+                                            .foregroundColor(.red)
+                                        Text(message)
+                                            .font(.caption)
+                                            .foregroundColor(.red)
+                                    }
+                                    Text("Tap 'Sync Now' to try again")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
                             }
                         }
+                    }
+
+                    // Success checkmark animation
+                    if showSyncSuccess {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                                .font(.title2)
+                            Text("Sync complete!")
+                                .font(.callout)
+                                .foregroundColor(.green)
+                        }
+                        .transition(.opacity.combined(with: .scale))
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -207,11 +235,30 @@ struct ContentView: View {
 
             // Sync Now button
             Button(action: {
-                Task { await syncManager.performSync() }
+                Task {
+                    let success = await syncManager.performSync()
+                    if success {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            showSyncSuccess = true
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            withAnimation(.easeOut(duration: 0.5)) {
+                                showSyncSuccess = false
+                            }
+                        }
+                    }
+                }
             }) {
-                Label(syncManager.isSyncing ? "Syncing..." : "Sync Now",
-                      systemImage: "arrow.clockwise")
-                    .frame(maxWidth: .infinity)
+                HStack(spacing: 8) {
+                    if syncManager.isSyncing {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(0.8)
+                    }
+                    Label(syncManager.isSyncing ? "Syncing..." : "Sync Now",
+                          systemImage: syncManager.isSyncing ? "" : "arrow.clockwise")
+                }
+                .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .tint(.orange)

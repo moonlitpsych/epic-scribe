@@ -59,11 +59,48 @@ class SyncManager: ObservableObject {
             }
             return true
         } catch {
+            let friendlyMessage = categorizeError(error)
             await MainActor.run {
-                lastSyncResult = .error(error.localizedDescription)
+                lastSyncResult = .error(friendlyMessage)
                 isSyncing = false
             }
             return false
         }
+    }
+
+    /// Maps raw errors to user-friendly messages.
+    private func categorizeError(_ error: Error) -> String {
+        if let syncError = error as? APIClient.SyncError {
+            switch syncError {
+            case .invalidURL:
+                return "Configuration error. Please reinstall the app."
+            case .httpError(let code, _):
+                if code == 401 || code == 403 {
+                    return "Authentication failed. Please contact your provider."
+                } else if code >= 500 {
+                    return "Server temporarily unavailable. Try again in a few minutes."
+                } else {
+                    return "Sync failed (error \(code)). Tap 'Sync Now' to try again."
+                }
+            case .networkError(let underlying):
+                let nsError = underlying as NSError
+                if nsError.domain == NSURLErrorDomain {
+                    switch nsError.code {
+                    case NSURLErrorNotConnectedToInternet,
+                         NSURLErrorNetworkConnectionLost,
+                         NSURLErrorDataNotAllowed:
+                        return "No internet connection. Check Wi-Fi or cellular data."
+                    case NSURLErrorTimedOut:
+                        return "Connection timed out. Try again in a moment."
+                    default:
+                        return "Network error. Check your connection and try again."
+                    }
+                }
+                return "Sync failed. Tap 'Sync Now' to try again."
+            }
+        }
+
+        // Catch-all for unexpected errors
+        return "Sync failed. Tap 'Sync Now' to try again."
     }
 }

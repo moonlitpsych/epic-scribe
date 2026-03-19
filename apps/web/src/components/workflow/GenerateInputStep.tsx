@@ -3,13 +3,14 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Template, Setting } from '@epic-scribe/types';
-import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle, CloudDownload, Mail, Save, Link2, Heart, QrCode, X, FileText } from 'lucide-react';
+import { ChevronLeft, Sparkles, Eye, AlertCircle, Globe, Languages, CheckCircle, CloudDownload, Mail, Save, Link2, Heart, QrCode, X, FileText, ChevronRight } from 'lucide-react';
 import QRCode from 'qrcode';
 import PatientSelector from './PatientSelector';
 import EncountersList from './EncountersList';
 import ManualNotePanel from './ManualNotePanel';
 import TranscriptSelector from './TranscriptSelector';
 import AudioRecorder from './AudioRecorder';
+import ClinicalDataDetailModal from '../clinical/ClinicalDataDetailModal';
 import { CalendarEncounter } from '@/google-calendar';
 
 interface Patient {
@@ -113,6 +114,9 @@ export default function GenerateInputStep({
   // QR code state
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+
+  // Clinical data detail modal
+  const [showClinicalDetailModal, setShowClinicalDetailModal] = useState(false);
 
   const generateQrCode = useCallback(async () => {
     if (!selectedPatient) return;
@@ -615,15 +619,20 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
         {selectedPatient && (
           <div className="mt-3 flex items-center gap-2">
             {clinicalDataSummary?.hasClinicalData && (
-              <div className="flex-1 flex items-center gap-2 p-2 bg-[var(--success-bg)] border border-[var(--success-border)] rounded-[2px]">
+              <button
+                onClick={() => setShowClinicalDetailModal(true)}
+                className="flex-1 flex items-center gap-2 p-2 bg-[var(--success-bg)] border border-[var(--success-border)] rounded-[2px] cursor-pointer hover:bg-[var(--success-bg)]/80 transition-colors text-left"
+              >
                 <Heart className="text-[var(--success-text)] flex-shrink-0" size={16} />
-                <span className="text-sm text-[var(--success-text)]">
+                <span className="text-sm text-[var(--success-text)] flex-1">
                   Health Records synced
                   {clinicalDataSummary.lastSyncedAt && (
-                    <> ({new Date(clinicalDataSummary.lastSyncedAt).toLocaleDateString('en-US', {
+                    <> ({new Date(clinicalDataSummary.lastSyncedAt).toLocaleString('en-US', {
                       month: 'short',
                       day: 'numeric',
-                      year: 'numeric'
+                      year: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit'
                     })})</>
                   )}
                   {Object.keys(clinicalDataSummary.counts).length > 0 && (
@@ -634,7 +643,8 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
                     </span>
                   )}
                 </span>
-              </div>
+                <ChevronRight className="text-[var(--success-text)] flex-shrink-0" size={16} />
+              </button>
             )}
             <button
               onClick={generateQrCode}
@@ -1158,6 +1168,15 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
             </div>
           </div>
         </div>
+      )}
+
+      {selectedPatient && (
+        <ClinicalDataDetailModal
+          isOpen={showClinicalDetailModal}
+          onClose={() => setShowClinicalDetailModal(false)}
+          patientId={selectedPatient.id}
+          patientName={`${selectedPatient.first_name} ${selectedPatient.last_name}`}
+        />
       )}
     </div>
   );
