@@ -2,7 +2,8 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Mic, Square, Loader2, FileAudio } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+// Whisper server URL — local Python server for on-device transcription
+const WHISPER_SERVER = process.env.NEXT_PUBLIC_WHISPER_URL || 'http://localhost:5111';
 
 interface AudioRecorderProps {
   onTranscriptReady: (text: string) => void;
@@ -17,11 +18,24 @@ export default function AudioRecorder({ onTranscriptReady, disabled, patientName
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [blobSize, setBlobSize] = useState<number | null>(null);
+  const [whisperReady, setWhisperReady] = useState<boolean | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const blobRef = useRef<Blob | null>(null);
+
+  // Check if Whisper server is running
+  useEffect(() => {
+    const checkHealth = () => {
+      fetch(`${WHISPER_SERVER}/health`)
+        .then((r) => r.ok ? setWhisperReady(true) : setWhisperReady(false))
+        .catch(() => setWhisperReady(false));
+    };
+    checkHealth();
+    const interval = setInterval(checkHealth, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Clean up on unmount
   useEffect(() => {
@@ -109,35 +123,21 @@ export default function AudioRecorder({ onTranscriptReady, disabled, patientName
     if (!blob) return;
 
     setError(null);
-
-    // Upload to Supabase Storage
-    setState('uploading');
-    const timestamp = Date.now();
-    const ext = blob.type.includes('webm') ? 'webm' : 'mp4';
-    const storagePath = `recordings/${timestamp}.${ext}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('encounter-recordings')
-      .upload(storagePath, blob, { contentType: blob.type, upsert: false });
-
-    if (uploadError) {
-      console.error('Upload error:', uploadError);
-      setError(`Upload failed: ${uploadError.message}`);
-      setState('recorded');
-      return;
-    }
-
-    // Call transcribe API
     setState('transcribing');
+
     try {
-      const res = await fetch('/api/transcribe', {
+      // Send audio directly to local Whisper server — no cloud upload
+      const res = await fetch(`${WHISPER_SERVER}/transcribe`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ storagePath, patientName }),
+        headers: { 'Content-Type': blob.type },
+        body: blob,
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        if (res.status === 0 || data.error?.includes('fetch')) {
+          throw new Error('Whisper server not running. Start it with: python3 scripts/whisper-server.py');
+        }
         throw new Error(data.error || `Transcription failed (${res.status})`);
       }
 
@@ -149,10 +149,14 @@ export default function AudioRecorder({ onTranscriptReady, disabled, patientName
       setElapsed(0);
     } catch (err: any) {
       console.error('Transcription error:', err);
-      setError(err.message || 'Transcription failed');
+      if (err.message?.includes('Failed to fetch') || err.name === 'TypeError') {
+        setError('Whisper server not running. Start it with: python3 scripts/whisper-server.py');
+      } else {
+        setError(err.message || 'Transcription failed');
+      }
       setState('recorded');
     }
-  }, [onTranscriptReady, patientName]);
+  }, [onTranscriptReady]);
 
   const reset = useCallback(() => {
     setState('idle');
@@ -169,6 +173,12 @@ export default function AudioRecorder({ onTranscriptReady, disabled, patientName
       <div className="flex items-center gap-3">
         <FileAudio className="text-[var(--accent-primary)] flex-shrink-0" size={18} />
         <span className="text-sm font-medium text-[var(--accent-primary)]">Record Encounter</span>
+        {whisperReady === true && (
+          <span className="text-xs text-[var(--success-text)]">Whisper ready</span>
+        )}
+        {whisperReady === false && state === 'idle' && (
+          <span className="text-xs text-[var(--text-muted)]">Whisper offline</span>
+        )}
 
         {state === 'idle' && (
           <button
