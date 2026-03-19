@@ -7,7 +7,7 @@
 
 ---
 
-## Current Status (2026-03-18)
+## Current Status (2026-03-19)
 
 ### Working Features
 - **Note Generation**: Full workflow with Gemini 2.5 Pro API + automatic failover to backup API key
@@ -165,7 +165,7 @@ Saves both raw AI output and user-edited versions with timestamps.
 ## Quick Reference
 
 ### Note Generation Workflow
-1. Go to `/workflow`
+1. Go to `/flow` (renamed from `/workflow` for strong.work/flow URL)
 2. Select patient (required - must have first/last name)
 3. Select Setting × Visit Type
 4. Paste transcript
@@ -199,9 +199,9 @@ pnpm lint             # Check for issues
 
 ## Recent Updates (2026-03-19)
 
-### Local Whisper Transcription (v0 — IN PROGRESS)
+### Local Whisper Transcription (v0 — COMPLETE)
 
-On-device visit recording + transcription using OpenAI's open-source Whisper model. HIPAA compliant by architecture — audio is recorded and transcribed locally, never touches a server. Only the text transcript goes to Epic Scribe.
+On-device visit recording + transcription using OpenAI's open-source Whisper model. HIPAA compliant by architecture — audio is recorded and transcribed locally, never touches a server. Only the text transcript goes to Epic Scribe. Tested end-to-end with synthetic audio (3.9s transcription).
 
 **Why this replaces Google Meet transcription:**
 - Google Meet transcription requires paid Workspace + BAA per user — blocks SaaS launch
@@ -215,11 +215,17 @@ On-device visit recording + transcription using OpenAI's open-source Whisper mod
 Microphone + BlackHole (system audio) → ffmpeg recording → Whisper (local) → labeled transcript → Epic Scribe workflow
 ```
 
+**Three integration paths:**
+1. **CLI scripts** (`record-visit.sh` + `transcribe-visit.py`) — record and transcribe from terminal, transcript copied to clipboard
+2. **Whisper HTTP server** (`scripts/whisper-server.py`) — local Flask server on port 5111, receives audio via POST, returns transcript JSON
+3. **AudioRecorder UI** (`AudioRecorder.tsx`) — browser-based recording in workflow, sends audio to local Whisper server, health check indicator ("Whisper ready" / "Whisper offline")
+
 **Speaker Separation (telehealth):**
 - BlackHole-2ch: virtual audio driver that captures system audio (patient's voice from video call)
 - Aggregate Device: combines mic (provider) + BlackHole (patient) into a multi-channel recording
 - Channels are split and transcribed separately → "Provider:" / "Patient:" labels in transcript
 - Better than Meet: clean speaker labels vs Meet's single-speaker blob
+- BlackHole installed but needs reboot to activate
 
 **Speaker Separation (in-person):**
 - Single mic captures both voices — no separation currently
@@ -232,6 +238,7 @@ Microphone + BlackHole (system audio) → ffmpeg recording → Whisper (local) �
 - `blackhole-2ch` (brew cask) — virtual audio driver for system audio capture
 - Whisper `base` model (~139MB) — stored in `~/.cache/whisper/`
 - `certifi` — SSL cert fix for Python 3.10 on macOS
+- `flask` (Python package) — for whisper-server.py
 
 **macOS Audio Device Setup (one-time, after BlackHole install + reboot):**
 1. Open Audio MIDI Setup
@@ -241,6 +248,10 @@ Microphone + BlackHole (system audio) → ffmpeg recording → Whisper (local) �
 
 **Usage:**
 ```bash
+# Start Whisper HTTP server (for AudioRecorder UI integration)
+SSL_CERT_FILE=$(python3 -c "import certifi; print(certifi.where())") \
+  python3 scripts/whisper-server.py
+
 # In-person visit (mic only, no speaker labels)
 ./scripts/record-visit.sh --device ":1" --model base
 
@@ -258,8 +269,10 @@ SSL_CERT_FILE=$(python3 -c "import certifi; print(certifi.where())") \
 **Files:**
 | File | Purpose |
 |------|---------|
+| `scripts/whisper-server.py` | Local HTTP server (Flask, port 5111) wrapping Whisper for UI integration |
 | `scripts/record-visit.sh` | Shell wrapper: records via ffmpeg, auto-transcribes on Ctrl+C |
 | `scripts/transcribe-visit.py` | Python: splits channels, runs Whisper, merges labeled transcript, copies to clipboard |
+| `apps/web/src/components/workflow/AudioRecorder.tsx` | Browser recording UI with Whisper server health check |
 | `recordings/` | Local audio files (gitignored — PHI stays on device) |
 
 **Whisper Model Options:**
@@ -271,10 +284,9 @@ SSL_CERT_FILE=$(python3 -c "import certifi; print(certifi.where())") \
 | medium | 1.5GB | ~5 min | Best — diminishing returns |
 
 **Next Steps:**
-1. Install BlackHole + reboot for telehealth speaker separation
-2. Integration: auto-populate transcript in Epic Scribe workflow (instead of clipboard paste)
-3. iOS companion app: add recording + Whisper transcription on iPhone
-4. In-person diarization: pyannote.audio for speaker separation without BlackHole
+1. Reboot to activate BlackHole for telehealth speaker separation
+2. iOS companion app: add recording + Whisper transcription on iPhone
+3. In-person diarization: pyannote.audio for speaker separation without BlackHole
 
 ---
 
@@ -531,7 +543,7 @@ devicectl device install app --device <DEVICE_UDID> \
 - Patient ID: `75168b31-c6eb-4b87-a13a-8e013d87a00d`
 - Data: 132 meds, 66 labs, 139 vitals, 126 clinical notes, 1 condition, 2 allergies, 3 procedures
 - Mock transcript: `scripts/test-healthkit-transcript.txt` (HMHI Downtown RCC Follow-up)
-- Test in web UI: /workflow → select "Rufus Sweeney" → HMHI Downtown RCC → Follow-up → paste transcript → Generate
+- Test in web UI: /flow → select "Rufus Sweeney" → HMHI Downtown RCC → Follow-up → paste transcript → Generate
 
 **Key files:**
 | File | Purpose |
