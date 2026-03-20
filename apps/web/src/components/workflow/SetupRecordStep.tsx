@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Setting, SETTINGS, Template } from '@epic-scribe/types';
-import { Heart, QrCode, X, ChevronDown, ChevronRight, ExternalLink, ArrowRight, Loader2 } from 'lucide-react';
+import { Heart, QrCode, X, ChevronDown, ChevronRight, ExternalLink, ArrowRight, Loader2, Smartphone } from 'lucide-react';
+import { useRecentTranscripts, PhoneTranscript } from '@/hooks/useRecentTranscripts';
 import QRCode from 'qrcode';
 import PatientSelector from './PatientSelector';
 import EncountersList from './EncountersList';
@@ -97,6 +98,9 @@ export default function SetupRecordStep({
   const [transcript, setTranscript] = useState('');
   const [recordingState, setRecordingState] = useState<RecordingState>('idle');
   const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Phone transcripts
+  const { transcripts: phoneTranscripts, markUsed: markPhoneTranscriptUsed } = useRecentTranscripts();
 
   const isReady = !!selectedPatient && !!setting && !!visitType && !!template && !loadingTemplate;
 
@@ -269,6 +273,13 @@ export default function SetupRecordStep({
       if (autoAdvanceRef.current) clearTimeout(autoAdvanceRef.current);
     };
   }, [recordingState, transcript, isReady, selectedPatient, setting, visitType, template, encounterId, onSetupComplete]);
+
+  // ─── Phone transcript selected ───
+  const handlePhoneTranscript = (pt: PhoneTranscript) => {
+    setTranscript(pt.transcript);
+    setRecordingState('completed');
+    markPhoneTranscriptUsed(pt.id, pt.patient_id || undefined);
+  };
 
   // ─── Skip recording (paste manually) ───
   const handleSkipRecording = () => {
@@ -491,6 +502,66 @@ export default function SetupRecordStep({
           </div>
         )}
       </div>
+
+      {/* ─── Phone Recordings ─── */}
+      {phoneTranscripts.length > 0 && (
+        <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Smartphone size={18} className="text-[var(--accent-warm)]" />
+            <h2 className="text-xl font-heading text-[var(--text-primary)] tracking-tight">Phone Recordings</h2>
+            <span className="text-xs font-mono px-1.5 py-0.5 rounded-full bg-[var(--accent-warm)] text-[var(--bg-base)]">
+              {phoneTranscripts.length}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {phoneTranscripts.map((pt) => {
+              const recordedDate = new Date(pt.recorded_at);
+              const now = new Date();
+              const diffMs = now.getTime() - recordedDate.getTime();
+              const diffMin = Math.floor(diffMs / 60000);
+              const timeAgo = diffMin < 60
+                ? `${diffMin}m ago`
+                : diffMin < 1440
+                  ? `${Math.floor(diffMin / 60)}h ago`
+                  : recordedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+              return (
+                <button
+                  key={pt.id}
+                  onClick={() => handlePhoneTranscript(pt)}
+                  disabled={!isReady}
+                  className="w-full flex items-center gap-3 p-3 rounded-[2px] border border-[var(--border-default)] bg-[var(--bg-surface-2)] hover:bg-[var(--bg-hover)] transition-colors text-left disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-[var(--text-primary)] truncate">
+                        {pt.patient_name}
+                      </span>
+                      <span className="text-xs text-[var(--text-muted)]">{timeAgo}</span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      {pt.word_count && (
+                        <span className="text-xs text-[var(--text-secondary)]">{pt.word_count} words</span>
+                      )}
+                      {pt.recording_duration_seconds && (
+                        <span className="text-xs text-[var(--text-secondary)]">
+                          {Math.floor(pt.recording_duration_seconds / 60)}m {pt.recording_duration_seconds % 60}s
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <ArrowRight size={14} className="text-[var(--text-muted)] flex-shrink-0" />
+                </button>
+              );
+            })}
+          </div>
+          {!isReady && (
+            <p className="text-xs text-[var(--text-muted)] mt-2">
+              Select a patient, setting, and visit type to use phone recordings.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* ─── Record Encounter ─── */}
       <AudioRecorder

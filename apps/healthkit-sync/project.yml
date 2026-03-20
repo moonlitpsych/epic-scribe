@@ -24,7 +24,8 @@ targets:
       INFOPLIST_KEY_NSHealthShareUsageDescription: "Epic Scribe needs access to your health records to include clinical data in generated notes."
       INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription: "Epic Scribe reads your clinical records (medications, conditions, labs) to enrich generated psychiatry notes."
       INFOPLIST_KEY_NSCameraUsageDescription: "Epic Scribe uses your camera to scan QR codes for patient pairing."
-      INFOPLIST_KEY_UIBackgroundModes: "fetch"
+      INFOPLIST_KEY_NSMicrophoneUsageDescription: "Epic Scribe records visit audio for on-device transcription. Audio never leaves your phone."
+      INFOPLIST_KEY_UIBackgroundModes: "fetch audio"
       GENERATE_INFOPLIST_FILE: true
       INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
       INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true
@@ -36,4 +37,10 @@ targets:
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access:
           - health-records
-    dependencies: []
+    dependencies:
+      - package: WhisperKit
+        product: WhisperKit
+packages:
+  WhisperKit:
+    url: https://github.com/argmaxinc/WhisperKit.git
+    from: "0.9.0"
