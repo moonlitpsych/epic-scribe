@@ -9,6 +9,7 @@ import PatientSelector from './PatientSelector';
 import EncountersList from './EncountersList';
 import ManualNotePanel from './ManualNotePanel';
 import AudioRecorder, { RecordingState } from './AudioRecorder';
+import TranscriptSelector from './TranscriptSelector';
 import SmartListExpander from './SmartListExpander';
 import { SmartToolsParser } from '@epic-scribe/note-service/src/smarttools';
 import { CalendarEncounter } from '@/google-calendar';
@@ -561,6 +562,19 @@ export default function SetupRecordStep({
             </p>
           )}
         </div>
+      )}
+
+      {/* ─── Google Drive Transcripts ─── */}
+      {selectedPatient && (
+        <TranscriptSelector
+          encounterId={selectedEncounterId}
+          patientName={selectedPatient ? `${selectedPatient.last_name}, ${selectedPatient.first_name}` : null}
+          onTranscriptLoaded={(content) => {
+            setTranscript(content);
+            setRecordingState('completed');
+          }}
+          disabled={!isReady}
+        />
       )}
 
       {/* ─── Record Encounter ─── */}
