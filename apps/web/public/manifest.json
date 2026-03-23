@@ -1,0 +1,8 @@
+{
+  "name": "Epic Scribe",
+  "short_name": "Scribe",
+  "start_url": "/record",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#10b981"
+}

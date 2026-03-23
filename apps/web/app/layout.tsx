@@ -23,9 +23,21 @@ const ibmPlexMono = IBM_Plex_Mono({
   display: 'swap',
 })
 
+import type { Viewport } from 'next'
+
 export const metadata: Metadata = {
   title: 'Epic Scribe - Psychiatry Note Generator',
   description: 'HIPAA-compliant psychiatry note generator with Epic SmartTools integration',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Epic Scribe',
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#10b981',
 }
 
 export default function RootLayout({

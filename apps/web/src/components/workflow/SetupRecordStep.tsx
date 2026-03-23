@@ -509,7 +509,7 @@ export default function SetupRecordStep({
         <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
           <div className="flex items-center gap-2 mb-3">
             <Smartphone size={18} className="text-[var(--accent-warm)]" />
-            <h2 className="text-xl font-heading text-[var(--text-primary)] tracking-tight">Phone Recordings</h2>
+            <h2 className="text-xl font-heading text-[var(--text-primary)] tracking-tight">Recent Recordings</h2>
             <span className="text-xs font-mono px-1.5 py-0.5 rounded-full bg-[var(--accent-warm)] text-[var(--bg-base)]">
               {phoneTranscripts.length}
             </span>
