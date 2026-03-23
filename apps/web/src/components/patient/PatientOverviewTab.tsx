@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Save, User, FileText, Calendar, Activity, Pencil, X, Check, QrCode, Smartphone } from 'lucide-react';
+import { Save, User, FileText, Calendar, Activity, Pencil, X, Check, QrCode, Smartphone, Heart, Eye } from 'lucide-react';
 import QRCode from 'qrcode';
+import ClinicalDataDetailModal from '../clinical/ClinicalDataDetailModal';
 
 interface Patient {
   id: string;
@@ -54,6 +55,21 @@ export default function PatientOverviewTab({
       .catch(() => {});
   }, []);
 
+  // Clinical data state
+  const [clinicalDataSummary, setClinicalDataSummary] = useState<{
+    hasClinicalData: boolean;
+    lastSyncedAt: string | null;
+    counts: Record<string, number>;
+  } | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/clinical-data/summary?patientId=${patient.id}`)
+      .then((res) => res.json())
+      .then((data) => setClinicalDataSummary(data))
+      .catch(() => {});
+  }, [patient.id]);
+
   // QR code state
   const [showQr, setShowQr] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
@@ -101,6 +117,20 @@ export default function PatientOverviewTab({
       hour: 'numeric',
       minute: '2-digit',
     });
+  };
+
+  const formatRelativeTime = (isoString: string) => {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return formatDateTime(isoString);
   };
 
   const handleContextChange = (value: string) => {
@@ -373,49 +403,122 @@ export default function PatientOverviewTab({
         </div>
       </div>
 
-      {/* HealthKit Sync */}
+      {/* Health Records / HealthKit Sync */}
       <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-[2px] bg-[var(--success-bg)]">
-              <Smartphone className="text-[var(--success-text)]" size={20} />
+        {clinicalDataSummary?.hasClinicalData ? (
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-[2px] bg-[var(--success-bg)]">
+                  <Heart className="text-[var(--success-text)]" size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">Health Records</h3>
+                  {clinicalDataSummary.lastSyncedAt && (
+                    <p className="text-sm text-[var(--text-muted)]">
+                      Last synced {formatRelativeTime(clinicalDataSummary.lastSyncedAt)}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">HealthKit Sync</h3>
-              <p className="text-sm text-[var(--text-secondary)]">
-                Scan this QR code with the Epic Scribe iOS app to link health records
-              </p>
-            </div>
-          </div>
-        </div>
 
-        {showQr && qrDataUrl ? (
-          <div className="flex flex-col items-center gap-3">
-            {/* Keep QR code on white background for scanability */}
-            <div className="bg-white p-2 rounded-[2px]">
-              <img src={qrDataUrl} alt="Patient QR Code" width={256} height={256} />
+            {/* Data count grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              {Object.entries(clinicalDataSummary.counts)
+                .filter(([, count]) => count > 0)
+                .map(([type, count]) => (
+                  <div key={type} className="bg-[var(--bg-surface-2)] rounded-[2px] px-3 py-2 text-center">
+                    <p className="text-lg font-semibold text-[var(--text-primary)]">{count}</p>
+                    <p className="text-xs text-[var(--text-muted)] capitalize">{type}</p>
+                  </div>
+                ))}
             </div>
-            <p className="text-sm font-medium text-[var(--text-primary)]">
-              {patient.first_name} {patient.last_name}
-            </p>
-            <button
-              onClick={() => setShowQr(false)}
-              className="flex items-center gap-2 px-4 py-2 rounded-[2px] text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
-            >
-              <X size={14} />
-              Hide QR Code
-            </button>
-          </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowDetailModal(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-[2px] text-sm font-medium bg-[var(--accent-primary)] text-[var(--text-inverse)] hover:bg-[var(--accent-primary-hover)] transition-colors"
+              >
+                <Eye size={16} />
+                View Details
+              </button>
+              <button
+                onClick={generateQrCode}
+                className="flex items-center gap-2 px-4 py-2 rounded-[2px] text-sm font-medium text-[var(--text-secondary)] border border-[var(--border-default)] hover:bg-[var(--bg-hover)] transition-colors"
+              >
+                <QrCode size={16} />
+                Show QR Code
+              </button>
+            </div>
+
+            {showQr && qrDataUrl && (
+              <div className="flex flex-col items-center gap-3 mt-4 pt-4 border-t border-[var(--border-default)]">
+                <div className="bg-white p-2 rounded-[2px]">
+                  <img src={qrDataUrl} alt="Patient QR Code" width={256} height={256} />
+                </div>
+                <p className="text-sm font-medium text-[var(--text-primary)]">
+                  {patient.first_name} {patient.last_name}
+                </p>
+                <button
+                  onClick={() => setShowQr(false)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-[2px] text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
+                >
+                  <X size={14} />
+                  Hide QR Code
+                </button>
+              </div>
+            )}
+          </>
         ) : (
-          <button
-            onClick={generateQrCode}
-            className="flex items-center gap-2 px-4 py-2 rounded-[2px] text-sm font-medium bg-[var(--accent-primary)] text-[var(--text-inverse)] hover:bg-[var(--accent-primary-hover)] transition-colors"
-          >
-            <QrCode size={16} />
-            Show QR Code
-          </button>
+          <>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-[2px] bg-[var(--bg-surface-2)]">
+                <Smartphone className="text-[var(--text-secondary)]" size={20} />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">HealthKit Sync</h3>
+                <p className="text-sm text-[var(--text-secondary)]">
+                  Have your patient open the Epic Scribe iOS app and scan the QR code below
+                </p>
+              </div>
+            </div>
+
+            {showQr && qrDataUrl ? (
+              <div className="flex flex-col items-center gap-3">
+                <div className="bg-white p-2 rounded-[2px]">
+                  <img src={qrDataUrl} alt="Patient QR Code" width={256} height={256} />
+                </div>
+                <p className="text-sm font-medium text-[var(--text-primary)]">
+                  {patient.first_name} {patient.last_name}
+                </p>
+                <button
+                  onClick={() => setShowQr(false)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-[2px] text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
+                >
+                  <X size={14} />
+                  Hide QR Code
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={generateQrCode}
+                className="flex items-center gap-2 px-4 py-2 rounded-[2px] text-sm font-medium bg-[var(--accent-primary)] text-[var(--text-inverse)] hover:bg-[var(--accent-primary-hover)] transition-colors"
+              >
+                <QrCode size={16} />
+                Show QR Code
+              </button>
+            )}
+          </>
         )}
       </div>
+
+      <ClinicalDataDetailModal
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        patientId={patient.id}
+        patientName={`${patient.first_name} ${patient.last_name}`}
+      />
 
       {/* Clinical Context */}
       <div className="bg-[var(--bg-surface)] rounded-[2px] border border-[var(--border-default)] p-6">
