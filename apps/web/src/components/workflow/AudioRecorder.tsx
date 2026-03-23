@@ -2,8 +2,6 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Mic, Square, Loader2, FileAudio, CheckCircle } from 'lucide-react';
-// Whisper server URL — local Python server for on-device transcription
-const WHISPER_SERVER = process.env.NEXT_PUBLIC_WHISPER_URL || 'http://localhost:5111';
 
 export type RecordingState = 'idle' | 'recording' | 'recorded' | 'uploading' | 'transcribing' | 'completed';
 
@@ -31,7 +29,6 @@ export default function AudioRecorder({
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [blobSize, setBlobSize] = useState<number | null>(null);
-  const [whisperReady, setWhisperReady] = useState<boolean | null>(null);
   const [transcriptionStatus, setTranscriptionStatus] = useState('');
   const [transcriptPreview, setTranscriptPreview] = useState('');
 
@@ -51,18 +48,6 @@ export default function AudioRecorder({
   useEffect(() => {
     onRecordingStateChange?.(state);
   }, [state, onRecordingStateChange]);
-
-  // Check if Whisper server is running
-  useEffect(() => {
-    const checkHealth = () => {
-      fetch(`${WHISPER_SERVER}/health`)
-        .then((r) => r.ok ? setWhisperReady(true) : setWhisperReady(false))
-        .catch(() => setWhisperReady(false));
-    };
-    checkHealth();
-    const interval = setInterval(checkHealth, 10000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Clean up on unmount
   useEffect(() => {
@@ -146,22 +131,24 @@ export default function AudioRecorder({
 
     setError(null);
     setState('transcribing');
-    setTranscriptionStatus('Sending to Whisper...');
+    setTranscriptionStatus('Transcribing with Gemini...');
 
     try {
-      const res = await fetch(`${WHISPER_SERVER}/transcribe`, {
+      const headers: Record<string, string> = {
+        'Content-Type': audioBlob.type,
+      };
+      if (patientName) {
+        headers['X-Patient-Name'] = patientName;
+      }
+
+      const res = await fetch('/api/transcribe', {
         method: 'POST',
-        headers: { 'Content-Type': audioBlob.type },
+        headers,
         body: audioBlob,
       });
 
-      setTranscriptionStatus('Transcribing audio...');
-
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        if (res.status === 0 || data.error?.includes('fetch')) {
-          throw new Error('Whisper server not running. Start it with: python3 scripts/whisper-server.py');
-        }
         throw new Error(data.error || `Transcription failed (${res.status})`);
       }
 
@@ -173,15 +160,11 @@ export default function AudioRecorder({
       onTranscriptReady(data.transcript);
     } catch (err: any) {
       console.error('Transcription error:', err);
-      if (err.message?.includes('Failed to fetch') || err.name === 'TypeError') {
-        setError('Whisper server not running. Start it with: python3 scripts/whisper-server.py');
-      } else {
-        setError(err.message || 'Transcription failed');
-      }
+      setError(err.message || 'Transcription failed');
       setState('recorded');
       setTranscriptionStatus('');
     }
-  }, [onTranscriptReady]);
+  }, [onTranscriptReady, patientName]);
 
   const startRecording = useCallback(async () => {
     setError(null);
@@ -217,7 +200,7 @@ export default function AudioRecorder({
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType,
-        audioBitsPerSecond: 32000,
+        audioBitsPerSecond: 16000,
       });
 
       chunksRef.current = [];
@@ -291,12 +274,6 @@ export default function AudioRecorder({
         <div className="flex items-center gap-3 mb-4">
           <FileAudio className="text-[var(--accent-primary)]" size={20} />
           <span className="text-base font-medium text-[var(--text-primary)]">Record Encounter</span>
-          {whisperReady === true && (
-            <span className="text-xs text-[var(--success-text)] ml-auto">Whisper ready</span>
-          )}
-          {whisperReady === false && state === 'idle' && (
-            <span className="text-xs text-[var(--text-muted)] ml-auto">Whisper offline</span>
-          )}
         </div>
 
         {/* Idle — big Start Recording button */}
@@ -407,12 +384,6 @@ export default function AudioRecorder({
       <div className="flex items-center gap-3">
         <FileAudio className="text-[var(--accent-primary)] flex-shrink-0" size={18} />
         <span className="text-sm font-medium text-[var(--accent-primary)]">Record Encounter</span>
-        {whisperReady === true && (
-          <span className="text-xs text-[var(--success-text)]">Whisper ready</span>
-        )}
-        {whisperReady === false && state === 'idle' && (
-          <span className="text-xs text-[var(--text-muted)]">Whisper offline</span>
-        )}
 
         {state === 'idle' && (
           <button
