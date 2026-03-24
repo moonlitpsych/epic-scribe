@@ -131,20 +131,48 @@ export default function AudioRecorder({
 
     setError(null);
     setState('transcribing');
-    setTranscriptionStatus('Transcribing with Gemini...');
 
     try {
-      const headers: Record<string, string> = {
-        'Content-Type': audioBlob.type,
-      };
-      if (patientName) {
-        headers['X-Patient-Name'] = patientName;
+      // Step 1: Get presigned upload URL from server
+      setTranscriptionStatus('Preparing upload...');
+      const urlRes = await fetch('/api/transcribe/upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mimeType: audioBlob.type }),
+      });
+
+      if (!urlRes.ok) {
+        const urlData = await urlRes.json().catch(() => ({}));
+        throw new Error(urlData.error || 'Failed to prepare upload');
       }
 
+      const { uploadUrl, storagePath } = await urlRes.json();
+
+      // Step 2: Upload audio directly to Supabase Storage (bypasses Vercel body limit)
+      const sizeMB = (audioBlob.size / (1024 * 1024)).toFixed(1);
+      setTranscriptionStatus(`Uploading ${sizeMB} MB...`);
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: audioBlob,
+        headers: {
+          'Content-Type': audioBlob.type,
+        },
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error(`Upload failed (${uploadRes.status})`);
+      }
+
+      // Step 3: Call transcribe API with storage path
+      setTranscriptionStatus('Transcribing with Gemini...');
       const res = await fetch('/api/transcribe', {
         method: 'POST',
-        headers,
-        body: audioBlob,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storagePath,
+          patientName,
+          mimeType: audioBlob.type.split(';')[0],
+        }),
       });
 
       if (!res.ok) {
@@ -200,7 +228,7 @@ export default function AudioRecorder({
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType,
-        audioBitsPerSecond: 16000,
+        audioBitsPerSecond: 128000,
       });
 
       chunksRef.current = [];

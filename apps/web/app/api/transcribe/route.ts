@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
       const fileSizeMB = arrayBuffer.byteLength / (1024 * 1024);
       console.log(`[Transcribe] Direct upload: ${fileSizeMB.toFixed(1)} MB, ${mimeType}`);
     } else {
-      // Supabase Storage mode — existing path for stored recordings
-      const { storagePath, patientName: pName } = await request.json();
+      // Supabase Storage mode — audio uploaded to Storage, then transcribed here
+      const { storagePath, patientName: pName, mimeType: bodyMimeType } = await request.json();
       patientName = pName;
 
       if (!storagePath) {
@@ -53,10 +53,15 @@ export async function POST(request: NextRequest) {
 
       const arrayBuffer = await fileData.arrayBuffer();
       base64Audio = Buffer.from(arrayBuffer).toString('base64');
-      mimeType = storagePath.endsWith('.mp4') ? 'audio/mp4' : 'audio/webm';
+      mimeType = bodyMimeType || (storagePath.endsWith('.mp4') ? 'audio/mp4' : 'audio/webm');
 
       const fileSizeMB = arrayBuffer.byteLength / (1024 * 1024);
       console.log(`[Transcribe] Storage file: ${storagePath}, ${fileSizeMB.toFixed(1)} MB, ${mimeType}`);
+
+      // Clean up storage after download (fire-and-forget)
+      supabase.storage.from('encounter-recordings').remove([storagePath]).catch((err) => {
+        console.warn('[Transcribe] Storage cleanup failed:', err);
+      });
     }
 
     // Call Gemini with audio
