@@ -335,6 +335,28 @@ export default function ReviewGenerateStep({
     }
   };
 
+  // In-place translation — translates whatever is in the transcript textarea
+  const handleTranslateInPlace = async () => {
+    if (!transcript.trim()) return;
+    setIsTranslating(true);
+    try {
+      const response = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: transcript, sourceLanguage: 'Spanish', targetLanguage: 'English' }),
+      });
+      if (!response.ok) throw new Error('Translation failed');
+      const data = await response.json();
+      setTranscript(data.translatedText);
+      setHasTranslated(true);
+    } catch (error) {
+      console.error('Error translating transcript:', error);
+      alert('Failed to translate transcript. Please try again.');
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const handleLanguageToggle = () => {
     if (hasTranslated) {
       if (confirm('Switching language will reset the translation. Continue?')) {
@@ -508,12 +530,30 @@ ${previousNote ? `PREVIOUS NOTE:\n${previousNote}\n\n` : ''}
               placeholder="Record with Whisper above, or paste a transcript here..."
               rows={12}
               className="w-full px-4 py-3 border border-[var(--border-default)] rounded-[2px] focus:ring-2 focus:ring-[var(--accent-warm)] focus:border-transparent font-mono text-sm bg-[var(--bg-surface-2)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
-              disabled={isGenerating}
+              disabled={isGenerating || isTranslating}
             />
             <div className="flex items-center justify-between mt-2">
-              <p className="text-sm text-[var(--text-secondary)]">
-                {transcript.trim().split(/\s+/).filter(Boolean).length} words
-              </p>
+              <div className="flex items-center gap-3">
+                <p className="text-sm text-[var(--text-secondary)]">
+                  {transcript.trim().split(/\s+/).filter(Boolean).length} words
+                </p>
+                {transcript.trim().length > 0 && !hasTranslated && !isTranslating && (
+                  <button
+                    onClick={handleTranslateInPlace}
+                    disabled={isGenerating}
+                    className="flex items-center gap-1.5 px-3 py-1 text-sm text-[var(--info-text)] bg-[var(--info-bg)] border border-[var(--info-border)] rounded hover:bg-[var(--bg-hover)] transition-colors disabled:opacity-50"
+                  >
+                    <Globe size={14} />
+                    Translate to English
+                  </button>
+                )}
+                {isTranslating && (
+                  <span className="flex items-center gap-1.5 text-sm text-[var(--info-text)]">
+                    <Globe size={14} className="animate-pulse" />
+                    Translating...
+                  </span>
+                )}
+              </div>
               {transcript.trim().length === 0 && (
                 <p className="text-sm text-red-500">Transcript is required</p>
               )}
