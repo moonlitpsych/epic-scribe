@@ -151,6 +151,15 @@ export async function PATCH(
       }
       updates.status = body.status;
     }
+    if (body.setting !== undefined) {
+      updates.setting = body.setting;
+    }
+    if (body.visitType !== undefined) {
+      updates.visit_type = body.visitType;
+    }
+    if (body.patientId !== undefined) {
+      updates.patient_id = body.patientId;
+    }
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });

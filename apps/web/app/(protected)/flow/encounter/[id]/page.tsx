@@ -8,6 +8,7 @@ import EncounterHeader from '@/components/flow/encounter/EncounterHeader';
 import EncounterTabs, { type EncounterTab } from '@/components/flow/encounter/EncounterTabs';
 import NoteTab from '@/components/flow/encounter/NoteTab';
 import ActionsTab from '@/components/flow/encounter/ActionsTab';
+import RxTab from '@/components/flow/encounter/RxTab';
 import PatientProfileTab from '@/components/patient/PatientProfileTab';
 
 export default function EncounterPage() {
@@ -15,6 +16,7 @@ export default function EncounterPage() {
   const encounterId = params.id as string;
   const [activeTab, setActiveTab] = useState<EncounterTab>('note');
   const [stagedActionsCount, setStagedActionsCount] = useState(0);
+  const [rxActionsCount, setRxActionsCount] = useState(0);
 
   const { encounter, existingNote, isLoading, error, refresh } = useEncounter(encounterId);
 
@@ -55,13 +57,14 @@ export default function EncounterPage() {
         ← Back to Schedule
       </Link>
 
-      <EncounterHeader encounter={encounter} />
+      <EncounterHeader encounter={encounter} editable onEncounterUpdated={refresh} />
 
       <EncounterTabs
         activeTab={activeTab}
         onTabChange={setActiveTab}
         hasNote={encounter.hasNote}
         stagedActionsCount={stagedActionsCount}
+        rxActionsCount={rxActionsCount}
       />
 
       {/* Tab content */}
@@ -85,6 +88,10 @@ export default function EncounterPage() {
 
         {activeTab === 'actions' && (
           <ActionsTab encounterId={encounter.id} patientId={encounter.patientId} onStagedActionsLoaded={setStagedActionsCount} />
+        )}
+
+        {activeTab === 'rx' && (
+          <RxTab encounterId={encounter.id} onRxActionsLoaded={setRxActionsCount} />
         )}
       </div>
     </div>

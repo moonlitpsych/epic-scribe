@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Trash2, Check, Sparkles } from 'lucide-react';
 import ActionCard from './ActionCard';
 import LabActionCard from './LabActionCard';
+import RxActionCard from './RxActionCard';
 
 interface ActionItem {
   id: string;
@@ -294,6 +295,14 @@ export default function ActionsTab({ encounterId, patientId, onStagedActionsLoad
             {visibleStaged.map((action) =>
               action.action_type === 'lab' ? (
                 <LabActionCard
+                  key={action.id}
+                  action={action}
+                  onApprove={handleApproveStaged}
+                  onDismiss={handleDismissStaged}
+                  onExecute={handleExecuteStaged}
+                />
+              ) : action.action_type.startsWith('rx_') ? (
+                <RxActionCard
                   key={action.id}
                   action={action}
                   onApprove={handleApproveStaged}

@@ -13,6 +13,7 @@ import {
 } from '@/lib/auth/get-provider-session';
 import { getSupabaseClient } from '@/lib/supabase';
 import { stageLabOrder } from '@/lib/action-resolver/stagers/lab-stager';
+import { stageRxOrder } from '@/lib/action-resolver/stagers/rx-stager';
 import { createLabRequisition } from '@/lib/db/lab-orders';
 import type { StagedAction } from '@/lib/db/staged-actions';
 
@@ -122,6 +123,40 @@ export async function POST(
           return NextResponse.json({
             status: 'completed',
             execution_result: executionResult,
+          });
+        }
+
+        case 'rx_new':
+        case 'rx_change':
+        case 'rx_refill':
+        case 'rx_discontinue': {
+          // Enrich with patient/profile data
+          const rxPayload = await stageRxOrder(action, ps.providerId);
+
+          const rxExecutionResult = {
+            medication: rxPayload.medication,
+            dose: rxPayload.dose,
+            frequency: rxPayload.frequency,
+            quantity: rxPayload.quantity,
+            refills: rxPayload.refills,
+            indication: rxPayload.indication,
+            isControlled: rxPayload.isControlled,
+            patient: rxPayload.patient,
+            currentMedications: rxPayload.currentMedications,
+            ...(rxPayload.previousDose && { previousDose: rxPayload.previousDose }),
+            ...(rxPayload.changeReason && { changeReason: rxPayload.changeReason }),
+            ...(rxPayload.taperInstructions && { taperInstructions: rxPayload.taperInstructions }),
+            ...(rxPayload.discontinueReason && { discontinueReason: rxPayload.discontinueReason }),
+          };
+
+          await updateActionStatus(actionId, ps.providerId, 'completed', {
+            execution_result: rxExecutionResult,
+            executed_at: new Date().toISOString(),
+          });
+
+          return NextResponse.json({
+            status: 'completed',
+            execution_result: rxExecutionResult,
           });
         }
 

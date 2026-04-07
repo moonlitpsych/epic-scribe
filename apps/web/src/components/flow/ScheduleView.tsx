@@ -11,6 +11,8 @@ import ScheduleDayView from './schedule/ScheduleDayView';
 import ScheduleWeekView from './schedule/ScheduleWeekView';
 import ScheduleMonthView from './schedule/ScheduleMonthView';
 import type { TodayEncounter } from '@/lib/flow/types';
+import QuickNoteModal from './QuickNoteModal';
+import NewEncounterModal from './NewEncounterModal';
 
 type ViewMode = 'day' | 'week' | 'month';
 
@@ -75,6 +77,8 @@ export default function ScheduleView() {
   );
 
   const [selectedEncounter, setSelectedEncounter] = useState<TodayEncounter | null>(null);
+  const [showQuickNote, setShowQuickNote] = useState(false);
+  const [showNewEncounter, setShowNewEncounter] = useState(false);
 
   // Listen for sidebar navigation events (MiniCalendar)
   useEffect(() => {
@@ -229,6 +233,22 @@ export default function ScheduleView() {
               Today
             </button>
 
+            {/* Quick Note button */}
+            <button
+              onClick={() => setShowQuickNote(true)}
+              className="rounded-lg border border-white/10 px-3 py-1.5 text-[12px] font-medium text-[#9ca3af] hover:bg-white/[0.04] hover:text-[#d1d5db]"
+            >
+              Quick Note
+            </button>
+
+            {/* New Encounter button */}
+            <button
+              onClick={() => setShowNewEncounter(true)}
+              className="rounded-lg bg-[var(--accent-primary)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-inverse)] hover:bg-[var(--accent-primary-hover)] transition-colors"
+            >
+              + New Encounter
+            </button>
+
             {/* View dropdown */}
             <div className="relative">
               <select
@@ -345,6 +365,26 @@ export default function ScheduleView() {
         <EncounterDetailModal
           encounter={selectedEncounter}
           onClose={() => setSelectedEncounter(null)}
+        />
+      )}
+
+      {/* Quick Note modal */}
+      {showQuickNote && (
+        <QuickNoteModal onClose={() => setShowQuickNote(false)} />
+      )}
+
+      {/* New Encounter modal */}
+      {showNewEncounter && (
+        <NewEncounterModal
+          defaultDate={date}
+          onClose={() => {
+            setShowNewEncounter(false);
+            refresh();
+          }}
+          onCreated={(id) => {
+            setShowNewEncounter(false);
+            window.location.href = `/flow/encounter/${id}`;
+          }}
         />
       )}
     </div>

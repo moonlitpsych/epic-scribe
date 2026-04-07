@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Template, Setting, EpicChartData, PromptReceipt } from '@epic-scribe/types';
+import { Template, Setting, SETTINGS, EpicChartData, PromptReceipt } from '@epic-scribe/types';
+import { VISIT_TYPES_BY_SETTING } from '@/lib/flow/visit-types';
 import { Sparkles, AlertCircle } from 'lucide-react';
 import type { TodayEncounter } from '@/lib/flow/types';
 import TranscriptSection from './TranscriptSection';
@@ -58,6 +59,11 @@ export default function NoteTab({ encounter, existingNote, onNoteSaved }: NoteTa
   const [receipt, setReceipt] = useState<PromptReceipt | null>(null);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [extractedEpicData, setExtractedEpicData] = useState<EpicChartData | null>(null);
+
+  // Template override
+  const [showTemplateOverride, setShowTemplateOverride] = useState(false);
+  const [overrideSetting, setOverrideSetting] = useState<string>('');
+  const [overrideVisitType, setOverrideVisitType] = useState<string>('');
 
   // If there's an existing note, pre-populate
   const hasNote = !!existingNote || !!generatedNote;
@@ -210,6 +216,64 @@ export default function NoteTab({ encounter, existingNote, onNoteSaved }: NoteTa
         <div className="flex items-center gap-2 text-[var(--text-muted)] text-sm">
           <div className="h-3 w-3 animate-spin rounded-full border-2 border-[var(--text-muted)] border-t-transparent" />
           Loading template...
+        </div>
+      )}
+
+      {/* Template indicator + override */}
+      {template && !hasNote && (
+        <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+          <span>Template: {encounter.setting} / {encounter.visitType}</span>
+          {!showTemplateOverride && (
+            <button
+              onClick={() => {
+                setShowTemplateOverride(true);
+                setOverrideSetting(encounter.setting || '');
+                setOverrideVisitType(encounter.visitType || '');
+              }}
+              className="text-[var(--accent-primary)] hover:underline"
+            >
+              Change
+            </button>
+          )}
+          {showTemplateOverride && (
+            <div className="flex items-center gap-2 ml-2">
+              <select
+                value={overrideSetting}
+                onChange={(e) => {
+                  setOverrideSetting(e.target.value);
+                  setOverrideVisitType('');
+                }}
+                className="px-1.5 py-0.5 text-xs border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)]"
+              >
+                {SETTINGS.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              <select
+                value={overrideVisitType}
+                onChange={(e) => {
+                  setOverrideVisitType(e.target.value);
+                  if (e.target.value && overrideSetting) {
+                    loadTemplate(overrideSetting, e.target.value);
+                    setShowTemplateOverride(false);
+                  }
+                }}
+                disabled={!overrideSetting}
+                className="px-1.5 py-0.5 text-xs border border-[var(--border-default)] rounded bg-[var(--bg-surface-2)] text-[var(--text-primary)] disabled:opacity-50"
+              >
+                <option value="">Visit type...</option>
+                {(VISIT_TYPES_BY_SETTING[overrideSetting as Setting] || []).map((vt) => (
+                  <option key={vt} value={vt}>{vt}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => setShowTemplateOverride(false)}
+                className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
       )}
 

@@ -1,21 +1,23 @@
 'use client';
 
-export type EncounterTab = 'note' | 'profile' | 'actions';
+export type EncounterTab = 'note' | 'profile' | 'actions' | 'rx';
 
 interface EncounterTabsProps {
   activeTab: EncounterTab;
   onTabChange: (tab: EncounterTab) => void;
   hasNote?: boolean;
   stagedActionsCount?: number;
+  rxActionsCount?: number;
 }
 
 const TABS: { key: EncounterTab; label: string }[] = [
   { key: 'note', label: 'Note' },
   { key: 'profile', label: 'Profile' },
   { key: 'actions', label: 'Actions' },
+  { key: 'rx', label: 'Rx' },
 ];
 
-export default function EncounterTabs({ activeTab, onTabChange, hasNote, stagedActionsCount }: EncounterTabsProps) {
+export default function EncounterTabs({ activeTab, onTabChange, hasNote, stagedActionsCount, rxActionsCount }: EncounterTabsProps) {
   return (
     <div className="flex items-center gap-0 border-b border-[var(--border-default)]">
       {TABS.map((tab) => {
@@ -37,6 +39,11 @@ export default function EncounterTabs({ activeTab, onTabChange, hasNote, stagedA
             {tab.key === 'actions' && !!stagedActionsCount && stagedActionsCount > 0 && (
               <span className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full text-[10px] font-semibold bg-[var(--accent-warm)] text-[var(--bg-base)]">
                 {stagedActionsCount}
+              </span>
+            )}
+            {tab.key === 'rx' && !!rxActionsCount && rxActionsCount > 0 && (
+              <span className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full text-[10px] font-semibold bg-[var(--accent-warm)] text-[var(--bg-base)]">
+                {rxActionsCount}
               </span>
             )}
             {isActive && (
