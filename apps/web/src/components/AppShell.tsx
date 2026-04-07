@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Menu, X, Users, FileText, Scale, LogOut, ChevronDown } from 'lucide-react';
+import { Menu, X, Users, FileText, Scale, LogOut, ChevronDown, Zap } from 'lucide-react';
 
 interface NavItem {
   label: string;
@@ -13,6 +13,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
+  { label: 'Flow', href: '/flow', icon: <Zap size={18} /> },
   { label: 'Patients', href: '/patients', icon: <Users size={18} /> },
   { label: 'Templates', href: '/templates', icon: <FileText size={18} /> },
   { label: 'DE', href: '/designated-examiner', icon: <Scale size={18} /> },

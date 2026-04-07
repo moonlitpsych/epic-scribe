@@ -2,6 +2,7 @@ import NextAuth, { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import { JWT } from 'next-auth/jwt';
 import { getOrCreateProvider } from '../../../../src/lib/auth/provider-lookup';
+import { storeProviderRefreshToken } from '../../../../src/lib/auth/store-refresh-token';
 
 // Refresh tokens 5 minutes before they expire to avoid edge cases
 const TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000;
@@ -22,6 +23,7 @@ export const authOptions: NextAuthOptions = {
             'https://www.googleapis.com/auth/calendar.events',    // Create/edit events
             'https://www.googleapis.com/auth/drive.file',         // Drive file access (limited to app-created files)
             'https://www.googleapis.com/auth/drive.readonly',     // Read Drive files
+            'https://www.googleapis.com/auth/meetings.space.readonly', // Meet conference status
           ].join(' '),
           // Force approval prompt to ensure we get refresh token
           prompt: 'consent',
@@ -50,6 +52,11 @@ export const authOptions: NextAuthOptions = {
             token.providerId = provider.id;
             token.isAdmin = provider.is_admin;
             console.log('[Auth] Provider linked:', provider.id, 'admin:', provider.is_admin);
+
+            // Persist refresh token for server-side calendar access (public booking)
+            if (token.refreshToken) {
+              storeProviderRefreshToken(provider.id, token.refreshToken as string).catch(() => {});
+            }
           }
         } catch (err) {
           console.error('[Auth] Failed to lookup/create provider:', err);

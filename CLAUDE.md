@@ -7,9 +7,10 @@
 
 ---
 
-## Current Status (2026-03-24)
+## Current Status (2026-03-28)
 
 ### Working Features
+- **Calendar Schedule View**: Day/Week/Month views at `/flow` with URL-based navigation (`?view=day&date=2026-03-28`). Time grid, encounter blocks, mini calendar sidebar, detail modal with ad-hoc notes.
 - **Note Generation**: Gemini 2.5 Pro + automatic failover to backup API key
 - **Browser Transcription**: Gemini 2.5 Flash via AudioRecorder (replaced local Whisper). Audio uploads via Supabase Storage presigned URLs to bypass Vercel 4.5 MB limit.
 - **Standalone /record Page**: Mobile-first recording page at `/record` with auto-save to `visit_transcripts`. PWA manifest for "Add to Home Screen" on iPhone.
@@ -28,7 +29,7 @@
 - **Structured Patient Profile**: Async Gemini extraction after note save, cumulative profile per patient
 - **Listening Coder (v0)**: CPT code suggestions (static rules, needs payer-aware intelligence)
 - **Dark Mode UI**: 50 files, CSS custom properties, Space Grotesk + IBM Plex fonts
-- **CLI Transcription**: `record-visit.sh` + `transcribe-visit.py` with BlackHole speaker separation for telehealth
+- **CLI Transcription**: `record-visit.sh` + `transcribe-visit.py` (BlackHole removed 2026-04-03 — was interfering with Meet transcription; telehealth speaker separation inactive)
 - **iPhone Recording** (code complete, needs Xcode build): WhisperKit on-device transcription, offline queue, auto-sync to desktop
 
 ### Known Issues
@@ -50,6 +51,19 @@
 **Phase 3 — Proactive billing agent (long-term):** Pre-submission claim review, denial pattern detection, authorization tracking, appeal automation, revenue dashboard.
 
 **Moonlit payer landscape (Utah):** FFS Medicaid, Molina, SelectHealth, Healthy U (MCOs), Optum (pending). Clearinghouses: Office Ally, Availity.
+
+### E-Prescribing — ScriptSure Direct (5 prescribers)
+
+**Decision:** ScriptSure direct via DAW Systems, migrating from IntakeQ's ScriptSure wrapper.
+- **IntakeQ cost:** $65/rx/mo = $325/mo for 5 prescribers
+- **ScriptSure direct (annual):** $41.67/rx/mo = $208/mo for 5 prescribers — **saves $1,400/yr**
+- All 5 prescribers already have EPCS credentials via IntakeQ; DAW Systems expected to transfer identity proofing (call 866-755-1500 x2 to confirm)
+- Surescripts-certified, EPCS included, no setup fees
+- NOT WENO (pharmacy rejection issues unacceptable for controlled substances)
+- **Phase 1:** Standalone ScriptSure alongside strong.work/flow, Rx stager outputs copy-to-clipboard
+- **Phase 2:** Embed ScriptSure into encounter Rx tab via vendor API
+- **Fallback:** DoseSpot Jumpstart iframe ($225/mo via Oystehr) if ScriptSure API is inadequate
+- See `AI_MA_ACTION_RESOLVER_SPEC.md` for full vendor comparison
 
 ### Beyond Billing
 Scheduling intelligence, patient outreach, credentialing tracking, compliance monitoring.
@@ -131,6 +145,104 @@ pnpm lint             # Check for issues
 
 ## Feature Details
 
+### Calendar Schedule View (2026-03-28)
+
+Google Calendar-like schedule view replacing the old flat DayView list at `/flow`. Three view modes (Day/Week/Month) with URL-based state (`?view=day&date=2026-03-28`).
+
+**Architecture:**
+- `getEncountersInRange()` in `google-calendar.ts` — generalized calendar fetch for arbitrary date ranges (max 200 results)
+- `enrichCalendarEvents()` in `lib/flow/enrich-encounters.ts` — shared enrichment logic (patient lookup, payer, diagnoses, note status) extracted from today route. Used by both `/api/encounters/today` and `/api/encounters/range`.
+- `GET /api/encounters/range?start=YYYY-MM-DD&end=YYYY-MM-DD` — date-range endpoint, 35-day cap
+- `PATCH /api/encounters/[id]` — saves `provider_notes` (migration 030)
+- `useEncounterRange(start, end)` hook — client-side fetch with polling and abort-on-change
+
+**Components:**
+- `ScheduleView.tsx` — orchestrator: reads URL params, computes date range, manages modal state, renders header with prev/next/today/view-dropdown
+- `schedule/ScheduleDayView.tsx` — 7AM–7PM time grid (48px/30min slots), positioned encounter blocks color-coded by status, current-time red line
+- `schedule/ScheduleWeekView.tsx` — 7-column grid (Mon–Sun), time gutter, today highlighted, encounter blocks per column
+- `schedule/ScheduleMonthView.tsx` — month grid, encounter pills (max 3 + "+N more"), click day → day view
+- `MiniCalendar.tsx` — compact month calendar in FlowSidebar, click day → navigates URL
+- `EncounterDetailModal.tsx` — modal overlay on click: patient info, status/payer badges, diagnoses, Meet link, notes textarea (auto-saves on blur via PATCH)
+
+**Old DayView:** `DayView.tsx` still exists but is no longer imported by `flow/page.tsx`. Can be removed.
+
+**Migration 030:** `encounters.provider_notes` column — already run.
+
+**Remaining Phase 1 cleanup:** Delete old `DayView.tsx` (no longer imported), test confirm-booking → navigate-to-date flow, polish from real-world use.
+
+**Key files:**
+- `src/components/flow/ScheduleView.tsx`, `schedule/ScheduleDayView.tsx`, `schedule/ScheduleWeekView.tsx`, `schedule/ScheduleMonthView.tsx`
+- `src/components/flow/MiniCalendar.tsx`, `EncounterDetailModal.tsx`
+- `src/lib/flow/enrich-encounters.ts`, `hooks/useEncounterRange.ts`
+- `app/api/encounters/range/route.ts`, `app/api/encounters/[id]/route.ts` (PATCH added)
+- `supabase/migrations/030_encounter_provider_notes.sql`
+
+### Encounter View (shipped 2026-03-30)
+
+Full encounter workspace at `/flow/encounter/[id]` — header with patient info, Note/Profile/Actions tabs, transcript input (record/paste), generation, editing, and saving. Replaces the old `WorkflowWizard` step-by-step flow.
+
+**Tabs:** Note (transcript → generate → edit → save), Profile (demographics, diagnoses, meds), Actions (AI-extracted + manual action items)
+- AI-suggested actions appear after **Generate Note** (fire-and-forget extractor). Lab actions are executable (Phase 2): approve → create requisition with matched Labcorp codes, patient demographics, insurance, diagnoses.
+- Rx and Labs tabs are future features
+
+**Key files:**
+- `app/(protected)/flow/encounter/[id]/page.tsx` — encounter page
+- `src/components/workflow/` — step components reused in encounter view
+- `AudioRecorder.tsx` for transcription, `PatientProfile` for profile tab
+
+**API routes:**
+- `GET/POST /api/encounters` — list/create
+- `GET/PATCH/DELETE /api/encounters/[id]` — fetch/update/delete (provider_notes, status)
+- `POST /api/generate` — note generation
+- `POST /api/transcribe` — audio transcription
+- `GET/POST /api/notes` — note CRUD
+- `GET /api/patient-profile/[patientId]` — patient profile data
+
+### Google Meet Status Integration (2026-03-30)
+
+Auto-updates encounter status based on Google Meet conference activity. Uses client-triggered polling (not Pub/Sub webhooks) — piggybacks on the existing 30s poll cycle in `useEncounterRange`.
+
+**Transitions:**
+- `scheduled` → `in-visit` when conference starts (participant joins)
+- `in-visit` → `note-pending` when conference ends
+- Never overwrites terminal statuses (`note-ready`, `signed`, `cancelled`, `no-show`)
+
+**Architecture:**
+- `src/lib/meet/meet-client.ts` — Meet API client (auth via provider's stored refresh token, same pattern as `calendar-client.ts`)
+- `POST /api/encounters/check-meet-status` — checks encounters with `status IN (scheduled, in-visit)` + meet_link within ±30 min of now
+- `useEncounterRange` hook fires the check after each encounter fetch, re-fetches on transitions
+- Non-blocking: Meet API errors don't affect encounter loading
+
+**Prerequisites:**
+- Google Meet REST API enabled in GCP Console
+- OAuth scope `meetings.space.readonly` added to consent screen
+- Provider must sign out/in to grant new scope
+
+**Key files:**
+- `src/lib/meet/meet-client.ts`, `app/api/encounters/check-meet-status/route.ts`
+- `app/api/auth/[...nextauth]/route.ts` (scope added)
+- `src/lib/flow/hooks/useEncounterRange.ts` (meet check hook)
+
+### AI MA Action Resolver Phase 2 — Lab Execution (2026-04-03)
+
+Approved lab actions auto-create Labcorp requisitions with matched test codes, patient demographics, insurance, and diagnoses from patient profile.
+
+**Flow:** Generate Note → extractor produces staged lab action → Approve → "Create Requisition" → fuzzy-match tests → create requisition + junction rows → completed with `LAB-YYYYMMDD-{hex}` number.
+
+**Architecture:**
+- `src/lib/db/lab-orders.ts` — fuzzy test matching (abbreviation map: cbc/cmp/tsh/uds/a1c/lfts), insurance lookup, requisition creation
+- `src/lib/action-resolver/stagers/lab-stager.ts` — parallel-fetches patient, insurance, tests, profile diagnoses → `LabOrderPayload`
+- `POST /api/actions/staged/[id]/execute` — generic dispatcher (lab case first, extensible for rx/referral)
+- `src/components/flow/encounter/LabActionCard.tsx` — status-driven UI card (staged→approved→executing→completed/failed)
+
+**DB (migration 032):** `staged_actions` gets `execution_result`, `error_message`, `executed_at`; `lab_requisitions` gets `encounter_id`, `staged_action_id`; 12 new lab tests (22 total).
+
+**Key files:**
+- `src/lib/db/lab-orders.ts`, `src/lib/action-resolver/stagers/lab-stager.ts`
+- `app/api/actions/staged/[id]/execute/route.ts`
+- `src/components/flow/encounter/LabActionCard.tsx`, `ActionsTab.tsx`
+- `supabase/migrations/032_lab_phase2.sql`
+
 ### Browser Transcription + Audio Upload (2026-03-24)
 
 AudioRecorder uses Gemini 2.5 Flash (not local Whisper) for browser transcription. Audio uploads use Supabase Storage presigned URLs to bypass Vercel's 4.5 MB serverless limit.
@@ -153,12 +265,11 @@ PWA manifest enables "Add to Home Screen" — opens directly to `/record` in sta
 
 **Key files:** `ReviewGenerateStep.tsx`, `api/translate/route.ts`
 
-### CLI Transcription + Speaker Separation (2026-03-19)
+### CLI Transcription (2026-03-19)
 
-Local Whisper via CLI scripts. BlackHole-2ch captures system audio for telehealth speaker separation. HIPAA compliant (audio stays on device).
+Local Whisper via CLI scripts. HIPAA compliant (audio stays on device). BlackHole-2ch was removed (2026-04-03) because it interfered with Google Meet transcription — telehealth speaker separation is currently inactive.
 
 **Scripts:** `record-visit.sh`, `transcribe-visit.py`, `whisper-server.py` (port 5111)
-**Audio devices:** EpicScribeOutput (Multi-Output) + EpicScribeAggregate (Aggregate) — permanent setup.
 
 ### HealthKit + iOS App
 

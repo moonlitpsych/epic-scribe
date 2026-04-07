@@ -2,7 +2,8 @@
  * Google Calendar API Client
  *
  * Fetches encounters from Google Calendar with 7-day lookahead.
- * Naming convention: "<Patient Last, First> — <Setting> — <VisitType>"
+ * Naming convention: "<Patient Last, First> - <Setting> - <VisitType>"
+ * Also accepts em-dash (—) for backwards compatibility.
  *
  * Authentication:
  * - Uses shared calendar for HIPAA-compliant Meet hosting (hello@trymoonlit.com)
@@ -27,10 +28,11 @@ export interface CalendarEncounter {
 
 /**
  * Parse encounter details from calendar event title.
- * Expected format: "<Patient Last, First> — <Setting> — <VisitType>"
+ * Accepts both "Name - Setting - Type" (hyphen) and "Name — Setting — Type" (em-dash).
  */
 function parseEventTitle(summary: string) {
-  const parts = summary.split('—').map(s => s.trim());
+  // Split on em-dash or space-hyphen-space
+  const parts = summary.split(/\s*[—]\s*|\s+-\s+/).map(s => s.trim());
 
   if (parts.length === 3) {
     return {
@@ -45,6 +47,15 @@ function parseEventTitle(summary: string) {
     setting: undefined,
     visitType: undefined,
   };
+}
+
+/**
+ * Check if an event title matches our encounter naming convention.
+ * Accepts both hyphen (-) and em-dash (—) separators.
+ */
+function isEncounterEvent(title: string): boolean {
+  const parts = title.split(/\s*[—]\s*|\s+-\s+/);
+  return parts.length >= 3;
 }
 
 /**
@@ -96,12 +107,8 @@ export async function getUpcomingEncounters(
     const events = response.data.items || [];
 
     // Filter to only events that match our naming convention
-    // Must have the em-dash separator (—) which indicates patient encounters
     return events
-      .filter((event) => {
-        const title = event.summary || '';
-        return title.includes('—');
-      })
+      .filter((event) => isEncounterEvent(event.summary || ''))
       .map((event) => {
         const { patient, setting, visitType } = parseEventTitle(event.summary || '');
 
@@ -120,6 +127,164 @@ export async function getUpcomingEncounters(
   } catch (error) {
     console.error('Error fetching calendar events:', error);
     throw new Error('Failed to fetch calendar events');
+  }
+}
+
+/**
+ * Fetch today's encounters from shared calendar.
+ * Same as getUpcomingEncounters but scoped to start-of-day to end-of-day.
+ */
+export async function getTodaysEncounters(
+  session: Session,
+  timezone = 'America/Denver'
+): Promise<CalendarEncounter[]> {
+  if (!session.accessToken) {
+    throw new Error('No access token available');
+  }
+
+  const calendar = getCalendarClient(session.accessToken);
+  const calendarId = getSharedCalendarId();
+
+  // Calculate today's range in the given timezone
+  const now = new Date();
+  const startOfDay = new Date(now.toLocaleDateString('en-US', { timeZone: timezone }));
+  const endOfDay = new Date(startOfDay);
+  endOfDay.setDate(endOfDay.getDate() + 1);
+
+  try {
+    const response = await calendar.events.list({
+      calendarId,
+      timeMin: startOfDay.toISOString(),
+      timeMax: endOfDay.toISOString(),
+      singleEvents: true,
+      orderBy: 'startTime',
+      maxResults: 30,
+    });
+
+    const events = response.data.items || [];
+
+    // Debug logging — remove after testing
+    console.log('[getTodaysEncounters] calendarId:', calendarId);
+    console.log('[getTodaysEncounters] timeRange:', startOfDay.toISOString(), '->', endOfDay.toISOString());
+    console.log('[getTodaysEncounters] raw events:', events.length, events.map(e => ({ summary: e.summary, start: e.start?.dateTime })));
+    console.log('[getTodaysEncounters] after filter:', events.filter(e => isEncounterEvent(e.summary || '')).map(e => e.summary));
+
+    return events
+      .filter((event) => isEncounterEvent(event.summary || ''))
+      .map((event) => {
+        const { patient, setting, visitType } = parseEventTitle(event.summary || '');
+
+        return {
+          id: event.id || '',
+          summary: event.summary || '',
+          description: event.description,
+          start: event.start?.dateTime || event.start?.date || '',
+          end: event.end?.dateTime || event.end?.date || '',
+          meetLink: event.hangoutLink,
+          patient,
+          setting,
+          visitType,
+        };
+      });
+  } catch (error) {
+    console.error('Error fetching today\'s calendar events:', error);
+    throw new Error('Failed to fetch today\'s calendar events');
+  }
+}
+
+/**
+ * Fetch encounters in an arbitrary date range from shared calendar.
+ * Used by the schedule view for day/week/month modes.
+ */
+export async function getEncountersInRange(
+  session: Session,
+  timeMin: string,
+  timeMax: string,
+  timezone = 'America/Denver'
+): Promise<CalendarEncounter[]> {
+  if (!session.accessToken) {
+    throw new Error('No access token available');
+  }
+
+  const calendar = getCalendarClient(session.accessToken);
+  const calendarId = getSharedCalendarId();
+
+  try {
+    const response = await calendar.events.list({
+      calendarId,
+      timeMin,
+      timeMax,
+      singleEvents: true,
+      orderBy: 'startTime',
+      maxResults: 200,
+      timeZone: timezone,
+    });
+
+    const events = response.data.items || [];
+
+    return events
+      .filter((event) => isEncounterEvent(event.summary || ''))
+      .map((event) => {
+        const { patient, setting, visitType } = parseEventTitle(event.summary || '');
+
+        return {
+          id: event.id || '',
+          summary: event.summary || '',
+          description: event.description,
+          start: event.start?.dateTime || event.start?.date || '',
+          end: event.end?.dateTime || event.end?.date || '',
+          meetLink: event.hangoutLink,
+          patient,
+          setting,
+          visitType,
+        };
+      });
+  } catch (error) {
+    console.error('Error fetching calendar events in range:', error);
+    throw new Error('Failed to fetch calendar events');
+  }
+}
+
+/**
+ * Fetch a single calendar event by ID from shared calendar.
+ */
+export async function getCalendarEventById(
+  session: Session,
+  eventId: string
+): Promise<CalendarEncounter | null> {
+  if (!session.accessToken) {
+    throw new Error('No access token available');
+  }
+
+  const calendar = getCalendarClient(session.accessToken);
+  const calendarId = getSharedCalendarId();
+
+  try {
+    const response = await calendar.events.get({
+      calendarId,
+      eventId,
+    });
+
+    const event = response.data;
+    if (!event || !event.summary) return null;
+
+    const { patient, setting, visitType } = parseEventTitle(event.summary);
+
+    return {
+      id: event.id || '',
+      summary: event.summary,
+      description: event.description ?? undefined,
+      start: event.start?.dateTime || event.start?.date || '',
+      end: event.end?.dateTime || event.end?.date || '',
+      meetLink: event.hangoutLink ?? undefined,
+      patient,
+      setting,
+      visitType,
+    };
+  } catch (error: any) {
+    if (error?.code === 404) return null;
+    console.error('Error fetching calendar event by ID:', error);
+    throw new Error('Failed to fetch calendar event');
   }
 }
 
@@ -201,7 +366,7 @@ export async function createEncounter(
   const calendar = getCalendarClient(session.accessToken);
   const calendarId = getSharedCalendarId();
 
-  const summary = `${patient} — ${setting} — ${visitType}`;
+  const summary = `${patient} - ${setting} - ${visitType}`;
 
   try {
     const event = await calendar.events.insert({

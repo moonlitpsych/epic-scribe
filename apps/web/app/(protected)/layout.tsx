@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import AppShell from '@/components/AppShell';
 
 export default function ProtectedLayout({
@@ -12,14 +12,26 @@ export default function ProtectedLayout({
 }) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [loadingTooLong, setLoadingTooLong] = useState(false);
+
+  // Flow routes (except /flow/classic) use their own shell
+  const isFlowRoute = pathname.startsWith('/flow') && !pathname.startsWith('/flow/classic');
 
   // Handle unauthenticated state
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (status === 'unauthenticated' || loadingTooLong) {
       router.push('/auth/signin');
     }
-  }, [status, router]);
+  }, [status, loadingTooLong, router]);
+
+  // If session stays in "loading" for more than 4s, redirect to sign-in
+  useEffect(() => {
+    if (status !== 'loading') return;
+    const timer = setTimeout(() => setLoadingTooLong(true), 4000);
+    return () => clearTimeout(timer);
+  }, [status]);
 
   // HIPAA-compliant: Auto-logout when token refresh fails
   // This ensures users don't have partial functionality with an expired token
@@ -64,6 +76,10 @@ export default function ProtectedLayout({
 
   if (status === 'unauthenticated') {
     return null;
+  }
+
+  if (isFlowRoute) {
+    return <>{children}</>;
   }
 
   return <AppShell>{children}</AppShell>;

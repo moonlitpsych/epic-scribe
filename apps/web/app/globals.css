@@ -64,3 +64,37 @@ html {
   background: rgba(16, 185, 129, 0.25);
   color: #e8eaf0;
 }
+
+/* Flow shell scoped vars */
+.flow-shell {
+  --flow-accent: #d97706;
+  --flow-accent-light: #f59e0b;
+  --flow-accent-bg: rgba(217,119,6,0.1);
+  --flow-sidebar-bg: #0a0b0f;
+  --flow-sidebar-border: rgba(255,255,255,0.06);
+}
+
+/* Booking shell — patient-facing warm theme */
+.book-shell {
+  --book-bg: #FEF8F1;
+  --book-surface: #FFFFFF;
+  --book-accent: #BF9C73;
+  --book-accent-hover: #A8865F;
+  --book-text: #091747;
+  --book-text-secondary: #4b5563;
+  --book-text-muted: #6b7280;
+  --book-border: #e5e0d8;
+  --book-border-focus: #BF9C73;
+  --book-success: #059669;
+  --book-error: #dc2626;
+}
+
+@keyframes flow-slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes flow-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
